@@ -18,7 +18,8 @@
     <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Project Name <span class="text-danger">*</span></label>
-        <select id="project_name" class="form-select" required></select>
+        <input list="project_list" id="project_name" class="form-control" placeholder="Start typing to search..." required />
+        <datalist id="project_list"></datalist>
       </div>
       <div class="col-md-3">
         <label class="form-label">Invoice Number</label>
@@ -26,18 +27,18 @@
       </div>
       <div class="col-md-3">
         <label class="form-label">Client Name</label>
-        <p id="client_name" class="form-control-plaintext"></p>
+        <p class="form-control-plaintext" id="client_name"></p>
       </div>
       <div class="col-md-3">
         <label class="form-label">Client Address</label>
-        <p id="client_address" class="form-control-plaintext"></p>
+        <p class="form-control-plaintext" id="client_address"></p>
       </div>
     </div>
 
     <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Client Number</label>
-        <p id="client_number" class="form-control-plaintext"></p>
+        <p class="form-control-plaintext" id="client_number"></p>
       </div>
       <div class="col-md-3">
         <label class="form-label">Invoice Date</label>
@@ -45,7 +46,7 @@
       </div>
       <div class="col-md-3">
         <label class="form-label">Due Date</label>
-        <p id="due_date" class="form-control-plaintext"></p>
+        <p class="form-control-plaintext" id="due_date"></p>
       </div>
       <div class="col-md-3">
         <label class="form-label">Exchange Rate</label>
@@ -56,7 +57,7 @@
     <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Currency</label>
-        <p id="currency" class="form-control-plaintext"></p>
+        <p class="form-control-plaintext" id="currency">$ (USD)</p>
       </div>
       <div class="col-md-9">
         <div class="row">
@@ -101,7 +102,7 @@
     <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Tax (%)</label>
-        <p id="tax" class="form-control-plaintext"></p>
+        <p class="form-control-plaintext" id="tax">19</p>
       </div>
       <div class="col-md-3">
         <label class="form-label">Subtotal</label>
@@ -128,9 +129,59 @@
 
     <div id="result" class="mt-4"></div>
 
-    <!-- Scripts -->
     <script>
       let validProjectNames = [];
+
+      function populateProjectNames() {
+        google.script.run.withSuccessHandler(function(projects) {
+          validProjectNames = projects;
+          const datalist = document.getElementById("project_list");
+          datalist.innerHTML = "";
+          projects.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            datalist.appendChild(opt);
+          });
+        }).getProjectNames();
+      }
+
+      function fillProjectDetails(details) {
+        document.getElementById("client_name").textContent = details.clientName;
+        document.getElementById("client_address").textContent = details.clientAddress;
+        document.getElementById("client_number").textContent = details.clientNumber;
+        document.getElementById("tax").textContent = details.tax;
+        const currencyMap = { '$': '$ (USD)', '€': '€ (EUR)', '₴': '₴ (UAH)' };
+        document.getElementById("currency").textContent = currencyMap[details.currency] || details.currency;
+
+        const invoiceDate = document.getElementById("invoice_date").value;
+        if (invoiceDate) {
+          let baseDate = new Date(invoiceDate);
+          let dueDate;
+          if (details.dayType === 'WD') {
+            dueDate = addWorkingDays(baseDate, details.paymentDelay);
+          } else {
+            dueDate = new Date(baseDate);
+            dueDate.setDate(dueDate.getDate() + details.paymentDelay);
+          }
+          document.getElementById("due_date").textContent = formatDateDDMMYYYY(dueDate);
+        }
+        updateTotals();
+      }
+
+      document.getElementById("project_name").addEventListener("change", function() {
+        const value = this.value.trim();
+        if (validProjectNames.includes(value)) {
+          google.script.run.withSuccessHandler(fillProjectDetails).getProjectDetails(value);
+        }
+      });
+
+      document.getElementById("invoice_date").addEventListener("change", function() {
+        const value = this.value.trim();
+        const project = document.getElementById("project_name").value.trim();
+        if (value && validProjectNames.includes(project)) {
+          google.script.run.withSuccessHandler(fillProjectDetails).getProjectDetails(project);
+        }
+      });
 
       function formatDateDDMMYYYY(dateObj) {
         const dd = String(dateObj.getDate()).padStart(2, '0');
@@ -139,61 +190,15 @@
         return `${dd}/${mm}/${yyyy}`;
       }
 
-      function populateProjectNames() {
-        google.script.run.withSuccessHandler(function (projects) {
-          validProjectNames = projects;
-          const select = document.getElementById("project_name");
-          select.innerHTML = `<option value="">Select project...</option>`;
-          projects.forEach(name => {
-            const opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
-            select.appendChild(opt);
-          });
-        }).getProjectNames();
-      }
-
-      document.getElementById("project_name").addEventListener("change", function () {
-        const name = this.value.trim();
-        if (validProjectNames.includes(name)) {
-          google.script.run.withSuccessHandler(fillProjectDetails).getProjectDetails(name);
+      function addWorkingDays(startDate, daysToAdd) {
+        let result = new Date(startDate);
+        let added = 0;
+        while (added < daysToAdd) {
+          result.setDate(result.getDate() + 1);
+          const day = result.getDay();
+          if (day !== 0 && day !== 6) added++;
         }
-      });
-
-      document.getElementById("invoice_date").addEventListener("change", function () {
-        const projectName = document.getElementById("project_name").value.trim();
-        if (validProjectNames.includes(projectName)) {
-          google.script.run.withSuccessHandler(function (details) {
-            if (details && details.paymentDelay > 0) {
-              const baseDate = new Date(document.getElementById("invoice_date").value);
-              baseDate.setDate(baseDate.getDate() + details.paymentDelay);
-              document.getElementById("due_date").textContent = formatDateDDMMYYYY(baseDate);
-            }
-          }).getProjectDetails(projectName);
-        }
-      });
-
-      function fillProjectDetails(details) {
-        if (!details) return;
-        const currencyMap = {
-          '$': '$ (USD)',
-          '€': '€ (EUR)',
-          '₴': '₴ (UAH)'
-        };
-        document.getElementById("client_name").textContent = details.clientName;
-        document.getElementById("client_number").textContent = details.clientNumber;
-        document.getElementById("client_address").textContent = details.clientAddress;
-        document.getElementById("tax").textContent = details.tax;
-        document.getElementById("currency").textContent = currencyMap[details.currency] || details.currency;
-
-        const invoiceDateEl = document.getElementById("invoice_date");
-        if (invoiceDateEl.value && details.paymentDelay > 0) {
-          const baseDate = new Date(invoiceDateEl.value);
-          baseDate.setDate(baseDate.getDate() + details.paymentDelay);
-          document.getElementById("due_date").textContent = formatDateDDMMYYYY(baseDate);
-        }
-
-        updateTotals();
+        return result;
       }
 
       function addRow() {
@@ -241,9 +246,12 @@
       }
 
       function submitForm() {
-        const projectValue = document.getElementById("project_name").value.trim();
+        const input = document.getElementById("project_name");
+        const projectValue = input.value.trim();
+
         if (!validProjectNames.includes(projectValue)) {
           alert("Please select a valid Project Name from the list.");
+          input.focus();
           return;
         }
 
@@ -263,7 +271,7 @@
           subtotal: document.getElementById("subtotal").innerText.trim(),
           total: document.getElementById("total").innerText.trim(),
           exchangeRate: document.getElementById("exchange_rate").value.trim(),
-          currency: document.getElementById("currency").textContent.trim().split(' ')[0],
+          currency: document.getElementById("currency").textContent.trim().split(" ")[0],
           amountInEUR: document.getElementById("amount_in_eur").innerText.trim(),
           bankDetails1: document.getElementById("bank_details_1").value.trim(),
           bankDetails2: document.getElementById("bank_details_2").value.trim(),
@@ -277,9 +285,8 @@
           data.items.push(rowData);
         }
 
-        google.script.run.withSuccessHandler(function (result) {
+        google.script.run.withSuccessHandler(function(result) {
           document.getElementById("spinner").style.display = "none";
-          document.getElementById("generate-btn").disabled = false;
           document.getElementById("result").innerHTML = `
             <div class="alert alert-success mt-4">
               <strong>Invoice created!</strong><br>

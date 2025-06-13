@@ -32,7 +32,8 @@ function getProjectDetails(projectName) {
         clientAddress: values[i][4] || '',
         tax: isNaN(tax) ? 0 : tax.toFixed(0),
         currency: currencyMap[values[i][8]] || values[i][8],
-        paymentDelay: parseInt(values[i][10]) || 0
+        paymentDelay: parseInt(values[i][10]) || 0,
+        dayType: (values[i][9] || '').toString().trim().toUpperCase()
       };
     }
   }
@@ -65,7 +66,7 @@ function processForm(data) {
   }
 
   const formattedDate = formatDate(data.invoiceDate);
-  const formattedDueDate = formatDate(data.dueDate);
+  const formattedDueDate = data.dueDate;
 
   const subtotalNum = parseFloat(data.subtotal) || 0;
   const taxRate = parseFloat(data.tax) || 0;
@@ -95,8 +96,8 @@ function processForm(data) {
     parseFloat(data.amountInEUR).toFixed(2),
     data.bankDetails1,
     data.bankDetails2,
-    '', // Google Doc Link
-    '', // PDF Link
+    '',
+    '',
     ...itemCells
   ];
 
