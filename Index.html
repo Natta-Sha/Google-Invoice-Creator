@@ -3,130 +3,19 @@
   <head>
     <base target="_top" />
     <meta charset="utf-8" />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <script>
-      function addRow() {
-        const tbody = document.getElementById("invoice-body");
-        const rowNumber = tbody.rows.length + 1;
-        const row = tbody.insertRow();
-
-        for (let i = 0; i < 6; i++) {
-          const cell = row.insertCell();
-          const input = document.createElement("input");
-          input.className = "form-control";
-          input.type = "text";
-
-          if (i === 0) input.value = rowNumber;
-          if (i === 5) {
-            input.classList.add("amount");
-            input.onfocus = markManualAmount;
-          }
-
-          input.oninput = updateTotals;
-          cell.appendChild(input);
-        }
-      }
-
-      function updateTotals() {
-        const tbody = document.getElementById("invoice-body");
-        let subtotal = 0;
-
-        for (let i = 0; i < tbody.rows.length; i++) {
-          const row = tbody.rows[i];
-          const inputs = row.getElementsByTagName("input");
-          const qty = parseFloat(inputs[3].value) || 0;
-          const rate = parseFloat(inputs[4].value) || 0;
-          const amountCell = inputs[5];
-
-          if (!amountCell.hasAttribute("manual")) {
-            amountCell.value = (qty * rate).toFixed(2);
-          }
-
-          const amount = parseFloat(amountCell.value) || 0;
-          subtotal += amount;
-        }
-
-        document.getElementById("subtotal").innerText = subtotal.toFixed(2);
-
-        const tax = parseFloat(document.getElementById("tax").value) || 0;
-        const total = subtotal + (subtotal * tax) / 100;
-        document.getElementById("total").innerText = total.toFixed(2);
-
-        const exchangeRate = parseFloat(
-          document.getElementById("exchange_rate").value
-        );
-        if (exchangeRate > 0) {
-          document.getElementById("amount_in_eur").innerText = (
-            total / exchangeRate
-          ).toFixed(2);
-        } else {
-          document.getElementById("amount_in_eur").innerText = "0.00";
-        }
-      }
-
-      function markManualAmount(e) {
-        e.target.setAttribute("manual", "true");
-      }
-
-      function submitForm() {
-        document.getElementById("generate-btn").disabled = true;
-        document.getElementById("spinner").style.display = "inline-block";
-        document.getElementById("result").innerHTML = "";
-
-        const data = {
-          invoiceNumber: document.getElementById("invoice_number").value.trim(),
-          clientName: document.getElementById("client_name").value.trim(),
-          clientAddress: document.getElementById("client_address").value.trim(),
-          clientNumber: document.getElementById("client_number").value.trim(),
-          invoiceDate: document.getElementById("invoice_date").value.trim(),
-          dueDate: document.getElementById("due_date").value.trim(),
-          tax: document.getElementById("tax").value.trim(),
-          subtotal: document.getElementById("subtotal").innerText.trim(),
-          total: document.getElementById("total").innerText.trim(),
-          exchangeRate: document.getElementById("exchange_rate").value.trim(),
-          currency: document.getElementById("currency").value.trim(),
-          amountInEUR: document
-            .getElementById("amount_in_eur")
-            .innerText.trim(),
-          bankDetails1: document.getElementById("bank_details_1").value.trim(),
-          bankDetails2: document.getElementById("bank_details_2").value.trim(),
-          items: [],
-        };
-
-        const tbody = document.getElementById("invoice-body");
-        for (let i = 0; i < tbody.rows.length; i++) {
-          const row = tbody.rows[i]; // <-- ЭТО добавили
-          const inputs = row.getElementsByTagName("input");
-          const rowData = [];
-          for (let input of inputs) {
-            rowData.push(input.value.trim());
-          }
-          data.items.push(rowData);
-        }
-
-        google.script.run
-          .withSuccessHandler(function (result) {
-            document.getElementById("spinner").style.display = "none";
-            document.getElementById("result").innerHTML = `
-      <div class="alert alert-success mt-4">
-        <strong>Invoice created!</strong><br>
-        <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
-        <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
-      </div>
-    `;
-          })
-          .processForm(data);
-      }
-    </script>
+    <title>Create Invoice</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   </head>
   <body class="container py-4">
     <h2 class="mb-4">Create Invoice</h2>
 
     <!-- Invoice details -->
     <div class="row mb-3">
+      <div class="col-md-3">
+        <label class="form-label">Project Name <span class="text-danger">*</span></label>
+        <input list="project_list" id="project_name" class="form-control" placeholder="Start typing to search..." required />
+        <datalist id="project_list"></datalist>
+      </div>
       <div class="col-md-3">
         <label class="form-label">Invoice Number</label>
         <input id="invoice_number" type="text" class="form-control" required />
@@ -139,14 +28,13 @@
         <label class="form-label">Client Address</label>
         <input id="client_address" type="text" class="form-control" />
       </div>
+    </div>
+
+    <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Client Number</label>
         <input id="client_number" type="text" class="form-control" />
       </div>
-    </div>
-
-    <!-- Dates and currency -->
-    <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Invoice Date</label>
         <input id="invoice_date" type="date" class="form-control" />
@@ -157,15 +45,11 @@
       </div>
       <div class="col-md-3">
         <label class="form-label">Exchange Rate</label>
-        <input
-          id="exchange_rate"
-          type="number"
-          step="0.0001"
-          class="form-control"
-          value="1.0000"
-          oninput="updateTotals()"
-        />
+        <input id="exchange_rate" type="number" step="0.0001" class="form-control" value="1.0000" oninput="updateTotals()" />
       </div>
+    </div>
+
+    <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Currency</label>
         <select id="currency" class="form-select">
@@ -173,17 +57,17 @@
           <option value="€">€ (EUR)</option>
         </select>
       </div>
-    </div>
-
-    <!-- Bank Details -->
-    <div class="row mb-3">
-      <div class="col-md-6">
-        <label class="form-label">Bank Details 1</label>
-        <textarea id="bank_details_1" class="form-control" rows="2"></textarea>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Bank Details 2</label>
-        <textarea id="bank_details_2" class="form-control" rows="2"></textarea>
+      <div class="col-md-9">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="form-label">Bank Details 1</label>
+            <textarea id="bank_details_1" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Bank Details 2</label>
+            <textarea id="bank_details_2" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -204,38 +88,19 @@
           <td><input type="text" class="form-control" value="1" /></td>
           <td><input type="text" class="form-control" /></td>
           <td><input type="text" class="form-control" /></td>
-          <td>
-            <input type="text" class="form-control" oninput="updateTotals()" />
-          </td>
-          <td>
-            <input type="text" class="form-control" oninput="updateTotals()" />
-          </td>
-          <td>
-            <input
-              type="text"
-              class="form-control amount"
-              onfocus="markManualAmount(event)"
-            />
-          </td>
+          <td><input type="text" class="form-control" oninput="updateTotals()" /></td>
+          <td><input type="text" class="form-control" oninput="updateTotals()" /></td>
+          <td><input type="text" class="form-control amount" onfocus="markManualAmount(event)" /></td>
         </tr>
       </tbody>
     </table>
 
-    <button class="btn btn-outline-primary mb-3" onclick="addRow()">
-      + Add Row
-    </button>
+    <button class="btn btn-outline-primary mb-3" onclick="addRow()">+ Add Row</button>
 
-    <!-- Totals -->
     <div class="row mb-3">
       <div class="col-md-3">
         <label class="form-label">Tax (%)</label>
-        <input
-          id="tax"
-          type="number"
-          class="form-control"
-          value="19"
-          oninput="updateTotals()"
-        />
+        <input id="tax" type="number" class="form-control" value="19" oninput="updateTotals()" />
       </div>
       <div class="col-md-3">
         <label class="form-label">Subtotal</label>
@@ -251,27 +116,131 @@
       </div>
     </div>
 
-    <!-- Submit button -->
     <div class="row mt-4">
       <div class="col-md-12 text-end">
-        <button
-          id="generate-btn"
-          class="btn btn-success"
-          onclick="submitForm()"
-        >
-          Generate Invoice
-        </button>
-        <div
-          id="spinner"
-          class="spinner-border text-primary ms-3"
-          style="display: none"
-          role="status"
-        >
+        <button id="generate-btn" class="btn btn-success" onclick="submitForm()">Generate Invoice</button>
+        <div id="spinner" class="spinner-border text-primary ms-3" style="display: none" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
     </div>
 
     <div id="result" class="mt-4"></div>
+
+    <!-- Scripts -->
+    <script>
+      let validProjectNames = [];
+
+      function populateProjectNames() {
+        google.script.run.withSuccessHandler(function(projects) {
+          validProjectNames = projects;
+          const datalist = document.getElementById("project_list");
+          datalist.innerHTML = "";
+          projects.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            datalist.appendChild(opt);
+          });
+        }).getProjectNames();
+      }
+
+      function addRow() {
+        const tbody = document.getElementById("invoice-body");
+        const rowNumber = tbody.rows.length + 1;
+        const row = tbody.insertRow();
+        for (let i = 0; i < 6; i++) {
+          const cell = row.insertCell();
+          const input = document.createElement("input");
+          input.className = "form-control";
+          input.type = "text";
+          if (i === 0) input.value = rowNumber;
+          if (i === 5) {
+            input.classList.add("amount");
+            input.onfocus = markManualAmount;
+          }
+          input.oninput = updateTotals;
+          cell.appendChild(input);
+        }
+      }
+
+      function updateTotals() {
+        const tbody = document.getElementById("invoice-body");
+        let subtotal = 0;
+        for (let row of tbody.rows) {
+          const inputs = row.getElementsByTagName("input");
+          const qty = parseFloat(inputs[3].value) || 0;
+          const rate = parseFloat(inputs[4].value) || 0;
+          const amountCell = inputs[5];
+          if (!amountCell.hasAttribute("manual")) {
+            amountCell.value = (qty * rate).toFixed(2);
+          }
+          subtotal += parseFloat(amountCell.value) || 0;
+        }
+        document.getElementById("subtotal").innerText = subtotal.toFixed(2);
+        const tax = parseFloat(document.getElementById("tax").value) || 0;
+        const total = subtotal + (subtotal * tax) / 100;
+        document.getElementById("total").innerText = total.toFixed(2);
+        const exchangeRate = parseFloat(document.getElementById("exchange_rate").value);
+        document.getElementById("amount_in_eur").innerText = exchangeRate > 0 ? (total / exchangeRate).toFixed(2) : "0.00";
+      }
+
+      function markManualAmount(e) {
+        e.target.setAttribute("manual", "true");
+      }
+
+      function submitForm() {
+        const input = document.getElementById("project_name");
+        const projectValue = input.value.trim();
+
+        if (!validProjectNames.includes(projectValue)) {
+          alert("Please select a valid Project Name from the list.");
+          input.focus();
+          return;
+        }
+
+        document.getElementById("generate-btn").disabled = true;
+        document.getElementById("spinner").style.display = "inline-block";
+        document.getElementById("result").innerHTML = "";
+
+        const data = {
+          projectName: projectValue,
+          invoiceNumber: document.getElementById("invoice_number").value.trim(),
+          clientName: document.getElementById("client_name").value.trim(),
+          clientAddress: document.getElementById("client_address").value.trim(),
+          clientNumber: document.getElementById("client_number").value.trim(),
+          invoiceDate: document.getElementById("invoice_date").value.trim(),
+          dueDate: document.getElementById("due_date").value.trim(),
+          tax: document.getElementById("tax").value.trim(),
+          subtotal: document.getElementById("subtotal").innerText.trim(),
+          total: document.getElementById("total").innerText.trim(),
+          exchangeRate: document.getElementById("exchange_rate").value.trim(),
+          currency: document.getElementById("currency").value.trim(),
+          amountInEUR: document.getElementById("amount_in_eur").innerText.trim(),
+          bankDetails1: document.getElementById("bank_details_1").value.trim(),
+          bankDetails2: document.getElementById("bank_details_2").value.trim(),
+          items: [],
+        };
+
+        const tbody = document.getElementById("invoice-body");
+        for (let row of tbody.rows) {
+          const inputs = row.getElementsByTagName("input");
+          const rowData = Array.from(inputs).map(i => i.value.trim());
+          data.items.push(rowData);
+        }
+
+        google.script.run.withSuccessHandler(function(result) {
+          document.getElementById("spinner").style.display = "none";
+          document.getElementById("result").innerHTML = `
+            <div class="alert alert-success mt-4">
+              <strong>Invoice created!</strong><br>
+              <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
+              <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
+            </div>
+          `;
+        }).processForm(data);
+      }
+
+      window.onload = populateProjectNames;
+    </script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-const TEMPLATE_ID = '1hqHM3O7pZNZ56zgb-nZJubYTs1zB2z1O42KCDRAXx2M'; // Твой шаблон
+const TEMPLATE_ID = '1hqHM3O7pZNZ56zgb-nZJubYTs1zB2z1O42KCDRAXx2M';
 const FOLDER_ID = '1eHbDCawBYyRse6UNuTS3Z3coxeb80Zqr';
 const SPREADSHEET_ID = '1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8';
 
@@ -12,15 +12,42 @@ function formatDate(dateStr) {
   return `${dd}/${mm}/${yyyy}`;
 }
 
+function getProjectNames() {
+  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Lists");
+  const values = sheet.getRange("A:A").getValues().flat().filter(String);
+  return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+}
+
+function getProjectDetails(projectName) {
+  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Lists");
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][0] === projectName) {
+      const tax = typeof values[i][5] === 'number' ? values[i][5] * 100 : parseFloat(values[i][5]);
+      const currencyMap = { 'USD': '$', 'EUR': '€', 'UAH': '₴' };
+      return {
+        clientName: values[i][1] || '',
+        clientNumber: `${values[i][2] || ''} ${values[i][3] || ''}`.trim(),
+        clientAddress: values[i][4] || '',
+        tax: isNaN(tax) ? 0 : tax.toFixed(0),
+        currency: currencyMap[values[i][8]] || values[i][8],
+        paymentDelay: parseInt(values[i][10]) || 0
+      };
+    }
+  }
+  return null;
+}
+
 function processForm(data) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
 
   if (sheet.getLastRow() === 0) {
     const baseHeaders = [
-      'Invoice Number', 'Client Name', 'Client Address', 'Client Number',
+      'Project Name', 'Invoice Number', 'Client Name', 'Client Address', 'Client Number',
       'Invoice Date', 'Due Date', 'Tax Rate (%)', 'Subtotal', 'Tax Amount',
       'Total', 'Exchange Rate', 'Currency', 'Amount in EUR',
-      'Bank Details 1', 'Bank Details 2',  // Добавлены новые поля
+      'Bank Details 1', 'Bank Details 2',
       'Google Doc Link', 'PDF Link'
     ];
 
@@ -47,11 +74,12 @@ function processForm(data) {
 
   const itemCells = [];
   data.items.forEach((row, i) => {
-    row[0] = (i + 1).toString(); // Номер строки
+    row[0] = (i + 1).toString();
     itemCells.push(...row);
   });
 
   const row = [
+    data.projectName,
     data.invoiceNumber,
     data.clientName,
     data.clientAddress,
@@ -65,7 +93,7 @@ function processForm(data) {
     parseFloat(data.exchangeRate).toFixed(4),
     data.currency,
     parseFloat(data.amountInEUR).toFixed(2),
-    data.bankDetails1, // Новые поля
+    data.bankDetails1,
     data.bankDetails2,
     '', // Google Doc Link
     '', // PDF Link
@@ -77,15 +105,14 @@ function processForm(data) {
 
   const doc = createInvoiceDoc(data, formattedDate, formattedDueDate, subtotalNum, taxRate, taxAmount, totalAmount);
 
-  Utilities.sleep(500); // Пауза перед генерацией PDF
+  Utilities.sleep(500);
   const pdf = doc.getAs('application/pdf');
-
-  Utilities.sleep(500); // Пауза перед сохранением PDF
+  Utilities.sleep(500);
   const folder = DriveApp.getFolderById(FOLDER_ID);
   const pdfFile = folder.createFile(pdf).setName(`${data.invoiceNumber}.pdf`);
 
-  sheet.getRange(newRowIndex, 16).setValue(doc.getUrl());  // Google Doc Link
-  sheet.getRange(newRowIndex, 17).setValue(pdfFile.getUrl()); // PDF Link
+  sheet.getRange(newRowIndex, 17).setValue(doc.getUrl());
+  sheet.getRange(newRowIndex, 18).setValue(pdfFile.getUrl());
 
   return {
     docUrl: doc.getUrl(),
@@ -97,7 +124,7 @@ function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRa
   const template = DriveApp.getFileById(TEMPLATE_ID);
   const folder = DriveApp.getFolderById(FOLDER_ID);
 
-  Utilities.sleep(500); // Пауза перед копированием шаблона
+  Utilities.sleep(500);
   const copy = template.makeCopy(`Invoice ${data.invoiceNumber}`, folder);
   const doc = DocumentApp.openById(copy.getId());
   const body = doc.getBody();
@@ -124,17 +151,15 @@ function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRa
     throw new Error('❗️Не найдена таблица с нужной шапкой (#, Services, Period, Quantity, Rate/hour, Amount). Проверьте шаблон!');
   }
 
-  // Удаляем все строки кроме шапки
   const existingRows = targetTable.getNumRows();
   for (let i = existingRows - 1; i > 0; i--) {
     targetTable.removeRow(i);
   }
 
-  // Добавляем строки
   data.items.forEach(row => {
     const newRow = targetTable.appendTableRow();
     row.forEach((cell, index) => {
-      if (index === 4 || index === 5) { // Rate/hour и Amount
+      if (index === 4 || index === 5) {
         newRow.appendTableCell(cell ? `${data.currency}${parseFloat(cell).toFixed(2)}` : '');
       } else {
         newRow.appendTableCell(cell || '');
@@ -142,11 +167,11 @@ function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRa
     });
   });
 
-  // Заменяем плейсхолдеры
+  body.replaceText('\\{Project Name\\}', data.projectName);
   body.replaceText('\\{Название клиента\\}', data.clientName);
   body.replaceText('\\{Адрес клиента\\}', data.clientAddress);
   body.replaceText('\\{Номер клиента\\}', data.clientNumber);
-  body.replaceText('\\{Номер счета\\}', data.invoiceNumber); // Новый — Номер счета
+  body.replaceText('\\{Номер счета\\}', data.invoiceNumber);
   body.replaceText('\\{Дата счета\\}', formattedDate);
   body.replaceText('\\{Due date\\}', formattedDueDate);
   body.replaceText('\\{VAT%\\}', taxRate.toFixed(0));
@@ -154,10 +179,9 @@ function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRa
   body.replaceText('\\{Сумма общая\\}', `${data.currency}${totalAmount.toFixed(2)}`);
   body.replaceText('\\{Exchange Rate\\}', parseFloat(data.exchangeRate).toFixed(4));
   body.replaceText('\\{Amount in EUR\\}', `€${parseFloat(data.amountInEUR).toFixed(2)}`);
-  body.replaceText('\\{Банковские реквизиты1\\}', data.bankDetails1); // Новый
-  body.replaceText('\\{Банковские реквизиты2\\}', data.bankDetails2); // Новый
+  body.replaceText('\\{Банковские реквизиты1\\}', data.bankDetails1);
+  body.replaceText('\\{Банковские реквизиты2\\}', data.bankDetails2);
 
-  // Плейсхолдеры для работ
   for (let i = 0; i < 20; i++) {
     const item = data.items[i];
     if (item) {
@@ -170,13 +194,8 @@ function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRa
       body.replaceText(`\\{Вид работ-${i + 1}\\}`, service);
       body.replaceText(`\\{Период работы-${i + 1}\\}`, period);
       body.replaceText(`\\{Часы-${i + 1}\\}`, qty);
-
-      if (rate) {
-        body.replaceText(`\\{Рейт-${i + 1}\\}`, rate);
-      }
-      if (amount) {
-        body.replaceText(`\\{Сумма-${i + 1}\\}`, amount);
-      }
+      if (rate) body.replaceText(`\\{Рейт-${i + 1}\\}`, rate);
+      if (amount) body.replaceText(`\\{Сумма-${i + 1}\\}`, amount);
     }
   }
 
