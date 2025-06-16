@@ -67,10 +67,9 @@
         <p class="form-control-plaintext" id="due_date"></p>
       </div>
       <div class="col-md-3">
-        <label class="form-label" for="exchange_rate" id="exchange_rate_label"
-          >Exchange Rate</label
-        >
-        <input id="exchange_rate" type="text" class="form-control" />
+        <label class="form-label">Exchange Rate</label>
+        <p class="form-control-plaintext" id="exchange_rate_view"></p>
+        <input id="exchange_rate" type="text" class="form-control d-none" />
       </div>
     </div>
 
@@ -226,7 +225,7 @@
 
         const invoiceDate = document.getElementById("invoice_date").value;
         if (invoiceDate) {
-          let baseDate = new Date(invoiceDate);
+          const baseDate = new Date(invoiceDate);
           let dueDate;
           if (details.dayType === "WD") {
             dueDate = addWorkingDays(baseDate, details.paymentDelay);
@@ -238,19 +237,18 @@
             formatDateDDMMYYYY(dueDate);
         }
 
-        const exchangeInput = document.getElementById("exchange_rate");
+        const exchangeRateView = document.getElementById("exchange_rate_view");
+        const exchangeRateInput = document.getElementById("exchange_rate");
+
         if (details.currency !== "$") {
-          exchangeInput.value = "";
-          exchangeInput.disabled = true;
-          document.getElementById("amount_in_eur").innerText = "";
+          exchangeRateView.textContent = "";
+          exchangeRateInput.value = "";
+          exchangeRateInput.classList.add("d-none");
+          document.getElementById("amount_in_eur").textContent = "";
         } else {
-          exchangeInput.disabled = false;
-          exchangeInput.value = "1.0000";
-          const total =
-            parseFloat(document.getElementById("total").innerText) || 0;
-          document.getElementById("amount_in_eur").innerText = (
-            total / 1
-          ).toFixed(2);
+          exchangeRateInput.value = "1.0000";
+          exchangeRateInput.classList.remove("d-none");
+          exchangeRateView.textContent = "";
         }
 
         updateTotals();
@@ -287,6 +285,7 @@
           }
           subtotal += parseFloat(amountCell.value) || 0;
         }
+
         document.getElementById("subtotal").innerText = subtotal.toFixed(2);
         const tax = parseFloat(document.getElementById("tax").textContent) || 0;
         const total = subtotal + (subtotal * tax) / 100;
@@ -297,25 +296,6 @@
         );
         document.getElementById("amount_in_eur").innerText =
           exchangeRate > 0 ? (total / exchangeRate).toFixed(2) : "";
-      }
-
-      function addRow() {
-        const tbody = document.getElementById("invoice-body");
-        const rowNumber = tbody.rows.length + 1;
-        const row = tbody.insertRow();
-        for (let i = 0; i < 6; i++) {
-          const cell = row.insertCell();
-          const input = document.createElement("input");
-          input.className = "form-control";
-          input.type = "text";
-          if (i === 0) input.value = rowNumber;
-          if (i === 5) {
-            input.classList.add("amount");
-            input.onfocus = markManualAmount;
-          }
-          input.oninput = updateTotals;
-          cell.appendChild(input);
-        }
       }
 
       function markManualAmount(e) {
@@ -414,12 +394,12 @@
           .withSuccessHandler(function (result) {
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerHTML = `
-            <div class="alert alert-success mt-4">
-              <strong>Invoice created!</strong><br>
-              <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
-              <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
-            </div>
-          `;
+              <div class="alert alert-success mt-4">
+                <strong>Invoice created!</strong><br>
+                <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
+                <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
+              </div>
+            `;
           })
           .processForm(data);
       }

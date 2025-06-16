@@ -24,8 +24,8 @@ function getProjectDetails(projectName) {
 
   const bankMap = {};
   for (let i = 1; i < values.length; i++) {
-    const shortName = values[i][16]; // Q
-    const fullDetails = values[i][17]; // R
+    const shortName = values[i][16];
+    const fullDetails = values[i][17];
     if (shortName && fullDetails) {
       bankMap[shortName] = fullDetails;
     }
@@ -87,12 +87,14 @@ function processForm(data) {
 
     const itemHeaders = [];
     for (let i = 1; i <= 20; i++) {
-      itemHeaders.push(`Row ${i} #`);
-      itemHeaders.push(`Row ${i} Service`);
-      itemHeaders.push(`Row ${i} Period`);
-      itemHeaders.push(`Row ${i} Quantity`);
-      itemHeaders.push(`Row ${i} Rate/hour`);
-      itemHeaders.push(`Row ${i} Amount`);
+      itemHeaders.push(
+        `Row ${i} #`,
+        `Row ${i} Service`,
+        `Row ${i} Period`,
+        `Row ${i} Quantity`,
+        `Row ${i} Rate/hour`,
+        `Row ${i} Amount`
+      );
     }
 
     sheet.appendRow([...baseHeaders, ...itemHeaders]);
@@ -100,27 +102,26 @@ function processForm(data) {
 
   const formattedDate = formatDate(data.invoiceDate);
   const formattedDueDate = data.dueDate;
-
   const subtotalNum = parseFloat(data.subtotal) || 0;
   const taxRate = parseFloat(data.tax) || 0;
   const taxAmount = (subtotalNum * taxRate) / 100;
   const totalAmount = subtotalNum + taxAmount;
+
+  const exchangeRateVal = parseFloat(data.exchangeRate);
+  const amountInEURVal = parseFloat(data.amountInEUR);
+
+  const exchangeRateToWrite = isNaN(exchangeRateVal)
+    ? ""
+    : exchangeRateVal.toFixed(4);
+  const amountInEURToWrite = isNaN(amountInEURVal)
+    ? ""
+    : amountInEURVal.toFixed(2);
 
   const itemCells = [];
   data.items.forEach((row, i) => {
     row[0] = (i + 1).toString();
     itemCells.push(...row);
   });
-
-  const exchangeRateValue = parseFloat(data.exchangeRate);
-  const amountInEURValue = parseFloat(data.amountInEUR);
-
-  const exchangeRateToWrite = isNaN(exchangeRateValue)
-    ? ""
-    : exchangeRateValue.toFixed(4);
-  const amountInEURToWrite = isNaN(amountInEURValue)
-    ? ""
-    : amountInEURValue.toFixed(2);
 
   const row = [
     data.projectName,
@@ -140,8 +141,8 @@ function processForm(data) {
     data.bankDetails1,
     data.bankDetails2,
     data.comment || "",
-    "", // Google Doc Link
-    "", // PDF Link
+    "",
+    "",
     ...itemCells,
   ];
 
@@ -157,10 +158,8 @@ function processForm(data) {
     taxAmount,
     totalAmount
   );
-
   Utilities.sleep(500);
   const pdf = doc.getAs("application/pdf");
-  Utilities.sleep(500);
   const folder = DriveApp.getFolderById(FOLDER_ID);
   const pdfFile = folder.createFile(pdf).setName(`${data.invoiceNumber}.pdf`);
 
@@ -172,7 +171,6 @@ function processForm(data) {
     pdfUrl: pdfFile.getUrl(),
   };
 }
-
 function createInvoiceDoc(
   data,
   formattedDate,
@@ -196,21 +194,10 @@ function createInvoiceDoc(
   for (const table of tables) {
     if (table.getNumRows() > 0) {
       const headerRow = table.getRow(0);
-      const headerTexts = [];
-      for (let i = 0; i < headerRow.getNumCells(); i++) {
-        headerTexts.push(headerRow.getCell(i).getText().trim());
-      }
-      const expectedHeaders = [
-        "#",
-        "Services",
-        "Period",
-        "Quantity",
-        "Rate/hour",
-        "Amount",
-      ];
-      if (
-        expectedHeaders.every((header, index) => headerTexts[index] === header)
-      ) {
+      const headers = Array.from({ length: headerRow.getNumCells() }, (_, i) =>
+        headerRow.getCell(i).getText().trim()
+      );
+      if (headers.join() === "#,Services,Period,Quantity,Rate/hour,Amount") {
         targetTable = table;
         break;
       }
@@ -223,8 +210,7 @@ function createInvoiceDoc(
     );
   }
 
-  const existingRows = targetTable.getNumRows();
-  for (let i = existingRows - 1; i > 0; i--) {
+  for (let i = targetTable.getNumRows() - 1; i > 0; i--) {
     targetTable.removeRow(i);
   }
 
@@ -281,16 +267,15 @@ function createInvoiceDoc(
       const qty = item[3] || "";
       const rate = item[4]
         ? `${data.currency}${parseFloat(item[4]).toFixed(2)}`
-        : null;
+        : "";
       const amount = item[5]
         ? `${data.currency}${parseFloat(item[5]).toFixed(2)}`
-        : null;
-
+        : "";
       body.replaceText(`\\{Вид работ-${i + 1}\\}`, service);
       body.replaceText(`\\{Период работы-${i + 1}\\}`, period);
       body.replaceText(`\\{Часы-${i + 1}\\}`, qty);
-      if (rate) body.replaceText(`\\{Рейт-${i + 1}\\}`, rate);
-      if (amount) body.replaceText(`\\{Сумма-${i + 1}\\}`, amount);
+      body.replaceText(`\\{Рейт-${i + 1}\\}`, rate);
+      body.replaceText(`\\{Сумма-${i + 1}\\}`, amount);
     }
   }
 
