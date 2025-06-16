@@ -124,9 +124,9 @@ function processForm(data) {
     subtotalNum.toFixed(2),
     taxAmount.toFixed(2),
     totalAmount.toFixed(2),
-    parseFloat(data.exchangeRate).toFixed(4),
+    data.currency === "$" ? parseFloat(data.exchangeRate).toFixed(4) : "",
     data.currency,
-    parseFloat(data.amountInEUR).toFixed(2),
+    data.currency === "$" ? parseFloat(data.amountInEUR).toFixed(2) : "",
     data.bankDetails1,
     data.bankDetails2,
     data.comment || "", // Новое поле
