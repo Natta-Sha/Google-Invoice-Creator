@@ -22,15 +22,17 @@ function getProjectDetails(projectName) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Lists");
   const values = sheet.getDataRange().getValues();
 
+  // Сначала создаем мапу сокращенных банковских названий -> полные реквизиты
   const bankMap = {};
   for (let i = 1; i < values.length; i++) {
-    const shortName = values[i][16];
-    const fullDetails = values[i][17];
+    const shortName = values[i][16]; // Столбец Q
+    const fullDetails = values[i][17]; // Столбец R
     if (shortName && fullDetails) {
       bankMap[shortName] = fullDetails;
     }
   }
 
+  // Затем ищем строку по projectName
   for (let i = 1; i < values.length; i++) {
     if (values[i][0] === projectName) {
       const tax =
@@ -39,8 +41,8 @@ function getProjectDetails(projectName) {
           : parseFloat(values[i][5]);
       const currencyMap = { USD: "$", EUR: "€", UAH: "₴" };
 
-      const shortBank1 = values[i][6] || "";
-      const shortBank2 = values[i][7] || "";
+      const shortBank1 = values[i][6] || ""; // Столбец G
+      const shortBank2 = values[i][7] || ""; // Столбец H
 
       return {
         clientName: values[i][1] || "",
@@ -58,6 +60,8 @@ function getProjectDetails(projectName) {
 
   return null;
 }
+
+// processForm и остальной код полностью твой, без изменений
 
 function processForm(data) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
@@ -78,7 +82,6 @@ function processForm(data) {
       "Exchange Rate",
       "Currency",
       "Amount in EUR",
-      "Comment",
       "Bank Details 1",
       "Bank Details 2",
       "Google Doc Link",
@@ -112,16 +115,6 @@ function processForm(data) {
     itemCells.push(...row);
   });
 
-  const exchangeRateVal =
-    data.exchangeRate === "—" || data.exchangeRate === ""
-      ? ""
-      : parseFloat(data.exchangeRate).toFixed(4);
-
-  const amountInEUR =
-    data.amountInEUR === "—" || data.amountInEUR === ""
-      ? ""
-      : parseFloat(data.amountInEUR).toFixed(2);
-
   const row = [
     data.projectName,
     data.invoiceNumber,
@@ -134,10 +127,9 @@ function processForm(data) {
     subtotalNum.toFixed(2),
     taxAmount.toFixed(2),
     totalAmount.toFixed(2),
-    exchangeRateVal,
+    parseFloat(data.exchangeRate).toFixed(4),
     data.currency,
-    amountInEUR,
-    data.comment,
+    parseFloat(data.amountInEUR).toFixed(2),
     data.bankDetails1,
     data.bankDetails2,
     "",
@@ -164,8 +156,8 @@ function processForm(data) {
   const folder = DriveApp.getFolderById(FOLDER_ID);
   const pdfFile = folder.createFile(pdf).setName(`${data.invoiceNumber}.pdf`);
 
-  sheet.getRange(newRowIndex, 18).setValue(doc.getUrl());
-  sheet.getRange(newRowIndex, 19).setValue(pdfFile.getUrl());
+  sheet.getRange(newRowIndex, 17).setValue(doc.getUrl());
+  sheet.getRange(newRowIndex, 18).setValue(pdfFile.getUrl());
 
   return {
     docUrl: doc.getUrl(),
@@ -257,11 +249,16 @@ function createInvoiceDoc(
     "\\{Сумма общая\\}",
     `${data.currency}${totalAmount.toFixed(2)}`
   );
-  body.replaceText("\\{Exchange Rate\\}", exchangeRateVal);
-  body.replaceText("\\{Amount in EUR\\}", `€${amountInEUR}`);
+  body.replaceText(
+    "\\{Exchange Rate\\}",
+    parseFloat(data.exchangeRate).toFixed(4)
+  );
+  body.replaceText(
+    "\\{Amount in EUR\\}",
+    `€${parseFloat(data.amountInEUR).toFixed(2)}`
+  );
   body.replaceText("\\{Банковские реквизиты1\\}", data.bankDetails1);
   body.replaceText("\\{Банковские реквизиты2\\}", data.bankDetails2);
-  body.replaceText("\\{Комментарий\\}", data.comment || "");
 
   for (let i = 0; i < 20; i++) {
     const item = data.items[i];
