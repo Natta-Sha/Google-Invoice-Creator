@@ -12,6 +12,10 @@
       .form-label {
         font-weight: bold;
       }
+      .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.1rem rgba(220, 53, 69, 0.25) !important;
+      }
     </style>
   </head>
   <body class="container py-4">
@@ -63,6 +67,7 @@
         <label class="form-label" for="exchange_rate" id="exchange_rate_label"
           >Exchange Rate</label
         >
+        <p class="form-control-plaintext" id="exchange_rate_display"></p>
         <input
           id="exchange_rate"
           type="number"
@@ -70,6 +75,7 @@
           class="form-control"
           value="1.0000"
           oninput="updateTotals()"
+          style="display: none"
         />
       </div>
     </div>
@@ -157,7 +163,7 @@
       </div>
       <div class="col-md-3">
         <label class="form-label">Amount in EUR</label>
-        <p class="form-control-plaintext" id="amount_in_eur">0.00</p>
+        <p class="form-control-plaintext" id="amount_in_eur"></p>
       </div>
     </div>
 
@@ -210,8 +216,9 @@
         document.getElementById("tax").textContent = details.tax;
 
         const currencyMap = { $: "$ (USD)", "€": "€ (EUR)", "₴": "₴ (UAH)" };
+        const currencySymbol = details.currency;
         document.getElementById("currency").textContent =
-          currencyMap[details.currency] || details.currency;
+          currencyMap[currencySymbol] || currencySymbol;
 
         document.getElementById("bank_details_1").textContent =
           details.bankDetails1 || "";
@@ -232,21 +239,22 @@
             formatDateDDMMYYYY(dueDate);
         }
 
-        const exchangeRateInput = document.getElementById("exchange_rate");
-        const exchangeRateLabel = document.getElementById(
-          "exchange_rate_label"
+        const exchangeInput = document.getElementById("exchange_rate");
+        const exchangeDisplay = document.getElementById(
+          "exchange_rate_display"
         );
 
-        if (["€", "₴"].includes(details.currency)) {
-          exchangeRateInput.value = "-";
-          exchangeRateInput.disabled = true;
-          exchangeRateLabel.innerHTML = "Exchange Rate";
+        if (currencySymbol !== "$") {
+          exchangeInput.style.display = "none";
+          exchangeDisplay.textContent = "";
+          document.getElementById("amount_in_eur").textContent = "";
         } else {
-          exchangeRateInput.disabled = false;
-          exchangeRateInput.value = "1.0000";
-          exchangeRateLabel.innerHTML = `
-            Exchange Rate (EUR 1 = USD ...)
-            <a href="https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/745582/745582?dateSelect=2025&tsTab=0&listId=www_sdks_b01012_3&tsId=BBEX3.D.USD.EUR.BB.AC.000&id=0" target="_blank" class="ms-1 btn btn-link btn-sm p-0">Link</a>`;
+          exchangeInput.style.display = "block";
+          exchangeInput.value = "1.0000";
+          exchangeDisplay.innerHTML = `
+      Exchange Rate (EUR 1 = USD ...)
+      <a href="https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/745582/745582?dateSelect=2025&tsTab=0&listId=www_sdks_b01012_3&tsId=BBEX3.D.USD.EUR.BB.AC.000&id=0" target="_blank" class="ms-1 btn btn-link btn-sm p-0">Link</a>
+    `;
         }
 
         updateTotals();
@@ -341,12 +349,35 @@
       }
 
       function submitForm() {
-        const input = document.getElementById("project_name");
-        const projectValue = input.value.trim();
+        const errors = [];
+
+        const invoiceNumberEl = document.getElementById("invoice_number");
+        const invoiceDateEl = document.getElementById("invoice_date");
+        const projectNameEl = document.getElementById("project_name");
+
+        const invoiceNumber = invoiceNumberEl.value.trim();
+        const invoiceDate = invoiceDateEl.value.trim();
+        const projectValue = projectNameEl.value.trim();
+
+        [projectNameEl, invoiceNumberEl, invoiceDateEl].forEach((el) =>
+          el.classList.remove("is-invalid")
+        );
 
         if (!validProjectNames.includes(projectValue)) {
-          alert("Please select a valid Project Name from the list.");
-          input.focus();
+          errors.push("Project Name must be selected from the list.");
+          projectNameEl.classList.add("is-invalid");
+        }
+        if (!invoiceNumber) {
+          errors.push("Invoice Number is required.");
+          invoiceNumberEl.classList.add("is-invalid");
+        }
+        if (!invoiceDate) {
+          errors.push("Invoice Date is required.");
+          invoiceDateEl.classList.add("is-invalid");
+        }
+
+        if (errors.length > 0) {
+          showValidationError(errors);
           return;
         }
 
@@ -409,6 +440,23 @@
       }
 
       window.onload = populateProjectNames;
+      function showValidationError(messages) {
+        const result = document.getElementById("result");
+        result.innerHTML = `
+    <div class="alert alert-danger">
+      <strong>Please fill out the following fields:</strong>
+      <ul>${messages.map((msg) => `<li>${msg}</li>`).join("")}</ul>
+    </div>
+  `;
+        result.scrollIntoView({ behavior: "smooth" });
+      }
+
+      ["project_name", "invoice_number", "invoice_date"].forEach((id) => {
+        document.getElementById(id).addEventListener("input", () => {
+          document.getElementById(id).classList.remove("is-invalid");
+          document.getElementById("result").innerHTML = "";
+        });
+      });
     </script>
   </body>
 </html>
