@@ -53,16 +53,16 @@ function getProjectDetails(projectName) {
 }
 
 function getExchangeRate(dateStr) {
-  const url =
-    "https://api.statistiken.bundesbank.de/rest/data/BBEX3/D.EUR.USD.BB.AC.000" +
-    `?startPeriod=${dateStr}&lastNObservations=1`;
+  const url = `https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?startPeriod=${dateStr}&endPeriod=${dateStr}`;
   const res = UrlFetchApp.fetch(url, {
     headers: { Accept: "application/vnd.sdmx.data+json" },
     muteHttpExceptions: true,
   });
+
   try {
     const json = JSON.parse(res.getContentText());
-    const obs = json.dataSets[0].series["0:0:0:0:0"].observations;
+    const obs = json?.dataSets?.[0]?.series?.["0:0:0:0:0"]?.observations;
+    if (!obs) return "";
     const key = Object.keys(obs)[0];
     return parseFloat(obs[key][0]).toFixed(4);
   } catch (e) {
@@ -180,7 +180,8 @@ function createInvoiceDoc(
   );
   const doc = DocumentApp.openById(copy.getId()),
     body = doc.getBody();
-  // ... таблица и items ...
+  // items insertion skipped for brevity
+
   body.replaceText(
     "\\{Exchange Rate\\}",
     data.currency === "€" ? data.exchangeRate : ""
