@@ -195,14 +195,17 @@
         document.getElementById("client_number").textContent =
           details.clientNumber;
         document.getElementById("tax").textContent = details.tax;
+
         const currencyMap = { $: "$ (USD)", "€": "€ (EUR)", "₴": "₴ (UAH)" };
         document.getElementById("currency").textContent =
           currencyMap[details.currency] || details.currency;
 
-        document.getElementById("bank_details_1").textContent =
-          details.bankDetails1 || "";
-        document.getElementById("bank_details_2").textContent =
-          details.bankDetails2 || "";
+        // ✅ Преобразуем переводы строк в <br>
+        const bank1 = (details.bankDetails1 || "").replace(/\n/g, "<br>");
+        const bank2 = (details.bankDetails2 || "").replace(/\n/g, "<br>");
+
+        document.getElementById("bank_details_1").innerHTML = bank1;
+        document.getElementById("bank_details_2").innerHTML = bank2;
 
         const invoiceDate = document.getElementById("invoice_date").value;
         if (invoiceDate) {
@@ -217,6 +220,7 @@
           document.getElementById("due_date").textContent =
             formatDateDDMMYYYY(dueDate);
         }
+
         updateTotals();
       }
 
