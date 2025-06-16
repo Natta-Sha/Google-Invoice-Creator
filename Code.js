@@ -22,17 +22,15 @@ function getProjectDetails(projectName) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Lists");
   const values = sheet.getDataRange().getValues();
 
-  // Сначала создаем мапу сокращенных банковских названий -> полные реквизиты
   const bankMap = {};
   for (let i = 1; i < values.length; i++) {
-    const shortName = values[i][16]; // Столбец Q
-    const fullDetails = values[i][17]; // Столбец R
+    const shortName = values[i][16]; // Q
+    const fullDetails = values[i][17]; // R
     if (shortName && fullDetails) {
       bankMap[shortName] = fullDetails;
     }
   }
 
-  // Затем ищем строку по projectName
   for (let i = 1; i < values.length; i++) {
     if (values[i][0] === projectName) {
       const tax =
@@ -41,8 +39,8 @@ function getProjectDetails(projectName) {
           : parseFloat(values[i][5]);
       const currencyMap = { USD: "$", EUR: "€", UAH: "₴" };
 
-      const shortBank1 = values[i][6] || ""; // Столбец G
-      const shortBank2 = values[i][7] || ""; // Столбец H
+      const shortBank1 = values[i][6] || "";
+      const shortBank2 = values[i][7] || "";
 
       return {
         clientName: values[i][1] || "",
@@ -60,8 +58,6 @@ function getProjectDetails(projectName) {
 
   return null;
 }
-
-// processForm и остальной код полностью твой, без изменений
 
 function processForm(data) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
@@ -84,6 +80,7 @@ function processForm(data) {
       "Amount in EUR",
       "Bank Details 1",
       "Bank Details 2",
+      "Comment", // Добавлено
       "Google Doc Link",
       "PDF Link",
     ];
@@ -132,8 +129,9 @@ function processForm(data) {
     parseFloat(data.amountInEUR).toFixed(2),
     data.bankDetails1,
     data.bankDetails2,
-    "",
-    "",
+    data.comment || "", // Новое поле
+    "", // Google Doc Link
+    "", // PDF Link
     ...itemCells,
   ];
 
@@ -156,8 +154,8 @@ function processForm(data) {
   const folder = DriveApp.getFolderById(FOLDER_ID);
   const pdfFile = folder.createFile(pdf).setName(`${data.invoiceNumber}.pdf`);
 
-  sheet.getRange(newRowIndex, 17).setValue(doc.getUrl());
-  sheet.getRange(newRowIndex, 18).setValue(pdfFile.getUrl());
+  sheet.getRange(newRowIndex, 18).setValue(doc.getUrl());
+  sheet.getRange(newRowIndex, 19).setValue(pdfFile.getUrl());
 
   return {
     docUrl: doc.getUrl(),
@@ -259,6 +257,7 @@ function createInvoiceDoc(
   );
   body.replaceText("\\{Банковские реквизиты1\\}", data.bankDetails1);
   body.replaceText("\\{Банковские реквизиты2\\}", data.bankDetails2);
+  body.replaceText("\\{Комментарий\\}", data.comment || ""); // 🔧 Подстановка комментария
 
   for (let i = 0; i < 20; i++) {
     const item = data.items[i];

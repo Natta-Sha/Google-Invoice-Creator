@@ -60,7 +60,9 @@
         <p class="form-control-plaintext" id="due_date"></p>
       </div>
       <div class="col-md-3">
-        <label class="form-label">Exchange Rate</label>
+        <label class="form-label" for="exchange_rate" id="exchange_rate_label"
+          >Exchange Rate</label
+        >
         <input
           id="exchange_rate"
           type="number"
@@ -81,14 +83,25 @@
         <div class="row">
           <div class="col-md-6">
             <label class="form-label">Bank Details 1</label>
-            <p class="form-control-plaintext" id="bank_details_1"></p>
+            <pre class="form-control-plaintext" id="bank_details_1"></pre>
           </div>
           <div class="col-md-6">
             <label class="form-label">Bank Details 2</label>
-            <p class="form-control-plaintext" id="bank_details_2"></p>
+            <pre class="form-control-plaintext" id="bank_details_2"></pre>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Comment -->
+    <div class="mb-3">
+      <label class="form-label">Comment</label>
+      <input
+        type="text"
+        id="comment"
+        class="form-control"
+        placeholder="Optional comment for invoice"
+      />
     </div>
 
     <!-- Items table -->
@@ -195,6 +208,7 @@
         document.getElementById("client_number").textContent =
           details.clientNumber;
         document.getElementById("tax").textContent = details.tax;
+
         const currencyMap = { $: "$ (USD)", "€": "€ (EUR)", "₴": "₴ (UAH)" };
         document.getElementById("currency").textContent =
           currencyMap[details.currency] || details.currency;
@@ -217,6 +231,24 @@
           document.getElementById("due_date").textContent =
             formatDateDDMMYYYY(dueDate);
         }
+
+        const exchangeRateInput = document.getElementById("exchange_rate");
+        const exchangeRateLabel = document.getElementById(
+          "exchange_rate_label"
+        );
+
+        if (["€", "₴"].includes(details.currency)) {
+          exchangeRateInput.value = "-";
+          exchangeRateInput.disabled = true;
+          exchangeRateLabel.innerHTML = "Exchange Rate";
+        } else {
+          exchangeRateInput.disabled = false;
+          exchangeRateInput.value = "1.0000";
+          exchangeRateLabel.innerHTML = `
+            Exchange Rate (EUR 1 = USD ...)
+            <a href="https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/745582/745582?dateSelect=2025&tsTab=0&listId=www_sdks_b01012_3&tsId=BBEX3.D.USD.EUR.BB.AC.000&id=0" target="_blank" class="ms-1 btn btn-link btn-sm p-0">Link</a>`;
+        }
+
         updateTotals();
       }
 
@@ -351,6 +383,7 @@
           bankDetails2: document
             .getElementById("bank_details_2")
             .textContent.trim(),
+          comment: document.getElementById("comment").value.trim(),
           items: [],
         };
 
