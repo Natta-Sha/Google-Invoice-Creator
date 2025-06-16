@@ -80,7 +80,7 @@ function processForm(data) {
       "Amount in EUR",
       "Bank Details 1",
       "Bank Details 2",
-      "Comment", // Добавлено
+      "Comment",
       "Google Doc Link",
       "PDF Link",
     ];
@@ -112,6 +112,16 @@ function processForm(data) {
     itemCells.push(...row);
   });
 
+  const exchangeRateValue = parseFloat(data.exchangeRate);
+  const amountInEURValue = parseFloat(data.amountInEUR);
+
+  const exchangeRateToWrite = isNaN(exchangeRateValue)
+    ? ""
+    : exchangeRateValue.toFixed(4);
+  const amountInEURToWrite = isNaN(amountInEURValue)
+    ? ""
+    : amountInEURValue.toFixed(2);
+
   const row = [
     data.projectName,
     data.invoiceNumber,
@@ -124,12 +134,12 @@ function processForm(data) {
     subtotalNum.toFixed(2),
     taxAmount.toFixed(2),
     totalAmount.toFixed(2),
-    parseFloat(data.exchangeRate).toFixed(4),
+    exchangeRateToWrite,
     data.currency,
-    parseFloat(data.amountInEUR).toFixed(2),
+    amountInEURToWrite,
     data.bankDetails1,
     data.bankDetails2,
-    data.comment || "", // Новое поле
+    data.comment || "",
     "", // Google Doc Link
     "", // PDF Link
     ...itemCells,
@@ -249,15 +259,19 @@ function createInvoiceDoc(
   );
   body.replaceText(
     "\\{Exchange Rate\\}",
-    parseFloat(data.exchangeRate).toFixed(4)
+    isNaN(parseFloat(data.exchangeRate))
+      ? ""
+      : parseFloat(data.exchangeRate).toFixed(4)
   );
   body.replaceText(
     "\\{Amount in EUR\\}",
-    `€${parseFloat(data.amountInEUR).toFixed(2)}`
+    isNaN(parseFloat(data.amountInEUR))
+      ? ""
+      : `€${parseFloat(data.amountInEUR).toFixed(2)}`
   );
   body.replaceText("\\{Банковские реквизиты1\\}", data.bankDetails1);
   body.replaceText("\\{Банковские реквизиты2\\}", data.bankDetails2);
-  body.replaceText("\\{Комментарий\\}", data.comment || ""); // 🔧 Подстановка комментария
+  body.replaceText("\\{Комментарий\\}", data.comment || "");
 
   for (let i = 0; i < 20; i++) {
     const item = data.items[i];
