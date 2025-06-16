@@ -61,13 +61,7 @@
       </div>
       <div class="col-md-3">
         <label class="form-label">Exchange Rate</label>
-        <input
-          id="exchange_rate"
-          type="text"
-          class="form-control"
-          readonly
-          value="—"
-        />
+        <p class="form-control-plaintext" id="exchange_rate">—</p>
       </div>
     </div>
 
@@ -87,6 +81,14 @@
             <p class="form-control-plaintext" id="bank_details_2"></p>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Комментарий -->
+    <div class="row mb-3">
+      <div class="col-md-12">
+        <label class="form-label">Комментарий</label>
+        <input type="text" id="comment" class="form-control" />
       </div>
     </div>
 
@@ -147,14 +149,6 @@
       </div>
     </div>
 
-    <!-- Комментарий -->
-    <div class="row mb-3">
-      <div class="col-md-12">
-        <label class="form-label">Комментарий</label>
-        <textarea id="comment" class="form-control" rows="2"></textarea>
-      </div>
-    </div>
-
     <div class="row mt-4">
       <div class="col-md-12 text-end">
         <button
@@ -208,25 +202,28 @@
         document.getElementById("currency").textContent =
           currencyMap[currencySymbol] || currencySymbol;
 
-        // 💱 Курс: только для $
-        const invoiceDate = document.getElementById("invoice_date").value;
-        if (invoiceDate && currencySymbol === "$") {
-          google.script.run
-            .withSuccessHandler(function (rate) {
-              document.getElementById("exchange_rate").value = rate || "—";
-              updateTotals();
-            })
-            .getExchangeRate(invoiceDate);
-        } else {
-          document.getElementById("exchange_rate").value = "—";
-        }
-
         const bank1 = (details.bankDetails1 || "").replace(/\n/g, "<br>");
         const bank2 = (details.bankDetails2 || "").replace(/\n/g, "<br>");
         document.getElementById("bank_details_1").innerHTML = bank1;
         document.getElementById("bank_details_2").innerHTML = bank2;
 
+        // Set exchange rate placeholder
+        document.getElementById("exchange_rate").textContent =
+          currencySymbol === "$" ? "..." : "—";
+
+        // Try to update due date
+        const invoiceDate = document.getElementById("invoice_date").value;
         if (invoiceDate) {
+          if (currencySymbol === "$") {
+            google.script.run
+              .withSuccessHandler(function (rate) {
+                document.getElementById("exchange_rate").textContent =
+                  rate || "—";
+                updateTotals();
+              })
+              .getExchangeRate(invoiceDate);
+          }
+
           let baseDate = new Date(invoiceDate);
           let dueDate;
           if (details.dayType === "WD") {
@@ -319,8 +316,9 @@
         const tax = parseFloat(document.getElementById("tax").textContent) || 0;
         const total = subtotal + (subtotal * tax) / 100;
         document.getElementById("total").innerText = total.toFixed(2);
+
         const rateVal = parseFloat(
-          document.getElementById("exchange_rate").value
+          document.getElementById("exchange_rate").textContent
         );
         document.getElementById("amount_in_eur").innerText =
           rateVal > 0 ? (total / rateVal).toFixed(2) : "0.00";
@@ -358,7 +356,9 @@
           tax: document.getElementById("tax").textContent.trim(),
           subtotal: document.getElementById("subtotal").innerText.trim(),
           total: document.getElementById("total").innerText.trim(),
-          exchangeRate: document.getElementById("exchange_rate").value.trim(),
+          exchangeRate: document
+            .getElementById("exchange_rate")
+            .textContent.trim(),
           currency: document
             .getElementById("currency")
             .textContent.trim()
