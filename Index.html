@@ -12,9 +12,6 @@
       .form-label {
         font-weight: bold;
       }
-      #exchange_rate_row {
-        display: none;
-      }
     </style>
   </head>
   <body class="container py-4">
@@ -62,9 +59,17 @@
         <label class="form-label">Due Date</label>
         <p class="form-control-plaintext" id="due_date"></p>
       </div>
-      <div class="col-md-3" id="exchange_rate_row">
-        <label class="form-label">Exchange Rate</label>
-        <p class="form-control-plaintext" id="exchange_rate">—</p>
+      <div class="col-md-3">
+        <label class="form-label">
+          Exchange Rate (EUR 1 = USD ...)
+          <a
+            href="https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/745582/745582?dateSelect=2025&tsTab=0&listId=www_sdks_b01012_3&tsId=BBEX3.D.USD.EUR.BB.AC.000&id=0"
+            target="_blank"
+            style="font-size: 0.85em; margin-left: 5px"
+            >[Link]</a
+          >
+        </label>
+        <input id="exchange_rate" type="text" class="form-control" readonly />
       </div>
     </div>
 
@@ -87,7 +92,6 @@
       </div>
     </div>
 
-    <!-- Comment -->
     <div class="row mb-3">
       <div class="col-md-12">
         <label class="form-label">Comment</label>
@@ -179,7 +183,7 @@
 
       function populateProjectNames() {
         google.script.run
-          .withSuccessHandler(function (projects) {
+          .withSuccessHandler((projects) => {
             validProjectNames = projects;
             const datalist = document.getElementById("project_list");
             datalist.innerHTML = "";
@@ -205,31 +209,24 @@
         document.getElementById("currency").textContent =
           currencyMap[currencySymbol] || currencySymbol;
 
-        const bank1 = (details.bankDetails1 || "").replace(/\n/g, "<br>");
-        const bank2 = (details.bankDetails2 || "").replace(/\n/g, "<br>");
-        document.getElementById("bank_details_1").innerHTML = bank1;
-        document.getElementById("bank_details_2").innerHTML = bank2;
-
-        const exchangeRow = document.getElementById("exchange_rate_row");
-        const exchangeRate = document.getElementById("exchange_rate");
-
-        if (currencySymbol === "€") {
-          exchangeRow.style.display = "block";
-          const invoiceDate = document.getElementById("invoice_date").value;
-          if (invoiceDate) {
-            google.script.run
-              .withSuccessHandler(function (rate) {
-                exchangeRate.textContent = rate || "—";
-                updateTotals();
-              })
-              .getExchangeRate(invoiceDate);
-          }
-        } else {
-          exchangeRow.style.display = "none";
-          exchangeRate.textContent = "—";
-        }
+        document.getElementById("bank_details_1").innerHTML = (
+          details.bankDetails1 || ""
+        ).replace(/\n/g, "<br>");
+        document.getElementById("bank_details_2").innerHTML = (
+          details.bankDetails2 || ""
+        ).replace(/\n/g, "<br>");
 
         const invoiceDate = document.getElementById("invoice_date").value;
+        const exchangeInput = document.getElementById("exchange_rate");
+
+        if (currencySymbol === "$") {
+          exchangeInput.readOnly = false;
+          exchangeInput.value = "";
+        } else {
+          exchangeInput.readOnly = true;
+          exchangeInput.value = "—";
+        }
+
         if (invoiceDate) {
           const baseDate = new Date(invoiceDate);
           let dueDate;
@@ -325,7 +322,7 @@
         document.getElementById("total").innerText = total.toFixed(2);
 
         const rateVal = parseFloat(
-          document.getElementById("exchange_rate").textContent
+          document.getElementById("exchange_rate").value
         );
         document.getElementById("amount_in_eur").innerText =
           rateVal > 0 ? (total / rateVal).toFixed(2) : "0.00";
@@ -363,9 +360,7 @@
           tax: document.getElementById("tax").textContent.trim(),
           subtotal: document.getElementById("subtotal").innerText.trim(),
           total: document.getElementById("total").innerText.trim(),
-          exchangeRate: document
-            .getElementById("exchange_rate")
-            .textContent.trim(),
+          exchangeRate: document.getElementById("exchange_rate").value.trim(),
           currency: document
             .getElementById("currency")
             .textContent.trim()
@@ -394,12 +389,11 @@
           .withSuccessHandler(function (result) {
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerHTML = `
-          <div class="alert alert-success mt-4">
-            <strong>Invoice created!</strong><br>
-            <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
-            <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
-          </div>
-        `;
+            <div class="alert alert-success mt-4">
+              <strong>Invoice created!</strong><br>
+              <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
+              <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
+            </div>`;
           })
           .processForm(data);
       }

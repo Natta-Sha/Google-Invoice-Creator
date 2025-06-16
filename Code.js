@@ -23,12 +23,14 @@ function getProjectDetails(projectName) {
     .getSheetByName("Lists")
     .getDataRange()
     .getValues();
+
   const bankMap = {};
   for (let i = 1; i < vs.length; i++) {
     const shortName = vs[i][16],
       fullDetails = vs[i][17];
     if (shortName && fullDetails) bankMap[shortName] = fullDetails;
   }
+
   for (let i = 1; i < vs.length; i++) {
     if (vs[i][0] === projectName) {
       const taxVal =
@@ -52,26 +54,9 @@ function getProjectDetails(projectName) {
   return null;
 }
 
-function getExchangeRate(dateStr) {
-  const url = `https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?startPeriod=${dateStr}&endPeriod=${dateStr}`;
-  const res = UrlFetchApp.fetch(url, {
-    headers: { Accept: "application/vnd.sdmx.data+json" },
-    muteHttpExceptions: true,
-  });
-
-  try {
-    const json = JSON.parse(res.getContentText());
-    const obs = json?.dataSets?.[0]?.series?.["0:0:0:0:0"]?.observations;
-    if (!obs) return "";
-    const key = Object.keys(obs)[0];
-    return parseFloat(obs[key][0]).toFixed(4);
-  } catch (e) {
-    return "";
-  }
-}
-
 function processForm(data) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
+
   if (sheet.getLastRow() === 0) {
     const base = [
       "Project Name",
@@ -119,7 +104,8 @@ function processForm(data) {
     })
     .flat();
 
-  const exch = data.currency === "€" ? data.exchangeRate : "";
+  // Only store exchange rate if USD
+  const exch = data.currency === "$" ? data.exchangeRate : "";
 
   const row = [
     data.projectName,
@@ -139,13 +125,14 @@ function processForm(data) {
     data.comment,
     data.bankDetails1,
     data.bankDetails2,
-    "",
-    "",
+    "", // Doc link
+    "", // PDF link
     ...items,
   ];
 
   const idx = sheet.getLastRow() + 1;
   sheet.appendRow(row);
+
   const doc = createInvoiceDoc(
     data,
     fmtDate,
@@ -162,6 +149,7 @@ function processForm(data) {
   const pdfFile = f.createFile(pdf).setName(`${data.invoiceNumber}.pdf`);
   sheet.getRange(idx, 18).setValue(doc.getUrl());
   sheet.getRange(idx, 19).setValue(pdfFile.getUrl());
+
   return { docUrl: doc.getUrl(), pdfUrl: pdfFile.getUrl() };
 }
 
@@ -180,11 +168,10 @@ function createInvoiceDoc(
   );
   const doc = DocumentApp.openById(copy.getId()),
     body = doc.getBody();
-  // items insertion skipped for brevity
 
   body.replaceText(
     "\\{Exchange Rate\\}",
-    data.currency === "€" ? data.exchangeRate : ""
+    data.currency === "$" ? data.exchangeRate : ""
   );
   body.replaceText("\\{Комментарий\\}", data.comment || "");
   doc.saveAndClose();
