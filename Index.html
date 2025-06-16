@@ -81,19 +81,11 @@
         <div class="row">
           <div class="col-md-6">
             <label class="form-label">Bank Details 1</label>
-            <textarea
-              id="bank_details_1"
-              class="form-control"
-              rows="2"
-            ></textarea>
+            <p class="form-control-plaintext" id="bank_details_1"></p>
           </div>
           <div class="col-md-6">
             <label class="form-label">Bank Details 2</label>
-            <textarea
-              id="bank_details_2"
-              class="form-control"
-              rows="2"
-            ></textarea>
+            <p class="form-control-plaintext" id="bank_details_2"></p>
           </div>
         </div>
       </div>
@@ -206,6 +198,11 @@
         const currencyMap = { $: "$ (USD)", "€": "€ (EUR)", "₴": "₴ (UAH)" };
         document.getElementById("currency").textContent =
           currencyMap[details.currency] || details.currency;
+
+        document.getElementById("bank_details_1").textContent =
+          details.bankDetails1 || "";
+        document.getElementById("bank_details_2").textContent =
+          details.bankDetails2 || "";
 
         const invoiceDate = document.getElementById("invoice_date").value;
         if (invoiceDate) {
@@ -348,8 +345,12 @@
           amountInEUR: document
             .getElementById("amount_in_eur")
             .innerText.trim(),
-          bankDetails1: document.getElementById("bank_details_1").value.trim(),
-          bankDetails2: document.getElementById("bank_details_2").value.trim(),
+          bankDetails1: document
+            .getElementById("bank_details_1")
+            .textContent.trim(),
+          bankDetails2: document
+            .getElementById("bank_details_2")
+            .textContent.trim(),
           items: [],
         };
 
@@ -364,12 +365,12 @@
           .withSuccessHandler(function (result) {
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerHTML = `
-            <div class="alert alert-success mt-4">
-              <strong>Invoice created!</strong><br>
-              <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
-              <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
-            </div>
-          `;
+              <div class="alert alert-success mt-4">
+                <strong>Invoice created!</strong><br>
+                <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
+                <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
+              </div>
+            `;
           })
           .processForm(data);
       }

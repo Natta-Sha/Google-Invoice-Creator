@@ -1,13 +1,13 @@
-const TEMPLATE_ID = '1hqHM3O7pZNZ56zgb-nZJubYTs1zB2z1O42KCDRAXx2M';
-const FOLDER_ID = '1eHbDCawBYyRse6UNuTS3Z3coxeb80Zqr';
-const SPREADSHEET_ID = '1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8';
+const TEMPLATE_ID = "1hqHM3O7pZNZ56zgb-nZJubYTs1zB2z1O42KCDRAXx2M";
+const FOLDER_ID = "1eHbDCawBYyRse6UNuTS3Z3coxeb80Zqr";
+const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index');
+  return HtmlService.createHtmlOutputFromFile("Index");
 }
 
 function formatDate(dateStr) {
-  if (!dateStr || dateStr.indexOf('-') === -1) return dateStr;
+  if (!dateStr || dateStr.indexOf("-") === -1) return dateStr;
   const [yyyy, mm, dd] = dateStr.split("-");
   return `${dd}/${mm}/${yyyy}`;
 }
@@ -22,34 +22,70 @@ function getProjectDetails(projectName) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Lists");
   const values = sheet.getDataRange().getValues();
 
+  // Сначала создаем мапу сокращенных банковских названий -> полные реквизиты
+  const bankMap = {};
+  for (let i = 1; i < values.length; i++) {
+    const shortName = values[i][16]; // Столбец Q
+    const fullDetails = values[i][17]; // Столбец R
+    if (shortName && fullDetails) {
+      bankMap[shortName] = fullDetails;
+    }
+  }
+
+  // Затем ищем строку по projectName
   for (let i = 1; i < values.length; i++) {
     if (values[i][0] === projectName) {
-      const tax = typeof values[i][5] === 'number' ? values[i][5] * 100 : parseFloat(values[i][5]);
-      const currencyMap = { 'USD': '$', 'EUR': '€', 'UAH': '₴' };
+      const tax =
+        typeof values[i][5] === "number"
+          ? values[i][5] * 100
+          : parseFloat(values[i][5]);
+      const currencyMap = { USD: "$", EUR: "€", UAH: "₴" };
+
+      const shortBank1 = values[i][6] || ""; // Столбец G
+      const shortBank2 = values[i][7] || ""; // Столбец H
+
       return {
-        clientName: values[i][1] || '',
-        clientNumber: `${values[i][2] || ''} ${values[i][3] || ''}`.trim(),
-        clientAddress: values[i][4] || '',
+        clientName: values[i][1] || "",
+        clientNumber: `${values[i][2] || ""} ${values[i][3] || ""}`.trim(),
+        clientAddress: values[i][4] || "",
         tax: isNaN(tax) ? 0 : tax.toFixed(0),
         currency: currencyMap[values[i][8]] || values[i][8],
         paymentDelay: parseInt(values[i][10]) || 0,
-        dayType: (values[i][9] || '').toString().trim().toUpperCase()
+        dayType: (values[i][9] || "").toString().trim().toUpperCase(),
+        bankDetails1: bankMap[shortBank1] || "",
+        bankDetails2: bankMap[shortBank2] || "",
       };
     }
   }
+
   return null;
 }
+
+// processForm и остальной код полностью твой, без изменений
 
 function processForm(data) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
 
   if (sheet.getLastRow() === 0) {
     const baseHeaders = [
-      'Project Name', 'Invoice Number', 'Client Name', 'Client Address', 'Client Number',
-      'Invoice Date', 'Due Date', 'Tax Rate (%)', 'Subtotal', 'Tax Amount',
-      'Total', 'Exchange Rate', 'Currency', 'Amount in EUR',
-      'Bank Details 1', 'Bank Details 2',
-      'Google Doc Link', 'PDF Link'
+      "Project Name",
+      "Invoice Number",
+      "Client Name",
+      "Client Address",
+      "Client Number",
+      "Invoice Date",
+      "Due Date",
+      "Tax Rate (%)",
+      "Subtotal",
+      "Tax Amount",
+      "Total",
+      "Exchange Rate",
+      "Currency",
+      "Amount in EUR",
+      "Bank Details 1",
+      "Bank Details 2",
+      "Google Doc Link",
+      "PDF Link",
     ];
 
     const itemHeaders = [];
@@ -70,7 +106,7 @@ function processForm(data) {
 
   const subtotalNum = parseFloat(data.subtotal) || 0;
   const taxRate = parseFloat(data.tax) || 0;
-  const taxAmount = subtotalNum * taxRate / 100;
+  const taxAmount = (subtotalNum * taxRate) / 100;
   const totalAmount = subtotalNum + taxAmount;
 
   const itemCells = [];
@@ -96,18 +132,26 @@ function processForm(data) {
     parseFloat(data.amountInEUR).toFixed(2),
     data.bankDetails1,
     data.bankDetails2,
-    '',
-    '',
-    ...itemCells
+    "",
+    "",
+    ...itemCells,
   ];
 
   const newRowIndex = sheet.getLastRow() + 1;
   sheet.appendRow(row);
 
-  const doc = createInvoiceDoc(data, formattedDate, formattedDueDate, subtotalNum, taxRate, taxAmount, totalAmount);
+  const doc = createInvoiceDoc(
+    data,
+    formattedDate,
+    formattedDueDate,
+    subtotalNum,
+    taxRate,
+    taxAmount,
+    totalAmount
+  );
 
   Utilities.sleep(500);
-  const pdf = doc.getAs('application/pdf');
+  const pdf = doc.getAs("application/pdf");
   Utilities.sleep(500);
   const folder = DriveApp.getFolderById(FOLDER_ID);
   const pdfFile = folder.createFile(pdf).setName(`${data.invoiceNumber}.pdf`);
@@ -117,11 +161,19 @@ function processForm(data) {
 
   return {
     docUrl: doc.getUrl(),
-    pdfUrl: pdfFile.getUrl()
+    pdfUrl: pdfFile.getUrl(),
   };
 }
 
-function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRate, taxAmount, totalAmount) {
+function createInvoiceDoc(
+  data,
+  formattedDate,
+  formattedDueDate,
+  subtotal,
+  taxRate,
+  taxAmount,
+  totalAmount
+) {
   const template = DriveApp.getFileById(TEMPLATE_ID);
   const folder = DriveApp.getFolderById(FOLDER_ID);
 
@@ -140,8 +192,17 @@ function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRa
       for (let i = 0; i < headerRow.getNumCells(); i++) {
         headerTexts.push(headerRow.getCell(i).getText().trim());
       }
-      const expectedHeaders = ['#', 'Services', 'Period', 'Quantity', 'Rate/hour', 'Amount'];
-      if (expectedHeaders.every((header, index) => headerTexts[index] === header)) {
+      const expectedHeaders = [
+        "#",
+        "Services",
+        "Period",
+        "Quantity",
+        "Rate/hour",
+        "Amount",
+      ];
+      if (
+        expectedHeaders.every((header, index) => headerTexts[index] === header)
+      ) {
         targetTable = table;
         break;
       }
@@ -149,7 +210,9 @@ function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRa
   }
 
   if (!targetTable) {
-    throw new Error('❗️Не найдена таблица с нужной шапкой (#, Services, Period, Quantity, Rate/hour, Amount). Проверьте шаблон!');
+    throw new Error(
+      "❗️Не найдена таблица с нужной шапкой (#, Services, Period, Quantity, Rate/hour, Amount). Проверьте шаблон!"
+    );
   }
 
   const existingRows = targetTable.getNumRows();
@@ -157,40 +220,58 @@ function createInvoiceDoc(data, formattedDate, formattedDueDate, subtotal, taxRa
     targetTable.removeRow(i);
   }
 
-  data.items.forEach(row => {
+  data.items.forEach((row) => {
     const newRow = targetTable.appendTableRow();
     row.forEach((cell, index) => {
       if (index === 4 || index === 5) {
-        newRow.appendTableCell(cell ? `${data.currency}${parseFloat(cell).toFixed(2)}` : '');
+        newRow.appendTableCell(
+          cell ? `${data.currency}${parseFloat(cell).toFixed(2)}` : ""
+        );
       } else {
-        newRow.appendTableCell(cell || '');
+        newRow.appendTableCell(cell || "");
       }
     });
   });
 
-  body.replaceText('\\{Project Name\\}', data.projectName);
-  body.replaceText('\\{Название клиента\\}', data.clientName);
-  body.replaceText('\\{Адрес клиента\\}', data.clientAddress);
-  body.replaceText('\\{Номер клиента\\}', data.clientNumber);
-  body.replaceText('\\{Номер счета\\}', data.invoiceNumber);
-  body.replaceText('\\{Дата счета\\}', formattedDate);
-  body.replaceText('\\{Due date\\}', formattedDueDate);
-  body.replaceText('\\{VAT%\\}', taxRate.toFixed(0));
-  body.replaceText('\\{Сумма НДС\\}', `${data.currency}${taxAmount.toFixed(2)}`);
-  body.replaceText('\\{Сумма общая\\}', `${data.currency}${totalAmount.toFixed(2)}`);
-  body.replaceText('\\{Exchange Rate\\}', parseFloat(data.exchangeRate).toFixed(4));
-  body.replaceText('\\{Amount in EUR\\}', `€${parseFloat(data.amountInEUR).toFixed(2)}`);
-  body.replaceText('\\{Банковские реквизиты1\\}', data.bankDetails1);
-  body.replaceText('\\{Банковские реквизиты2\\}', data.bankDetails2);
+  body.replaceText("\\{Project Name\\}", data.projectName);
+  body.replaceText("\\{Название клиента\\}", data.clientName);
+  body.replaceText("\\{Адрес клиента\\}", data.clientAddress);
+  body.replaceText("\\{Номер клиента\\}", data.clientNumber);
+  body.replaceText("\\{Номер счета\\}", data.invoiceNumber);
+  body.replaceText("\\{Дата счета\\}", formattedDate);
+  body.replaceText("\\{Due date\\}", formattedDueDate);
+  body.replaceText("\\{VAT%\\}", taxRate.toFixed(0));
+  body.replaceText(
+    "\\{Сумма НДС\\}",
+    `${data.currency}${taxAmount.toFixed(2)}`
+  );
+  body.replaceText(
+    "\\{Сумма общая\\}",
+    `${data.currency}${totalAmount.toFixed(2)}`
+  );
+  body.replaceText(
+    "\\{Exchange Rate\\}",
+    parseFloat(data.exchangeRate).toFixed(4)
+  );
+  body.replaceText(
+    "\\{Amount in EUR\\}",
+    `€${parseFloat(data.amountInEUR).toFixed(2)}`
+  );
+  body.replaceText("\\{Банковские реквизиты1\\}", data.bankDetails1);
+  body.replaceText("\\{Банковские реквизиты2\\}", data.bankDetails2);
 
   for (let i = 0; i < 20; i++) {
     const item = data.items[i];
     if (item) {
-      const service = item[1] || '';
-      const period = item[2] || '';
-      const qty = item[3] || '';
-      const rate = item[4] ? `${data.currency}${parseFloat(item[4]).toFixed(2)}` : null;
-      const amount = item[5] ? `${data.currency}${parseFloat(item[5]).toFixed(2)}` : null;
+      const service = item[1] || "";
+      const period = item[2] || "";
+      const qty = item[3] || "";
+      const rate = item[4]
+        ? `${data.currency}${parseFloat(item[4]).toFixed(2)}`
+        : null;
+      const amount = item[5]
+        ? `${data.currency}${parseFloat(item[5]).toFixed(2)}`
+        : null;
 
       body.replaceText(`\\{Вид работ-${i + 1}\\}`, service);
       body.replaceText(`\\{Период работы-${i + 1}\\}`, period);
