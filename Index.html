@@ -12,6 +12,9 @@
       .form-label {
         font-weight: bold;
       }
+      #exchange_rate_row {
+        display: none;
+      }
     </style>
   </head>
   <body class="container py-4">
@@ -59,7 +62,7 @@
         <label class="form-label">Due Date</label>
         <p class="form-control-plaintext" id="due_date"></p>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-3" id="exchange_rate_row">
         <label class="form-label">Exchange Rate</label>
         <p class="form-control-plaintext" id="exchange_rate">—</p>
       </div>
@@ -84,10 +87,10 @@
       </div>
     </div>
 
-    <!-- Комментарий -->
+    <!-- Comment -->
     <div class="row mb-3">
       <div class="col-md-12">
-        <label class="form-label">Комментарий</label>
+        <label class="form-label">Comment</label>
         <input type="text" id="comment" class="form-control" />
       </div>
     </div>
@@ -207,24 +210,28 @@
         document.getElementById("bank_details_1").innerHTML = bank1;
         document.getElementById("bank_details_2").innerHTML = bank2;
 
-        // Set exchange rate placeholder
-        document.getElementById("exchange_rate").textContent =
-          currencySymbol === "$" ? "..." : "—";
+        const exchangeRow = document.getElementById("exchange_rate_row");
+        const exchangeRate = document.getElementById("exchange_rate");
 
-        // Try to update due date
-        const invoiceDate = document.getElementById("invoice_date").value;
-        if (invoiceDate) {
-          if (currencySymbol === "$") {
+        if (currencySymbol === "€") {
+          exchangeRow.style.display = "block";
+          const invoiceDate = document.getElementById("invoice_date").value;
+          if (invoiceDate) {
             google.script.run
               .withSuccessHandler(function (rate) {
-                document.getElementById("exchange_rate").textContent =
-                  rate || "—";
+                exchangeRate.textContent = rate || "—";
                 updateTotals();
               })
               .getExchangeRate(invoiceDate);
           }
+        } else {
+          exchangeRow.style.display = "none";
+          exchangeRate.textContent = "—";
+        }
 
-          let baseDate = new Date(invoiceDate);
+        const invoiceDate = document.getElementById("invoice_date").value;
+        if (invoiceDate) {
+          const baseDate = new Date(invoiceDate);
           let dueDate;
           if (details.dayType === "WD") {
             dueDate = addWorkingDays(baseDate, details.paymentDelay);
@@ -387,12 +394,12 @@
           .withSuccessHandler(function (result) {
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerHTML = `
-            <div class="alert alert-success mt-4">
-              <strong>Invoice created!</strong><br>
-              <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
-              <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
-            </div>
-          `;
+          <div class="alert alert-success mt-4">
+            <strong>Invoice created!</strong><br>
+            <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
+            <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
+          </div>
+        `;
           })
           .processForm(data);
       }
