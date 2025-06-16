@@ -63,11 +63,10 @@
         <label class="form-label">Exchange Rate</label>
         <input
           id="exchange_rate"
-          type="number"
-          step="0.0001"
+          type="text"
           class="form-control"
-          value="1.0000"
-          oninput="updateTotals()"
+          readonly
+          value="—"
         />
       </div>
     </div>
@@ -148,6 +147,14 @@
       </div>
     </div>
 
+    <!-- Комментарий -->
+    <div class="row mb-3">
+      <div class="col-md-12">
+        <label class="form-label">Комментарий</label>
+        <textarea id="comment" class="form-control" rows="2"></textarea>
+      </div>
+    </div>
+
     <div class="row mt-4">
       <div class="col-md-12 text-end">
         <button
@@ -197,17 +204,28 @@
         document.getElementById("tax").textContent = details.tax;
 
         const currencyMap = { $: "$ (USD)", "€": "€ (EUR)", "₴": "₴ (UAH)" };
+        const currencySymbol = details.currency;
         document.getElementById("currency").textContent =
-          currencyMap[details.currency] || details.currency;
+          currencyMap[currencySymbol] || currencySymbol;
 
-        // ✅ Преобразуем переводы строк в <br>
+        // 💱 Курс: только для $
+        const invoiceDate = document.getElementById("invoice_date").value;
+        if (invoiceDate && currencySymbol === "$") {
+          google.script.run
+            .withSuccessHandler(function (rate) {
+              document.getElementById("exchange_rate").value = rate || "—";
+              updateTotals();
+            })
+            .getExchangeRate(invoiceDate);
+        } else {
+          document.getElementById("exchange_rate").value = "—";
+        }
+
         const bank1 = (details.bankDetails1 || "").replace(/\n/g, "<br>");
         const bank2 = (details.bankDetails2 || "").replace(/\n/g, "<br>");
-
         document.getElementById("bank_details_1").innerHTML = bank1;
         document.getElementById("bank_details_2").innerHTML = bank2;
 
-        const invoiceDate = document.getElementById("invoice_date").value;
         if (invoiceDate) {
           let baseDate = new Date(invoiceDate);
           let dueDate;
@@ -301,11 +319,11 @@
         const tax = parseFloat(document.getElementById("tax").textContent) || 0;
         const total = subtotal + (subtotal * tax) / 100;
         document.getElementById("total").innerText = total.toFixed(2);
-        const exchangeRate = parseFloat(
+        const rateVal = parseFloat(
           document.getElementById("exchange_rate").value
         );
         document.getElementById("amount_in_eur").innerText =
-          exchangeRate > 0 ? (total / exchangeRate).toFixed(2) : "0.00";
+          rateVal > 0 ? (total / rateVal).toFixed(2) : "0.00";
       }
 
       function markManualAmount(e) {
@@ -315,7 +333,6 @@
       function submitForm() {
         const input = document.getElementById("project_name");
         const projectValue = input.value.trim();
-
         if (!validProjectNames.includes(projectValue)) {
           alert("Please select a valid Project Name from the list.");
           input.focus();
@@ -355,6 +372,7 @@
           bankDetails2: document
             .getElementById("bank_details_2")
             .textContent.trim(),
+          comment: document.getElementById("comment").value.trim(),
           items: [],
         };
 
@@ -369,12 +387,12 @@
           .withSuccessHandler(function (result) {
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerHTML = `
-              <div class="alert alert-success mt-4">
-                <strong>Invoice created!</strong><br>
-                <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
-                <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
-              </div>
-            `;
+            <div class="alert alert-success mt-4">
+              <strong>Invoice created!</strong><br>
+              <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
+              <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
+            </div>
+          `;
           })
           .processForm(data);
       }
