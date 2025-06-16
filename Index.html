@@ -425,6 +425,12 @@
       }
 
       window.onload = populateProjectNames;
+      ["project_name", "invoice_number", "invoice_date"].forEach((id) => {
+        document.getElementById(id).addEventListener("input", () => {
+          document.getElementById(id).classList.remove("is-invalid");
+          document.getElementById("result").innerHTML = "";
+        });
+      });
     </script>
   </body>
 </html>
