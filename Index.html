@@ -24,6 +24,23 @@
 
       .btn-outline-danger:focus {
         box-shadow: none !important;
+
+        .icon-button {
+          background: none;
+          border: none;
+          padding: 4px;
+          cursor: pointer;
+          color: #6c757d; /* Bootstrap's "secondary" color */
+        }
+
+        .icon-button:hover {
+          color: #000; /* Черная при наведении */
+        }
+
+        .icon-button:focus {
+          outline: none;
+          box-shadow: none;
+        }
       }
     </style>
   </head>
@@ -266,9 +283,9 @@
           exchangeInput.style.display = "block";
           exchangeInput.value = "1.0000";
           exchangeDisplay.innerHTML = `
-      Exchange Rate (EUR 1 = USD ...)
-      <a href="https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/745582/745582?dateSelect=2025&tsTab=0&listId=www_sdks_b01012_3&tsId=BBEX3.D.USD.EUR.BB.AC.000&id=0" target="_blank" class="ms-1 btn btn-link btn-sm p-0">Link</a>
-    `;
+            Exchange Rate (EUR 1 = USD ...)
+            <a href="https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/745582/745582?dateSelect=2025&tsTab=0&listId=www_sdks_b01012_3&tsId=BBEX3.D.USD.EUR.BB.AC.000&id=0" target="_blank" class="ms-1 btn btn-link btn-sm p-0">Link</a>
+          `;
         }
 
         updateTotals();
@@ -336,7 +353,7 @@
 
         const deleteCell = row.insertCell();
         deleteCell.innerHTML = `
-  <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteRow(this)" title="Delete row">
+  <button type="button" class="icon-button" onclick="deleteRow(this)" title="Delete row">
     <i class="bi bi-trash"></i>
   </button>
 `;
@@ -457,12 +474,12 @@
           .withSuccessHandler(function (result) {
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerHTML = `
-              <div class="alert alert-success mt-4">
-                <strong>Invoice created!</strong><br>
-                <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
-                <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
-              </div>
-            `;
+                    <div class="alert alert-success mt-4">
+                      <strong>Invoice created!</strong><br>
+                      <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
+                      <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
+                    </div>
+                  `;
           })
           .processForm(data);
       }
@@ -471,11 +488,11 @@
       function showValidationError(messages) {
         const result = document.getElementById("result");
         result.innerHTML = `
-    <div class="alert alert-danger">
-      <strong>Please fill out the following fields:</strong>
-      <ul>${messages.map((msg) => `<li>${msg}</li>`).join("")}</ul>
-    </div>
-  `;
+          <div class="alert alert-danger">
+            <strong>Please fill out the following fields:</strong>
+            <ul>${messages.map((msg) => `<li>${msg}</li>`).join("")}</ul>
+          </div>
+        `;
         result.scrollIntoView({ behavior: "smooth" });
       }
 
