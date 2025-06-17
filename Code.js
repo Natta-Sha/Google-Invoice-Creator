@@ -157,8 +157,8 @@ function processForm(data) {
   const folder = DriveApp.getFolderById(FOLDER_ID);
   const pdfFile = folder.createFile(pdf).setName(`${data.invoiceNumber}.pdf`);
 
-  sheet.getRange(newRowIndex, 18).setValue(doc.getUrl());
-  sheet.getRange(newRowIndex, 19).setValue(pdfFile.getUrl());
+  sheet.getRange(newRowIndex, 19).setValue(doc.getUrl());
+  sheet.getRange(newRowIndex, 20).setValue(pdfFile.getUrl());
 
   return {
     docUrl: doc.getUrl(),
