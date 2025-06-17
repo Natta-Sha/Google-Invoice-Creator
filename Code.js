@@ -52,6 +52,7 @@ function getProjectDetails(projectName) {
         dayType: (values[i][9] || "").toString().trim().toUpperCase(),
         bankDetails1: bankMap[shortBank1] || "",
         bankDetails2: bankMap[shortBank2] || "",
+        ourCompany: values[i][14] || "", // O
       };
     }
   }
@@ -80,7 +81,8 @@ function processForm(data) {
       "Amount in EUR",
       "Bank Details 1",
       "Bank Details 2",
-      "Comment", // Добавлено
+      "Our Company",
+      "Comment",
       "Google Doc Link",
       "PDF Link",
     ];
@@ -129,6 +131,7 @@ function processForm(data) {
     data.currency === "$" ? parseFloat(data.amountInEUR).toFixed(2) : "",
     data.bankDetails1,
     data.bankDetails2,
+    data.ourCompany || "",
     data.comment || "", // Новое поле
     "", // Google Doc Link
     "", // PDF Link
@@ -176,7 +179,19 @@ function createInvoiceDoc(
   const folder = DriveApp.getFolderById(FOLDER_ID);
 
   Utilities.sleep(500);
-  const copy = template.makeCopy(`Invoice ${data.invoiceNumber}`, folder);
+  const invoiceDateForName = data.invoiceDate.replace(/-/g, "_");
+  const cleanCompanyName = (data.ourCompany || "")
+    .replace(/[\\/:*?"<>|]/g, "")
+    .trim();
+  const cleanClientName = (data.clientName || "")
+    .replace(/[\\/:*?"<>|]/g, "")
+    .trim();
+
+  const filename = `${data.invoiceDate}_${"Invoice"}${
+    data.invoiceNumber
+  }_${cleanCompanyName}-${cleanClientName}`;
+
+  const copy = template.makeCopy(filename, folder);
   const doc = DocumentApp.openById(copy.getId());
   const body = doc.getBody();
 

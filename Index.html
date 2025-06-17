@@ -90,6 +90,11 @@
         <p class="form-control-plaintext" id="client_number"></p>
       </div>
       <div class="col-md-3">
+        <label class="form-label">Our Company</label>
+        <p class="form-control-plaintext" id="our_company"></p>
+      </div>
+
+      <div class="col-md-3">
         <label class="form-label"
           >Invoice Date <span class="text-danger">*</span></label
         >
@@ -250,6 +255,8 @@
           details.clientAddress;
         document.getElementById("client_number").textContent =
           details.clientNumber;
+        document.getElementById("our_company").textContent =
+          details.ourCompany || "";
         document.getElementById("tax").textContent = details.tax;
 
         const currencyMap = { $: "$ (USD)", "€": "€ (EUR)", "₴": "₴ (UAH)" };
@@ -483,6 +490,8 @@
           bankDetails2: document
             .getElementById("bank_details_2")
             .textContent.trim(),
+          ourCompany: document.getElementById("our_company").textContent.trim(),
+
           comment: document.getElementById("comment").value.trim(),
           items: [],
         };
