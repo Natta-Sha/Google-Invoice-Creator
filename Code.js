@@ -180,6 +180,39 @@ function createInvoiceDoc(
   const doc = DocumentApp.openById(copy.getId());
   const body = doc.getBody();
 
+  // Удаляем блок "Exchange Rate Notice", если валюта не USD
+  if (data.currency !== "$") {
+    const paragraphs = body.getParagraphs();
+    let found = false;
+
+    for (let i = 0; i < paragraphs.length; i++) {
+      const text = paragraphs[i].getText();
+
+      if (text.includes("Exchange Rate Notice")) {
+        paragraphs[i].removeFromParent(); // Удаляем заголовок
+        if (i + 1 < paragraphs.length) {
+          paragraphs[i + 1].removeFromParent(); // Удаляем следующий абзац с формулировкой
+        }
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      Logger.log("⚠ Не найден блок Exchange Rate Notice");
+    }
+  } else {
+    // Если валюта USD — подставляем значения
+    body.replaceText(
+      "\\{Exchange Rate\\}",
+      parseFloat(data.exchangeRate).toFixed(4)
+    );
+    body.replaceText(
+      "\\{Amount in EUR\\}",
+      `€${parseFloat(data.amountInEUR).toFixed(2)}`
+    );
+  }
+
   const tables = body.getTables();
   let targetTable = null;
 
