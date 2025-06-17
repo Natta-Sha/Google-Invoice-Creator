@@ -155,7 +155,12 @@ function processForm(data) {
   const pdf = doc.getAs("application/pdf");
   Utilities.sleep(500);
   const folder = DriveApp.getFolderById(FOLDER_ID);
-  const pdfFile = folder.createFile(pdf).setName(`${data.invoiceNumber}.pdf`);
+  const filename = `${data.invoiceDate}_${"Invoice"}${data.invoiceNumber}_${(
+    data.ourCompany || ""
+  )
+    .replace(/[\\/:*?"<>|]/g, "")
+    .trim()}-${(data.clientName || "").replace(/[\\/:*?"<>|]/g, "").trim()}`;
+  const pdfFile = folder.createFile(pdf).setName(`${filename}.pdf`);
 
   sheet.getRange(newRowIndex, 19).setValue(doc.getUrl());
   sheet.getRange(newRowIndex, 20).setValue(pdfFile.getUrl());
