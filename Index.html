@@ -124,6 +124,7 @@
           <th>Quantity</th>
           <th>Rate/hour</th>
           <th>Amount</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="invoice-body">
@@ -309,6 +310,7 @@
         const tbody = document.getElementById("invoice-body");
         const rowNumber = tbody.rows.length + 1;
         const row = tbody.insertRow();
+
         for (let i = 0; i < 6; i++) {
           const cell = row.insertCell();
           const input = document.createElement("input");
@@ -322,6 +324,15 @@
           input.oninput = updateTotals;
           cell.appendChild(input);
         }
+
+        const deleteCell = row.insertCell();
+        deleteCell.innerHTML = `<button class="btn btn-outline-danger btn-sm" onclick="deleteRow(this)">🗑</button>`;
+      }
+
+      function deleteRow(button) {
+        const row = button.closest("tr");
+        row.remove();
+        updateTotals();
       }
 
       function updateTotals() {
