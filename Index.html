@@ -289,9 +289,9 @@
           exchangeInput.style.display = "block";
           exchangeInput.value = "1.0000";
           exchangeDisplay.innerHTML = `
-            Exchange Rate (EUR 1 = USD ...)
-            <a href="https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/745582/745582?dateSelect=2025&tsTab=0&listId=www_sdks_b01012_3&tsId=BBEX3.D.USD.EUR.BB.AC.000&id=0" target="_blank" class="ms-1 btn btn-link btn-sm p-0">Link</a>
-          `;
+    Exchange Rate (EUR 1 = USD ...)
+    <a href="https://www.bundesbank.de/dynamic/action/en/statistics/time-series-databases/time-series-databases/745582/745582?dateSelect=2025&tsTab=0&listId=www_sdks_b01012_3&tsId=BBEX3.D.USD.EUR.BB.AC.000&id=0" target="_blank" class="ms-1 btn btn-link btn-sm p-0">Link</a>
+  `;
         }
 
         updateTotals();
@@ -374,25 +374,43 @@
       function updateTotals() {
         const tbody = document.getElementById("invoice-body");
         let subtotal = 0;
+
         for (let row of tbody.rows) {
           const inputs = row.getElementsByTagName("input");
           const qty = parseFloat(inputs[3].value) || 0;
           const rate = parseFloat(inputs[4].value) || 0;
           const amountCell = inputs[5];
+
           if (!amountCell.hasAttribute("manual")) {
             amountCell.value = (qty * rate).toFixed(2);
           }
+
           subtotal += parseFloat(amountCell.value) || 0;
         }
+
         document.getElementById("subtotal").innerText = subtotal.toFixed(2);
+
         const tax = parseFloat(document.getElementById("tax").textContent) || 0;
         const total = subtotal + (subtotal * tax) / 100;
         document.getElementById("total").innerText = total.toFixed(2);
-        const exchangeRate = parseFloat(
-          document.getElementById("exchange_rate").value
-        );
-        document.getElementById("amount_in_eur").innerText =
-          exchangeRate > 0 ? (total / exchangeRate).toFixed(2) : "0.00";
+
+        // Новая логика для Amount in EUR
+        const currency = document
+          .getElementById("currency")
+          .textContent.trim()
+          .split(" ")[0];
+
+        const amountInEurEl = document.getElementById("amount_in_eur");
+
+        if (currency === "$") {
+          const exchangeRate = parseFloat(
+            document.getElementById("exchange_rate").value
+          );
+          amountInEurEl.innerText =
+            exchangeRate > 0 ? (total / exchangeRate).toFixed(2) : "0.00";
+        } else {
+          amountInEurEl.innerText = "";
+        }
       }
 
       function markManualAmount(e) {
