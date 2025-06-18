@@ -294,27 +294,6 @@ function createInvoiceDoc(
     );
   }
 
-  const placeholderRow = targetTable.getRow(1);
-  const placeholderStyles = [];
-
-  for (let i = 0; i < placeholderRow.getNumCells(); i++) {
-    const cell = placeholderRow.getCell(i);
-    const textEl = cell.getNumChildren() > 0 ? cell.getChild(0).asText() : null;
-
-    if (textEl) {
-      placeholderStyles.push({
-        bold: textEl.isBold(),
-        italic: textEl.isItalic(),
-        underline: textEl.isUnderline(),
-        fontSize: textEl.getFontSize(),
-        fontFamily: textEl.getFontFamily(),
-        alignment: cell.getTextAlignment(),
-        backgroundColor: cell.getBackgroundColor(),
-      });
-    } else {
-      placeholderStyles.push({});
-    }
-  }
   // Удаляем все строки таблицы, кроме заголовка (строка 0)
   const numRows = targetTable.getNumRows();
   for (let i = numRows - 1; i > 0; i--) {
