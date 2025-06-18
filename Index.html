@@ -575,6 +575,13 @@
       }
 
       function createNewInvoice() {
+        const isFormDisabled = document.getElementById("project_name").disabled;
+
+        if (isFormDisabled) {
+          resetForm(); // уже создан — просто очистить
+          return;
+        }
+
         const hasFilledFields = [...document.querySelectorAll("input")].some(
           (el) => el.type !== "hidden" && el.value.trim() !== ""
         );
