@@ -21,17 +21,34 @@ function getProjectDetails(projectName) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Lists");
   const values = sheet.getDataRange().getValues();
 
-  const bankMap = {};
-  let selectedTemplateName = "";
-  let selectedTemplateId = "";
-
-  // 1. Сначала находим строку с нужным проектом
+  const templateMap = new Map();
+  const bankMap = new Map();
   let projectRow = null;
+
   for (let i = 1; i < values.length; i++) {
-    const name = (values[i][0] || "").toString().trim();
-    if (name.toLowerCase() === projectName.toString().trim().toLowerCase()) {
-      projectRow = values[i];
-      break;
+    const row = values[i];
+
+    // Project row
+    const name = (row[0] || "").toString().trim();
+    if (
+      !projectRow &&
+      name.toLowerCase() === projectName.toString().trim().toLowerCase()
+    ) {
+      projectRow = row;
+    }
+
+    // Template map (T/U → 19/20)
+    const templateName = (row[19] || "").toString().trim();
+    const templateId = (row[20] || "").toString().trim();
+    if (templateName && templateId) {
+      templateMap.set(templateName.toLowerCase(), templateId);
+    }
+
+    // Bank map (Q/R → 16/17)
+    const short = (row[16] || "").toString().trim();
+    const full = (row[17] || "").toString().trim();
+    if (short && full) {
+      bankMap.set(short, full);
     }
   }
 
@@ -39,40 +56,20 @@ function getProjectDetails(projectName) {
     throw new Error(`❗ Project "${projectName}" not found in column A.`);
   }
 
-  // 2. Получаем название шаблона из столбца N (index 13)
-  selectedTemplateName = (projectRow[13] || "").toString().trim();
+  const selectedTemplateName = (projectRow[13] || "").toString().trim();
   if (!selectedTemplateName) {
     throw new Error(
       `🚫 No invoice template name specified for project "${projectName}". Please fill in column N.`
     );
   }
 
-  // 3. Находим шаблон в справочнике шаблонов (T: 19, U: 20)
-  for (let i = 1; i < values.length; i++) {
-    const templateName = (values[i][19] || "").toString().trim();
-    const templateId = (values[i][20] || "").toString().trim();
-    if (
-      templateName.toLowerCase() === selectedTemplateName.toLowerCase() &&
-      templateId
-    ) {
-      selectedTemplateId = templateId;
-      break;
-    }
-  }
-
+  const selectedTemplateId = templateMap.get(
+    selectedTemplateName.toLowerCase()
+  );
   if (!selectedTemplateId) {
     throw new Error(
       `🚫 No invoice template found for "${selectedTemplateName}". Please check columns T and U in 'Lists'.`
     );
-  }
-
-  // 4. Сопоставление банков по Q (16) → R (17)
-  for (let i = 1; i < values.length; i++) {
-    const short = (values[i][16] || "").toString().trim();
-    const full = (values[i][17] || "").toString().trim();
-    if (short && full) {
-      bankMap[short] = full;
-    }
   }
 
   const tax =
@@ -92,8 +89,8 @@ function getProjectDetails(projectName) {
     currency: currencyMap[projectRow[8]] || projectRow[8],
     paymentDelay: parseInt(projectRow[10]) || 0,
     dayType: (projectRow[9] || "").toString().trim().toUpperCase(),
-    bankDetails1: bankMap[shortBank1] || "",
-    bankDetails2: bankMap[shortBank2] || "",
+    bankDetails1: bankMap.get(shortBank1) || "",
+    bankDetails2: bankMap.get(shortBank2) || "",
     ourCompany: projectRow[14] || "",
     templateId: selectedTemplateId,
   };
@@ -179,7 +176,7 @@ function processForm(data) {
   ];
 
   const newRowIndex = sheet.getLastRow() + 1;
-  sheet.appendRow(row);
+  sheet.getRange(newRowIndex, 1, 1, row.length).setValues([row]);
 
   const doc = createInvoiceDoc(
     data,
