@@ -61,9 +61,13 @@
 
     <script>
       function goHome() {
-        const url = new URL(window.location.href);
-        url.searchParams.set("page", "home");
-        window.location.href = url.toString();
+        google.script.run
+          .withSuccessHandler(function (html) {
+            document.open();
+            document.write(html);
+            document.close();
+          })
+          .loadPage("Home");
       }
     </script>
 
