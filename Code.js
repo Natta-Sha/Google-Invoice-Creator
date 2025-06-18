@@ -332,17 +332,21 @@ function createInvoiceDoc(
 
       const newCell = newRow.appendTableCell(cellValue);
       const text = newCell.getChild(0).asText();
-      const style = placeholderStyles[index] || {};
 
-      if (style.bold !== undefined) text.setBold(style.bold);
-      if (style.italic !== undefined) text.setItalic(style.italic);
-      if (style.underline !== undefined) text.setUnderline(style.underline);
-      if (style.fontSize !== undefined) text.setFontSize(style.fontSize);
-      if (style.fontFamily !== undefined) text.setFontFamily(style.fontFamily);
-      if (style.alignment !== undefined)
-        newCell.setTextAlignment(style.alignment);
-      if (style.backgroundColor !== undefined)
-        newCell.setBackgroundColor(style.backgroundColor);
+      // Жёсткие стили
+      text.setFontFamily("Helvetica");
+      text.setFontSize(9);
+      text.setBold(false);
+      text.setItalic(false);
+      text.setUnderline(false);
+      newCell.setBackgroundColor(null); // очистка фона
+
+      // Выравнивание
+      if (index >= 3) {
+        newCell.setTextAlignment(DocumentApp.TextAlignment.RIGHT);
+      } else {
+        newCell.setTextAlignment(DocumentApp.TextAlignment.LEFT);
+      }
     });
   });
 
