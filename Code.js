@@ -233,6 +233,7 @@ function createInvoiceDoc(
   const template = DriveApp.getFileById(templateId);
   const folder = DriveApp.getFolderById(FOLDER_ID);
 
+  const invoiceDateForName = data.invoiceDate.replace(/-/g, "_");
   const cleanCompany = (data.ourCompany || "")
     .replace(/[\\/:*?"<>|]/g, "")
     .trim();
@@ -294,7 +295,6 @@ function createInvoiceDoc(
     );
   }
 
-  // Удаляем все строки таблицы, кроме заголовка (строка 0)
   const numRows = targetTable.getNumRows();
   for (let i = numRows - 1; i > 0; i--) {
     targetTable.removeRow(i);
@@ -302,29 +302,13 @@ function createInvoiceDoc(
 
   data.items.forEach((row) => {
     const newRow = targetTable.appendTableRow();
-
-    row.forEach((cellValueRaw, index) => {
-      const cellValue =
-        (index === 4 || index === 5) && cellValueRaw
-          ? `${data.currency}${parseFloat(cellValueRaw).toFixed(2)}`
-          : cellValueRaw || "";
-
-      const newCell = newRow.appendTableCell(cellValue);
-      const text = newCell.getChild(0).asText();
-
-      // Жёсткие стили
-      text.setFontFamily("Helvetica");
-      text.setFontSize(9);
-      text.setBold(false);
-      text.setItalic(false);
-      text.setUnderline(false);
-      newCell.setBackgroundColor(null); // очистка фона
-
-      // Выравнивание
-      if (index >= 3) {
-        newCell.setTextAlignment(DocumentApp.TextAlignment.RIGHT);
+    row.forEach((cell, index) => {
+      if (index === 4 || index === 5) {
+        newRow.appendTableCell(
+          cell ? `${data.currency}${parseFloat(cell).toFixed(2)}` : ""
+        );
       } else {
-        newCell.setTextAlignment(DocumentApp.TextAlignment.LEFT);
+        newRow.appendTableCell(cell || "");
       }
     });
   });
