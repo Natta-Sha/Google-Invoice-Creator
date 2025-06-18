@@ -33,7 +33,8 @@ function getProjectDetails(projectName) {
       bankMap[shortName] = fullDetails;
     }
 
-    const templateName = values[i][19]; // T (справочник шаблонов)
+    const templateName = (values[i][19] || "").toString().trim(); // T
+
     const templateId = values[i][20]; // U
     if (templateName && templateId) {
       templateMap[templateName] = templateId;
@@ -51,7 +52,8 @@ function getProjectDetails(projectName) {
       const shortBank1 = values[i][6] || "";
       const shortBank2 = values[i][7] || "";
 
-      selectedTemplateName = values[i][13]; // N
+      selectedTemplateName = (values[i][13] || "").toString().trim(); // N
+
       selectedTemplateId = templateMap[selectedTemplateName] || "";
       if (!selectedTemplateId) {
         throw new Error(
