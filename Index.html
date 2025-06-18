@@ -250,6 +250,8 @@
       }
 
       function fillProjectDetails(details) {
+        window.currentProjectDetails = details;
+
         document.getElementById("client_name").textContent = details.clientName;
         document.getElementById("client_address").textContent =
           details.clientAddress;
@@ -494,6 +496,7 @@
 
           comment: document.getElementById("comment").value.trim(),
           items: [],
+          templateId: window.currentProjectDetails?.templateId || "",
         };
 
         const tbody = document.getElementById("invoice-body");
