@@ -2,16 +2,15 @@ const FOLDER_ID = "1eHbDCawBYyRse6UNuTS3Z3coxeb80Zqr";
 const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 
 function doGet(e) {
-  const page = e && e.parameter && e.parameter.page ? e.parameter.page : "home";
+  const page = e.parameter.page;
 
-  switch (page) {
-    case "generate":
-      return HtmlService.createHtmlOutputFromFile("Index").setTitle(
-        "Generate Invoice"
-      );
-    default:
-      return HtmlService.createHtmlOutputFromFile("Home").setTitle("Home");
+  if (page === "generate") {
+    return HtmlService.createHtmlOutputFromFile("Index").setTitle(
+      "Generate Invoice"
+    );
   }
+
+  return HtmlService.createHtmlOutputFromFile("Home").setTitle("Welcome");
 }
 
 function formatDate(dateStr) {
