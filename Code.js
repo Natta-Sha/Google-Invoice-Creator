@@ -311,6 +311,13 @@ function createInvoiceDoc(
       } else {
         tableCell.setText(cell || "");
       }
+      // Сбросить стиль: делаем обычный текст
+      const text = tableCell.getChild(0).asText();
+      text.setBold(false);
+      text.setItalic(false);
+      text.setUnderline(false);
+      text.setFontSize(null);
+      text.setFontFamily(null);
     });
   });
 
