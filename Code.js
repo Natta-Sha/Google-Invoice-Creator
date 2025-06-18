@@ -305,7 +305,9 @@ function createInvoiceDoc(
   const placeholderStyles = [];
 
   for (let i = 0; i < placeholderRow.getNumCells(); i++) {
-    const textEl = placeholderRow.getCell(i).getChild(0)?.asText();
+    const cell = placeholderRow.getCell(i);
+    const textEl = cell.getNumChildren() > 0 ? cell.getChild(0).asText() : null;
+
     if (textEl) {
       placeholderStyles.push({
         bold: textEl.isBold(),
