@@ -233,7 +233,6 @@ function createInvoiceDoc(
   const template = DriveApp.getFileById(templateId);
   const folder = DriveApp.getFolderById(FOLDER_ID);
 
-  const invoiceDateForName = data.invoiceDate.replace(/-/g, "_");
   const cleanCompany = (data.ourCompany || "")
     .replace(/[\\/:*?"<>|]/g, "")
     .trim();
@@ -295,12 +294,6 @@ function createInvoiceDoc(
     );
   }
 
-  const numRows = targetTable.getNumRows();
-  for (let i = numRows - 1; i > 0; i--) {
-    targetTable.removeRow(i);
-  }
-
-  // 1. Получаем стили плейсхолдеров из первой строки с данными
   const placeholderRow = targetTable.getRow(1);
   const placeholderStyles = [];
 
@@ -315,32 +308,41 @@ function createInvoiceDoc(
         underline: textEl.isUnderline(),
         fontSize: textEl.getFontSize(),
         fontFamily: textEl.getFontFamily(),
+        alignment: cell.getTextAlignment(),
+        backgroundColor: cell.getBackgroundColor(),
       });
     } else {
       placeholderStyles.push({});
     }
   }
+  // Удаляем все строки таблицы, кроме заголовка (строка 0)
+  const numRows = targetTable.getNumRows();
+  for (let i = numRows - 1; i > 0; i--) {
+    targetTable.removeRow(i);
+  }
 
-  // 2. Вставка новых строк с применением этих стилей
   data.items.forEach((row) => {
     const newRow = targetTable.appendTableRow();
 
-    row.forEach((cell, index) => {
+    row.forEach((cellValueRaw, index) => {
       const cellValue =
-        (index === 4 || index === 5) && cell
-          ? `${data.currency}${parseFloat(cell).toFixed(2)}`
-          : cell || "";
+        (index === 4 || index === 5) && cellValueRaw
+          ? `${data.currency}${parseFloat(cellValueRaw).toFixed(2)}`
+          : cellValueRaw || "";
 
-      const newCell = newRow.appendTableCell();
-      const text = newCell.editAsText();
-      text.setText(cellValue);
-
+      const newCell = newRow.appendTableCell(cellValue);
+      const text = newCell.getChild(0).asText();
       const style = placeholderStyles[index] || {};
+
       if (style.bold !== undefined) text.setBold(style.bold);
       if (style.italic !== undefined) text.setItalic(style.italic);
       if (style.underline !== undefined) text.setUnderline(style.underline);
       if (style.fontSize !== undefined) text.setFontSize(style.fontSize);
       if (style.fontFamily !== undefined) text.setFontFamily(style.fontFamily);
+      if (style.alignment !== undefined)
+        newCell.setTextAlignment(style.alignment);
+      if (style.backgroundColor !== undefined)
+        newCell.setBackgroundColor(style.backgroundColor);
     });
   });
 
