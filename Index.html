@@ -54,16 +54,18 @@
   </head>
   <body class="container py-4">
     <div class="mb-4">
-      <button class="btn btn-link" onclick="goHome()">← Back to Home</button>
-
-      <script>
-        function goHome() {
-          const url = new URL(window.location.href);
-          url.searchParams.set("page", "home");
-          window.location.href = url.toString();
-        }
-      </script>
+      <button class="btn btn-link" onclick="goHome()">
+        ← Back to Main Page
+      </button>
     </div>
+
+    <script>
+      function goHome() {
+        const url = new URL(window.location.href);
+        url.searchParams.set("page", "home");
+        window.location.href = url.toString();
+      }
+    </script>
 
     <h2 class="mb-4">Create invoice</h2>
 
