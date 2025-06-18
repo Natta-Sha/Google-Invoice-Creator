@@ -22,62 +22,81 @@ function getProjectDetails(projectName) {
   const values = sheet.getDataRange().getValues();
 
   const bankMap = {};
-  const templateMap = {};
   let selectedTemplateName = "";
   let selectedTemplateId = "";
 
+  // 1. Сначала находим строку с нужным проектом
+  let projectRow = null;
   for (let i = 1; i < values.length; i++) {
-    const shortName = values[i][16]; // Q
-    const fullDetails = values[i][17]; // R
-    if (shortName && fullDetails) {
-      bankMap[shortName] = fullDetails;
-    }
-
-    const templateName = (values[i][19] || "").toString().trim(); // T
-
-    const templateId = values[i][20]; // U
-    if (templateName && templateId) {
-      templateMap[templateName] = templateId;
+    const name = (values[i][0] || "").toString().trim();
+    if (name.toLowerCase() === projectName.toString().trim().toLowerCase()) {
+      projectRow = values[i];
+      break;
     }
   }
 
+  if (!projectRow) {
+    throw new Error(`❗ Project "${projectName}" not found in column A.`);
+  }
+
+  // 2. Получаем название шаблона из столбца N (index 13)
+  selectedTemplateName = (projectRow[13] || "").toString().trim();
+  if (!selectedTemplateName) {
+    throw new Error(
+      `🚫 No invoice template name specified for project "${projectName}". Please fill in column N.`
+    );
+  }
+
+  // 3. Находим шаблон в справочнике шаблонов (T: 19, U: 20)
   for (let i = 1; i < values.length; i++) {
-    if (values[i][0] === projectName) {
-      const tax =
-        typeof values[i][5] === "number"
-          ? values[i][5] * 100
-          : parseFloat(values[i][5]);
-      const currencyMap = { USD: "$", EUR: "€", UAH: "₴" };
-
-      const shortBank1 = values[i][6] || "";
-      const shortBank2 = values[i][7] || "";
-
-      selectedTemplateName = (values[i][13] || "").toString().trim(); // N
-
-      selectedTemplateId = templateMap[selectedTemplateName] || "";
-      if (!selectedTemplateId) {
-        throw new Error(
-          `🚫 No invoice template found for the selected project. Please check Clients details and ensure the template of invoice is chosen.`
-        );
-      }
-
-      return {
-        clientName: values[i][1] || "",
-        clientNumber: `${values[i][2] || ""} ${values[i][3] || ""}`.trim(),
-        clientAddress: values[i][4] || "",
-        tax: isNaN(tax) ? 0 : tax.toFixed(0),
-        currency: currencyMap[values[i][8]] || values[i][8],
-        paymentDelay: parseInt(values[i][10]) || 0,
-        dayType: (values[i][9] || "").toString().trim().toUpperCase(),
-        bankDetails1: bankMap[shortBank1] || "",
-        bankDetails2: bankMap[shortBank2] || "",
-        ourCompany: values[i][14] || "",
-        templateId: selectedTemplateId,
-      };
+    const templateName = (values[i][19] || "").toString().trim();
+    const templateId = (values[i][20] || "").toString().trim();
+    if (
+      templateName.toLowerCase() === selectedTemplateName.toLowerCase() &&
+      templateId
+    ) {
+      selectedTemplateId = templateId;
+      break;
     }
   }
 
-  return null;
+  if (!selectedTemplateId) {
+    throw new Error(
+      `🚫 No invoice template found for "${selectedTemplateName}". Please check columns T and U in 'Lists'.`
+    );
+  }
+
+  // 4. Сопоставление банков по Q (16) → R (17)
+  for (let i = 1; i < values.length; i++) {
+    const short = (values[i][16] || "").toString().trim();
+    const full = (values[i][17] || "").toString().trim();
+    if (short && full) {
+      bankMap[short] = full;
+    }
+  }
+
+  const tax =
+    typeof projectRow[5] === "number"
+      ? projectRow[5] * 100
+      : parseFloat(projectRow[5]);
+  const currencyMap = { USD: "$", EUR: "€", UAH: "₴" };
+
+  const shortBank1 = (projectRow[6] || "").toString().trim();
+  const shortBank2 = (projectRow[7] || "").toString().trim();
+
+  return {
+    clientName: projectRow[1] || "",
+    clientNumber: `${projectRow[2] || ""} ${projectRow[3] || ""}`.trim(),
+    clientAddress: projectRow[4] || "",
+    tax: isNaN(tax) ? 0 : tax.toFixed(0),
+    currency: currencyMap[projectRow[8]] || projectRow[8],
+    paymentDelay: parseInt(projectRow[10]) || 0,
+    dayType: (projectRow[9] || "").toString().trim().toUpperCase(),
+    bankDetails1: bankMap[shortBank1] || "",
+    bankDetails2: bankMap[shortBank2] || "",
+    ourCompany: projectRow[14] || "",
+    templateId: selectedTemplateId,
+  };
 }
 
 function processForm(data) {
