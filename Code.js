@@ -1,4 +1,3 @@
-const TEMPLATE_ID = "1hqHM3O7pZNZ56zgb-nZJubYTs1zB2z1O42KCDRAXx2M";
 const FOLDER_ID = "1eHbDCawBYyRse6UNuTS3Z3coxeb80Zqr";
 const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 
@@ -54,6 +53,11 @@ function getProjectDetails(projectName) {
 
       selectedTemplateName = values[i][13]; // N
       selectedTemplateId = templateMap[selectedTemplateName] || "";
+      if (!selectedTemplateId) {
+        throw new Error(
+          `🚫 No invoice template found for the selected project. Please check Clients details and ensure the template of invoice is chosen.`
+        );
+      }
 
       return {
         clientName: values[i][1] || "",
@@ -200,7 +204,12 @@ function createInvoiceDoc(
   totalAmount,
   templateId
 ) {
-  const template = DriveApp.getFileById(templateId || TEMPLATE_ID);
+  if (!templateId) {
+    throw new Error(
+      "🚫 No invoice template found for the selected project. Please check Clients details and ensure the template of invoice is chosen."
+    );
+  }
+  const template = DriveApp.getFileById(templateId);
   const folder = DriveApp.getFolderById(FOLDER_ID);
 
   const invoiceDateForName = data.invoiceDate.replace(/-/g, "_");
