@@ -303,12 +303,13 @@ function createInvoiceDoc(
   data.items.forEach((row) => {
     const newRow = targetTable.appendTableRow();
     row.forEach((cell, index) => {
+      const tableCell = newRow.appendTableCell();
       if (index === 4 || index === 5) {
-        newRow.appendTableCell(
+        tableCell.setText(
           cell ? `${data.currency}${parseFloat(cell).toFixed(2)}` : ""
         );
       } else {
-        newRow.appendTableCell(cell || "");
+        tableCell.setText(cell || "");
       }
     });
   });
