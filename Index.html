@@ -228,6 +228,13 @@
         </div>
       </div>
     </div>
+    <div class="row mt-3">
+      <div class="col-md-12 text-end">
+        <button class="btn btn-secondary" onclick="createNewInvoice()">
+          Create New Invoice
+        </button>
+      </div>
+    </div>
 
     <div id="result" class="mt-4"></div>
 
@@ -510,12 +517,19 @@
           .withSuccessHandler(function (result) {
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerHTML = `
-                    <div class="alert alert-success mt-4">
-                      <strong>Invoice created!</strong><br>
-                      <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
-                      <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
-                    </div>
-                  `;
+      <div class="alert alert-success mt-4">
+        <strong>Invoice created!</strong><br>
+        <a href="${result.docUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open Google Doc</a>
+        <a href="${result.pdfUrl}" class="btn btn-outline-secondary mt-2" target="_blank">Open PDF</a>
+      </div>
+    `;
+
+            // 🔒 Disable all input fields and buttons
+            document
+              .querySelectorAll("input, textarea, button")
+              .forEach((el) => {
+                el.disabled = true;
+              });
           })
           .processForm(data);
       }
@@ -538,6 +552,52 @@
           document.getElementById("result").innerHTML = "";
         });
       });
+      function createNewInvoice() {
+        const hasFilledFields = [...document.querySelectorAll("input")].some(
+          (el) => el.type !== "hidden" && el.value.trim() !== ""
+        );
+
+        if (hasFilledFields) {
+          const proceed = confirm(
+            "You have unsaved data.\nDo you want to submit the current invoice before creating a new one?"
+          );
+
+          if (proceed) {
+            submitForm();
+          } else {
+            const confirmClear = confirm(
+              "Are you sure you want to clear the current invoice data and start a new one?"
+            );
+            if (confirmClear) {
+              resetForm();
+            }
+          }
+        } else {
+          resetForm();
+        }
+      }
+
+      function resetForm() {
+        document.querySelectorAll("input, textarea").forEach((el) => {
+          el.value = "";
+          el.disabled = false;
+        });
+
+        document
+          .querySelectorAll("p.form-control-plaintext, pre")
+          .forEach((el) => {
+            el.textContent = "";
+          });
+
+        document.getElementById("invoice-body").innerHTML = "";
+        addRow(); // добавить одну пустую строку
+
+        document.getElementById("result").innerHTML = "";
+        document.getElementById("generate-btn").disabled = false;
+        document.getElementById("spinner").style.display = "none";
+
+        populateProjectNames();
+      }
     </script>
   </body>
 </html>
