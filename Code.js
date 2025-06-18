@@ -331,10 +331,11 @@ function createInvoiceDoc(
           ? `${data.currency}${parseFloat(cell).toFixed(2)}`
           : cell || "";
 
-      const newCell = newRow.appendTableCell(cellValue);
-      const text = newCell.getChild(0).asText();
-      const style = placeholderStyles[index] || {};
+      const newCell = newRow.appendTableCell();
+      const text = newCell.editAsText();
+      text.setText(cellValue);
 
+      const style = placeholderStyles[index] || {};
       if (style.bold !== undefined) text.setBold(style.bold);
       if (style.italic !== undefined) text.setItalic(style.italic);
       if (style.underline !== undefined) text.setUnderline(style.underline);
