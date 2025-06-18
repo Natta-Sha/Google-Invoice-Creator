@@ -300,24 +300,44 @@ function createInvoiceDoc(
     targetTable.removeRow(i);
   }
 
+  // 1. Получаем стили плейсхолдеров из первой строки с данными
+  const placeholderRow = targetTable.getRow(1);
+  const placeholderStyles = [];
+
+  for (let i = 0; i < placeholderRow.getNumCells(); i++) {
+    const textEl = placeholderRow.getCell(i).getChild(0)?.asText();
+    if (textEl) {
+      placeholderStyles.push({
+        bold: textEl.isBold(),
+        italic: textEl.isItalic(),
+        underline: textEl.isUnderline(),
+        fontSize: textEl.getFontSize(),
+        fontFamily: textEl.getFontFamily(),
+      });
+    } else {
+      placeholderStyles.push({});
+    }
+  }
+
+  // 2. Вставка новых строк с применением этих стилей
   data.items.forEach((row) => {
     const newRow = targetTable.appendTableRow();
+
     row.forEach((cell, index) => {
-      const tableCell = newRow.appendTableCell();
-      if (index === 4 || index === 5) {
-        tableCell.setText(
-          cell ? `${data.currency}${parseFloat(cell).toFixed(2)}` : ""
-        );
-      } else {
-        tableCell.setText(cell || "");
-      }
-      // Сбросить стиль: делаем обычный текст
-      const text = tableCell.getChild(0).asText();
-      text.setBold(false);
-      text.setItalic(false);
-      text.setUnderline(false);
-      text.setFontSize(null);
-      text.setFontFamily(null);
+      const cellValue =
+        (index === 4 || index === 5) && cell
+          ? `${data.currency}${parseFloat(cell).toFixed(2)}`
+          : cell || "";
+
+      const newCell = newRow.appendTableCell(cellValue);
+      const text = newCell.getChild(0).asText();
+      const style = placeholderStyles[index] || {};
+
+      if (style.bold !== undefined) text.setBold(style.bold);
+      if (style.italic !== undefined) text.setItalic(style.italic);
+      if (style.underline !== undefined) text.setUnderline(style.underline);
+      if (style.fontSize !== undefined) text.setFontSize(style.fontSize);
+      if (style.fontFamily !== undefined) text.setFontFamily(style.fontFamily);
     });
   });
 
