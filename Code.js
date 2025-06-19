@@ -389,11 +389,27 @@ function getInvoiceList() {
       total: headers.indexOf("Total"),
     };
 
-    // Проверка: все ли нужные колонки найдены
+    // Проверка всех колонок
     for (let key in colIndex) {
       if (colIndex[key] === -1) {
         throw new Error(`❌ Колонка "${key}" не найдена в заголовках таблицы.`);
       }
+    }
+
+    // ✅ Функция форматирования даты
+    function formatDate(val) {
+      if (!val) return "";
+      if (val instanceof Date) {
+        const dd = String(val.getDate()).padStart(2, "0");
+        const mm = String(val.getMonth() + 1).padStart(2, "0");
+        const yyyy = val.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+      }
+      if (typeof val === "string" && val.includes("T")) {
+        const [yyyy, mm, dd] = val.split("T")[0].split("-");
+        return `${dd}/${mm}/${yyyy}`;
+      }
+      return val.toString();
     }
 
     const result = [];
@@ -404,7 +420,7 @@ function getInvoiceList() {
       result.push({
         projectName: row[colIndex.projectName] || "",
         invoiceNumber: row[colIndex.invoiceNumber] || "",
-        invoiceDate: row[colIndex.invoiceDate] || "",
+        invoiceDate: formatDate(row[colIndex.invoiceDate]),
         total:
           row[colIndex.total] !== undefined && row[colIndex.total] !== ""
             ? parseFloat(row[colIndex.total]).toFixed(2)
