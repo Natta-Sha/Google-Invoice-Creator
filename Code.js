@@ -367,18 +367,11 @@ function createInvoiceDoc(
 
 function getInvoiceList() {
   try {
-    Logger.log("📞 getInvoiceList() вызвана");
-
     const sheet =
       SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
     const data = sheet.getDataRange().getValues();
 
-    Logger.log("✅ Всего строк включая заголовок: " + data.length);
-
-    if (data.length < 2) {
-      Logger.log("⚠️ Недостаточно данных (только заголовок или пусто)");
-      return [];
-    }
+    if (data.length < 2) return [];
 
     const headers = data[0].map((h) => (h || "").toString().trim());
 
@@ -389,14 +382,12 @@ function getInvoiceList() {
       total: headers.indexOf("Total"),
     };
 
-    // Проверка всех колонок
     for (let key in colIndex) {
       if (colIndex[key] === -1) {
-        throw new Error(`❌ Колонка "${key}" не найдена в заголовках таблицы.`);
+        throw new Error(`Missing column: "${key}"`);
       }
     }
 
-    // ✅ Функция форматирования даты
     function formatDate(val) {
       if (!val) return "";
       if (val instanceof Date) {
@@ -412,26 +403,16 @@ function getInvoiceList() {
       return val.toString();
     }
 
-    const result = [];
-
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-
-      result.push({
-        projectName: row[colIndex.projectName] || "",
-        invoiceNumber: row[colIndex.invoiceNumber] || "",
-        invoiceDate: formatDate(row[colIndex.invoiceDate]),
-        total:
-          row[colIndex.total] !== undefined && row[colIndex.total] !== ""
-            ? parseFloat(row[colIndex.total]).toFixed(2)
-            : "",
-      });
-    }
-
-    Logger.log("📦 Итоговые данные JSON: " + JSON.stringify(result));
-    return result;
+    return data.slice(1).map((row) => ({
+      projectName: row[colIndex.projectName] || "",
+      invoiceNumber: row[colIndex.invoiceNumber] || "",
+      invoiceDate: formatDate(row[colIndex.invoiceDate]),
+      total:
+        row[colIndex.total] !== undefined && row[colIndex.total] !== ""
+          ? parseFloat(row[colIndex.total]).toFixed(2)
+          : "",
+    }));
   } catch (error) {
-    Logger.log("❌ Ошибка в getInvoiceList: " + error.message);
     return [];
   }
 }
