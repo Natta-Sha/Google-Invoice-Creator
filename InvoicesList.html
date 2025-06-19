@@ -53,12 +53,11 @@
       td:nth-child(6) {
         width: 10%;
       }
-      th.actions,
-      td.actions {
+      th:nth-child(7),
+      td:nth-child(7) {
         width: 26%;
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
+        white-space: nowrap;
+        text-align: center;
       }
 
       thead input {
@@ -67,25 +66,8 @@
         padding: 4px;
       }
 
-      /* скрываем заголовок последнего столбца */
-      thead th.actions {
-        visibility: hidden;
-      }
-
-      /* Убираем любые рамки и фон DataTables у ячеек с кнопками */
-      table.dataTable tbody td.actions,
-      table.dataTable thead th.actions {
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-      }
-
-      td.actions {
-        white-space: nowrap;
-      }
-
-      table.dataTable tbody td.actions {
-        border-bottom: none !important;
+      .btn-sm {
+        font-size: 0.75rem;
       }
     </style>
   </head>
@@ -106,7 +88,7 @@
           <th>Due Date</th>
           <th>Total</th>
           <th>Currency</th>
-          <th class="actions"></th>
+          <th>Actions</th>
         </tr>
         <tr>
           <th><input type="text" placeholder="Search Project" /></th>
@@ -115,7 +97,7 @@
           <th><input type="text" placeholder="Search Due" /></th>
           <th><input type="text" placeholder="Search Total" /></th>
           <th><input type="text" placeholder="Search Currency" /></th>
-          <th class="actions"></th>
+          <th></th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -127,7 +109,6 @@
           dom: "lrtip",
           orderCellsTop: true,
           fixedHeader: true,
-          columnDefs: [{ targets: -1, className: "actions" }],
         });
 
         $("#invoiceTable thead tr:eq(1) th").each(function (i) {
@@ -151,13 +132,11 @@
                 row.total || "",
                 row.currency || "",
                 `
- 
-    <button class="btn btn-sm btn-outline-primary me-1">View</button>
-    <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-    <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
-    <button class="btn btn-sm btn-outline-success">Copy</button>
-  
-              `,
+                <button class="btn btn-sm btn-outline-primary me-1">View</button>
+                <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
+                <button class="btn btn-sm btn-outline-success">Copy</button>
+                `,
               ]);
             });
 
