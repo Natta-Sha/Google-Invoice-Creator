@@ -366,38 +366,53 @@ function createInvoiceDoc(
 }
 
 function getInvoiceList() {
-  const sheet =
-    SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
-  const data = sheet.getDataRange().getValues();
-  Logger.log("Rows loaded: " + data.length); // ➕ добавлено
+  try {
+    const sheet =
+      SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
+    const data = sheet.getDataRange().getValues();
+    Logger.log("✅ Rows loaded: " + data.length);
 
-  const headers = data[0];
+    if (data.length < 2) {
+      Logger.log("⚠️ No data rows found");
+      return [];
+    }
 
-  const colIndex = {
-    projectName: headers.indexOf("Project Name"),
-    invoiceNumber: headers.indexOf("Invoice Number"),
-    invoiceDate: headers.indexOf("Invoice Date"),
-    total: headers.indexOf("Total"),
-  };
+    const headers = data[0].map((h) => (h || "").toString().trim());
 
-  Logger.log("Header indexes: " + JSON.stringify(colIndex)); // ➕
+    const colIndex = {
+      projectName: headers.indexOf("Project Name"),
+      invoiceNumber: headers.indexOf("Invoice Number"),
+      invoiceDate: headers.indexOf("Invoice Date"),
+      total: headers.indexOf("Total"),
+    };
 
-  const result = [];
+    // Проверка: все ли нужные колонки найдены
+    for (let key in colIndex) {
+      if (colIndex[key] === -1) {
+        throw new Error(`❌ Column "${key}" not found in sheet headers.`);
+      }
+    }
 
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    result.push({
-      projectName: row[colIndex.projectName] || "",
-      invoiceNumber: row[colIndex.invoiceNumber] || "",
-      invoiceDate: row[colIndex.invoiceDate] || "",
-      total:
-        row[colIndex.total] !== undefined
-          ? parseFloat(row[colIndex.total]).toFixed(2)
-          : "",
-    });
+    const result = [];
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+
+      result.push({
+        projectName: row[colIndex.projectName] || "",
+        invoiceNumber: row[colIndex.invoiceNumber] || "",
+        invoiceDate: row[colIndex.invoiceDate] || "",
+        total:
+          row[colIndex.total] !== undefined && row[colIndex.total] !== ""
+            ? parseFloat(row[colIndex.total]).toFixed(2)
+            : "",
+      });
+    }
+
+    Logger.log("✅ Returning data: " + JSON.stringify(result));
+    return result;
+  } catch (error) {
+    Logger.log("❌ ERROR in getInvoiceList: " + error.message);
+    return [];
   }
-
-  Logger.log("Returning " + result.length + " records"); // ➕
-
-  return result;
 }
