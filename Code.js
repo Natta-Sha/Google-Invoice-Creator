@@ -391,7 +391,7 @@ function getInvoiceList() {
     function formatDate(val) {
       if (!val) return "";
 
-      // Если это объект типа Date — форматируем вручную
+      // Если это объект Date (нормальный случай)
       if (val instanceof Date) {
         const dd = String(val.getDate()).padStart(2, "0");
         const mm = String(val.getMonth() + 1).padStart(2, "0");
@@ -399,20 +399,22 @@ function getInvoiceList() {
         return `${dd}/${mm}/${yyyy}`;
       }
 
-      if (typeof val === "string") {
-        if (val.includes("T")) {
-          // ISO формат (например 2025-06-03T00:00:00.000Z)
-          const [yyyy, mm, dd] = val.split("T")[0].split("-");
-          return `${dd}/${mm}/${yyyy}`;
-        }
-
-        // MM/DD/YYYY (ошибочно считанная дата из ячейки)
-        const match = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-        if (match) {
-          const [_, mm, dd, yyyy] = match;
-          return `${dd.padStart(2, "0")}/${mm.padStart(2, "0")}/${yyyy}`;
-        }
+      // Если ISO-строка (2025-06-17T00:00:00Z)
+      if (typeof val === "string" && val.includes("T")) {
+        const [yyyy, mm, dd] = val.split("T")[0].split("-");
+        return `${dd}/${mm}/${yyyy}`;
       }
+
+      // Если строка в формате MM/DD/YYYY
+      const mmddyyyy = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (mmddyyyy) {
+        const [_, mm, dd, yyyy] = mmddyyyy;
+        return `${dd.padStart(2, "0")}/${mm.padStart(2, "0")}/${yyyy}`;
+      }
+
+      // Если уже правильный формат — оставим
+      const ddmmyyyy = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (ddmmyyyy) return val;
 
       return val.toString(); // fallback
     }
