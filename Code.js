@@ -10,10 +10,7 @@ function doGet(e) {
 }
 
 function loadPage(name) {
-  const template = HtmlService.createTemplateFromFile(name);
-  return template
-    .evaluate()
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
 
 function formatDate(dateStr) {
