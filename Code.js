@@ -367,13 +367,16 @@ function createInvoiceDoc(
 
 function getInvoiceList() {
   try {
+    Logger.log("📞 getInvoiceList() вызвана");
+
     const sheet =
       SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
     const data = sheet.getDataRange().getValues();
-    Logger.log("✅ Rows loaded: " + data.length);
+
+    Logger.log("✅ Всего строк включая заголовок: " + data.length);
 
     if (data.length < 2) {
-      Logger.log("⚠️ No data rows found");
+      Logger.log("⚠️ Недостаточно данных (только заголовок или пусто)");
       return [];
     }
 
@@ -389,7 +392,7 @@ function getInvoiceList() {
     // Проверка: все ли нужные колонки найдены
     for (let key in colIndex) {
       if (colIndex[key] === -1) {
-        throw new Error(`❌ Column "${key}" not found in sheet headers.`);
+        throw new Error(`❌ Колонка "${key}" не найдена в заголовках таблицы.`);
       }
     }
 
@@ -409,10 +412,10 @@ function getInvoiceList() {
       });
     }
 
-    Logger.log("📦 JSON Output: " + JSON.stringify(result));
+    Logger.log("📦 Итоговые данные JSON: " + JSON.stringify(result));
     return result;
   } catch (error) {
-    Logger.log("❌ ERROR in getInvoiceList: " + error.message);
+    Logger.log("❌ Ошибка в getInvoiceList: " + error.message);
     return [];
   }
 }
