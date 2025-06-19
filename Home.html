@@ -26,12 +26,13 @@
   <body>
     <h1 class="mb-5">Welcome to Invoice App</h1>
 
-    <button class="btn btn-primary btn-lg mb-3" onclick="navigateToGenerate()">
-      Generate Invoice
-    </button>
-    <button class="btn btn-secondary btn-lg" onclick="navigateToList()">
-      List of Invoices
-    </button>
+<a href="<?= baseUrl ?>?page=Index" class="btn btn-primary btn-lg mb-3">
+  Generate Invoice
+</a>
+<a href="<?= baseUrl ?>?page=InvoicesList" class="btn btn-secondary btn-lg">
+  List of Invoices
+</a>
+
 
  
 <script>

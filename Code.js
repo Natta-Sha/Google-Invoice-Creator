@@ -3,7 +3,12 @@ const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 
 function doGet(e) {
   const page = e.parameter.page || "Home";
-  return HtmlService.createHtmlOutputFromFile(page).setTitle(page);
+  const template = HtmlService.createTemplateFromFile(page);
+  template.baseUrl = ScriptApp.getService().getUrl(); // <- ключевая строка
+  return template.evaluate().setTitle(page);
+}
+function loadPage(name) {
+  return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
 
 function formatDate(dateStr) {

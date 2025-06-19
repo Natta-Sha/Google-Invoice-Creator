@@ -51,9 +51,10 @@
   </head>
 
   <body class="container py-4">
-    <button class="btn btn-link mb-3" onclick="goHome()">
-      ← Back to Main Page
-    </button>
+    <a href="<?= baseUrl ?>?page=Home" class="btn btn-link"
+      >← Back to Main Page</a
+    >
+
     <script>
       function goHome() {
         window.location.href = "?page=Home";
