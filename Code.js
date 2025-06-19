@@ -4,9 +4,18 @@ const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 function doGet(e) {
   const page = e.parameter.page || "Home";
   const template = HtmlService.createTemplateFromFile(page);
-  template.baseUrl = ScriptApp.getService().getUrl(); // <- ключевая строка
+
+  // Подставляем baseUrl в каждый шаблон
+  template.baseUrl = ScriptApp.getService().getUrl();
+
+  // Если передан номер инвойса — передаём и его в шаблон
+  if (page === "ViewInvoice" && e.parameter.number) {
+    template.invoiceNumber = e.parameter.number;
+  }
+
   return template.evaluate().setTitle(page);
 }
+
 function loadPage(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
@@ -409,4 +418,53 @@ function getInvoiceList() {
   } catch (error) {
     return [];
   }
+}
+
+function getInvoiceByNumber(number) {
+  const sheet =
+    SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0].map((h) => h.toString().trim());
+
+  const indexMap = {};
+  headers.forEach((h, i) => (indexMap[h] = i));
+
+  const row = data.find((r) => r[indexMap["Invoice Number"]] == number);
+  if (!row) throw new Error("Invoice not found");
+
+  return {
+    projectName: row[indexMap["Project Name"]],
+    invoiceNumber: row[indexMap["Invoice Number"]],
+    clientName: row[indexMap["Client Name"]],
+    clientAddress: row[indexMap["Client Address"]],
+    clientNumber: row[indexMap["Client Number"]],
+    invoiceDate: formatDate(row[indexMap["Invoice Date"]]),
+    dueDate: formatDate(row[indexMap["Due Date"]]),
+    tax: row[indexMap["Tax Rate (%)"]],
+    subtotal: row[indexMap["Subtotal"]],
+    total: row[indexMap["Total"]],
+    exchangeRate: row[indexMap["Exchange Rate"]],
+    currency: row[indexMap["Currency"]],
+    amountInEUR: row[indexMap["Amount in EUR"]],
+    bankDetails1: row[indexMap["Bank Details 1"]],
+    bankDetails2: row[indexMap["Bank Details 2"]],
+    ourCompany: row[indexMap["Our Company"]],
+    comment: row[indexMap["Comment"]],
+    items: extractItems(row, headers),
+  };
+}
+
+function extractItems(row, headers) {
+  const items = [];
+  for (let i = 1; i <= 20; i++) {
+    const prefix = `Row ${i}`;
+    const base = headers.findIndex((h) => h === `${prefix} #`);
+    if (base !== -1) {
+      const item = row.slice(base, base + 6);
+      if (item.some((val) => val !== "" && val !== undefined)) {
+        items.push(item.map((val) => val?.toString() ?? ""));
+      }
+    }
+  }
+  return items;
 }
