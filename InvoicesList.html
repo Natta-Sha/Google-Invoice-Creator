@@ -135,6 +135,8 @@
                 row.currency || "",
                 `
                 <button class="btn btn-sm btn-outline-primary me-1 view-invoice" data-id="${row.id}">View</button>
+
+
                 <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
                 <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
                 <button class="btn btn-sm btn-outline-success">Copy</button>
@@ -150,7 +152,7 @@
               "button.view-invoice",
               function () {
                 const invoiceId = $(this).data("id");
-                window.location.href = `<?= baseUrl ?>?page=InvoiceViewer&id=${invoiceId}`;
+                window.location.href = `<?= baseUrl ?>?page=InvoiceGenerator&id=${invoiceId}`;
               }
             );
           })
