@@ -4,13 +4,18 @@ const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 function doGet(e) {
   const page = e.parameter.page;
 
-  if (page === "generate") {
-    return HtmlService.createHtmlOutputFromFile("Index").setTitle(
-      "Generate Invoice"
-    );
+  switch (page) {
+    case "generate":
+      return HtmlService.createHtmlOutputFromFile("Index").setTitle(
+        "Generate Invoice"
+      );
+    case "invoices":
+      return HtmlService.createHtmlOutputFromFile("InvoicesList").setTitle(
+        "List of Invoices"
+      );
+    default:
+      return HtmlService.createHtmlOutputFromFile("Home").setTitle("Welcome");
   }
-
-  return HtmlService.createHtmlOutputFromFile("Home").setTitle("Welcome");
 }
 
 function loadPage(name) {
