@@ -61,13 +61,7 @@
 
     <script>
       function goHome() {
-        google.script.run
-          .withSuccessHandler(function (html) {
-            document.open();
-            document.write(html);
-            document.close();
-          })
-          .loadPage("Home");
+        window.location.href = "?page=Home";
       }
     </script>
 
