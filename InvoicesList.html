@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <title>List of Invoices</title>
 
-    <!-- ✅ Стили -->
+    <!-- Стили -->
     <link
       rel="stylesheet"
       href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"
@@ -15,12 +15,11 @@
       rel="stylesheet"
     />
 
-    <!-- ✅ Скрипты -->
+    <!-- Скрипты -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
     <style>
-      /* Настраиваем ширину колонок */
       th:nth-child(1),
       td:nth-child(1) {
         width: 30%;
@@ -46,6 +45,7 @@
       thead input {
         width: 100%;
         box-sizing: border-box;
+        padding: 4px;
       }
     </style>
   </head>
@@ -70,10 +70,10 @@
           <th>Actions</th>
         </tr>
         <tr>
-          <th><input type="text" placeholder="Search" /></th>
-          <th><input type="text" placeholder="Search" /></th>
-          <th><input type="text" placeholder="Search" /></th>
-          <th><input type="text" placeholder="Search" /></th>
+          <th><input type="text" placeholder="Search Project" /></th>
+          <th><input type="text" placeholder="Search Number" /></th>
+          <th><input type="text" placeholder="Search Date" /></th>
+          <th><input type="text" placeholder="Search Total" /></th>
           <th></th>
         </tr>
       </thead>
@@ -82,21 +82,18 @@
 
     <script>
       function goHome() {
-        google.script.run
-          .withSuccessHandler(function (html) {
-            document.open();
-            document.write(html);
-            document.close();
-          })
-          .loadPage("Home");
+        window.location.href =
+          window.location.href.split("?")[0] + "?page=Home";
       }
 
       $(document).ready(function () {
         const table = $("#invoiceTable").DataTable({
-          searching: false, // ❌ отключает верхний общий фильтр
+          dom: "lrtip", // Убирает верхний глобальный фильтр
+          orderCellsTop: true,
+          fixedHeader: true,
         });
 
-        // Подключаем фильтры по колонкам
+        // Фильтрация по колонкам (нижняя строка thead)
         $("#invoiceTable thead tr:eq(1) th").each(function (i) {
           $("input", this).on("keyup change", function () {
             if (table.column(i).search() !== this.value) {
@@ -105,6 +102,7 @@
           });
         });
 
+        // Загружаем данные
         google.script.run
           .withSuccessHandler(function (data) {
             if (!Array.isArray(data) || data.length === 0) return;
