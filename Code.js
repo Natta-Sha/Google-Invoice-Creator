@@ -6,10 +6,6 @@ function doGet(e) {
   return HtmlService.createHtmlOutputFromFile(page).setTitle(page);
 }
 
-function loadPage(name) {
-  return HtmlService.createHtmlOutputFromFile(name).getContent();
-}
-
 function formatDate(dateStr) {
   if (!dateStr || dateStr.indexOf("-") === -1) return dateStr;
   const [yyyy, mm, dd] = dateStr.split("-");
