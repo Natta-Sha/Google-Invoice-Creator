@@ -435,28 +435,3 @@ function getInvoiceList() {
     return [];
   }
 }
-
-function getInvoiceById(id) {
-  if (!id) return null;
-
-  const sheet =
-    SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
-  const data = sheet.getDataRange().getValues();
-  if (data.length < 2) return null;
-
-  const headers = data[0];
-  const colIndex = headers.indexOf("ID");
-  if (colIndex === -1) return null;
-
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][colIndex] === id) {
-      const row = data[i];
-      const obj = {};
-      for (let j = 0; j < headers.length; j++) {
-        obj[headers[j]] = row[j];
-      }
-      return obj;
-    }
-  }
-  return null;
-}

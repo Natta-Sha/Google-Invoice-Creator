@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <title>List of Invoices</title>
 
-    <!-- CSS -->
+    <!-- Стили -->
     <link
       rel="stylesheet"
       href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"
@@ -15,18 +15,22 @@
       rel="stylesheet"
     />
 
-    <!-- JS -->
+    <!-- Скрипты -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
     <style>
       body {
-        font-size: 0.875rem;
+        font-size: 0.875rem; /* уменьшенный шрифт */
       }
 
       th,
       td {
-        padding: 4px 8px !important;
+        padding: 4px 8px !important; /* компактнее строки */
+      }
+
+      table.dataTable {
+        width: 100% !important;
       }
 
       th:nth-child(1),
@@ -57,17 +61,12 @@
       td:nth-child(7) {
         width: 26%;
         white-space: nowrap;
-        text-align: center;
       }
 
       thead input {
         width: 100%;
         box-sizing: border-box;
         padding: 4px;
-      }
-
-      .btn-sm {
-        font-size: 0.75rem;
       }
     </style>
   </head>
@@ -77,9 +76,19 @@
       >← Back to Main Page</a
     >
 
+    <script>
+      function goHome() {
+        window.location.href = "?page=Home";
+      }
+    </script>
+
     <h2 class="mb-4">List of Invoices</h2>
 
-    <table id="invoiceTable" class="display table table-bordered">
+    <table
+      id="invoiceTable"
+      class="display table table-bordered"
+      style="width: 100%"
+    >
       <thead class="table-light">
         <tr>
           <th>Project Name</th>
@@ -104,14 +113,18 @@
     </table>
 
     <script>
+      function goHome() {
+        window.location.href = "?page=Home";
+      }
+
       $(document).ready(function () {
         const table = $("#invoiceTable").DataTable({
-          dom: "lrtip",
+          dom: "lrtip", // Убирает верхний глобальный фильтр
           orderCellsTop: true,
           fixedHeader: true,
         });
 
-        // Фильтры по колонкам
+        // Фильтрация по колонкам (нижняя строка thead)
         $("#invoiceTable thead tr:eq(1) th").each(function (i) {
           $("input", this).on("keyup change", function () {
             if (table.column(i).search() !== this.value) {
@@ -120,7 +133,7 @@
           });
         });
 
-        // Загрузка данных из Google Sheets
+        // Загружаем данные
         google.script.run
           .withSuccessHandler(function (data) {
             if (!Array.isArray(data) || data.length === 0) return;
@@ -134,27 +147,15 @@
                 row.total || "",
                 row.currency || "",
                 `
-                <button class="btn btn-sm btn-outline-primary me-1 view-invoice" data-id="${row.id}">View</button>
-
-
-                <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-                <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
-                <button class="btn btn-sm btn-outline-success">Copy</button>
-                `,
+      <button class="btn btn-sm btn-outline-primary me-1">View</button>
+      <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+      <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
+      <button class="btn btn-sm btn-outline-success">Copy</button>
+    `,
               ]);
             });
 
             table.draw();
-
-            // Обработчик клика по кнопке View
-            $("#invoiceTable tbody").on(
-              "click",
-              "button.view-invoice",
-              function () {
-                const invoiceId = $(this).data("id");
-                window.location.href = `<?= baseUrl ?>?page=InvoiceGenerator&id=${invoiceId}`;
-              }
-            );
           })
           .getInvoiceList();
       });
