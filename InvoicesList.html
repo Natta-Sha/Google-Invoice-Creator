@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <title>List of Invoices</title>
 
-    <!-- Стили -->
+    <!-- CSS -->
     <link
       rel="stylesheet"
       href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"
@@ -15,7 +15,7 @@
       rel="stylesheet"
     />
 
-    <!-- Скрипты -->
+    <!-- JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
@@ -27,10 +27,6 @@
       th,
       td {
         padding: 4px 8px !important;
-      }
-
-      table.dataTable {
-        width: 100% !important;
       }
 
       th:nth-child(1),
@@ -57,6 +53,12 @@
       td:nth-child(6) {
         width: 10%;
       }
+      th.actions,
+      td.actions {
+        width: 26%;
+        background: none !important;
+        border: none !important;
+      }
 
       thead input {
         width: 100%;
@@ -64,29 +66,13 @@
         padding: 4px;
       }
 
-      .table-wrapper {
-        position: relative;
+      /* скрываем заголовок последнего столбца */
+      thead th.actions {
+        visibility: hidden;
       }
 
-      #invoice-actions-container {
-        position: absolute;
-        top: 0;
-        right: 0;
-        z-index: 10;
-        pointer-events: none;
-      }
-
-      .invoice-actions {
-        position: absolute;
-        right: 0;
-        display: flex;
-        gap: 4px;
+      td.actions {
         white-space: nowrap;
-        pointer-events: all;
-      }
-
-      .invoice-actions button {
-        font-size: 0.75rem;
       }
     </style>
   </head>
@@ -98,31 +84,29 @@
 
     <h2 class="mb-4">List of Invoices</h2>
 
-    <div class="table-wrapper">
-      <table id="invoiceTable" class="display table table-bordered">
-        <thead class="table-light">
-          <tr>
-            <th>Project Name</th>
-            <th>Invoice Number</th>
-            <th>Invoice Date</th>
-            <th>Due Date</th>
-            <th>Total</th>
-            <th>Currency</th>
-          </tr>
-          <tr>
-            <th><input type="text" placeholder="Search Project" /></th>
-            <th><input type="text" placeholder="Search Number" /></th>
-            <th><input type="text" placeholder="Search Date" /></th>
-            <th><input type="text" placeholder="Search Due" /></th>
-            <th><input type="text" placeholder="Search Total" /></th>
-            <th><input type="text" placeholder="Search Currency" /></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-      <div id="invoice-actions-container"></div>
-    </div>
+    <table id="invoiceTable" class="display table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Project Name</th>
+          <th>Invoice Number</th>
+          <th>Invoice Date</th>
+          <th>Due Date</th>
+          <th>Total</th>
+          <th>Currency</th>
+          <th class="actions"></th>
+        </tr>
+        <tr>
+          <th><input type="text" placeholder="Search Project" /></th>
+          <th><input type="text" placeholder="Search Number" /></th>
+          <th><input type="text" placeholder="Search Date" /></th>
+          <th><input type="text" placeholder="Search Due" /></th>
+          <th><input type="text" placeholder="Search Total" /></th>
+          <th><input type="text" placeholder="Search Currency" /></th>
+          <th class="actions"></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
     <script>
       $(document).ready(function () {
@@ -132,7 +116,6 @@
           fixedHeader: true,
         });
 
-        // Фильтрация
         $("#invoiceTable thead tr:eq(1) th").each(function (i) {
           $("input", this).on("keyup change", function () {
             if (table.column(i).search() !== this.value) {
@@ -153,40 +136,16 @@
                 row.dueDate || "",
                 row.total || "",
                 row.currency || "",
-              ]);
-            });
-
-            table.draw();
-
-            // Создаем блоки кнопок после отрисовки
-            setTimeout(() => {
-              const actionContainer = document.getElementById(
-                "invoice-actions-container"
-              );
-              actionContainer.innerHTML = "";
-
-              const tableTop =
-                document.querySelector("#invoiceTable").getBoundingClientRect()
-                  .top + window.scrollY;
-              const rows = document.querySelectorAll("#invoiceTable tbody tr");
-
-              rows.forEach((rowEl, index) => {
-                const rowTop =
-                  rowEl.getBoundingClientRect().top + window.scrollY;
-                const offsetY = rowTop - tableTop;
-
-                const actionBlock = document.createElement("div");
-                actionBlock.className = "invoice-actions";
-                actionBlock.style.top = `${offsetY}px`;
-                actionBlock.innerHTML = `
+                `
                 <button class="btn btn-sm btn-outline-primary me-1">View</button>
                 <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
                 <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
                 <button class="btn btn-sm btn-outline-success">Copy</button>
-              `;
-                actionContainer.appendChild(actionBlock);
-              });
-            }, 50);
+              `,
+              ]);
+            });
+
+            table.draw();
           })
           .getInvoiceList();
       });
