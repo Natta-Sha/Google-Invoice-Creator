@@ -104,9 +104,11 @@ function getProjectDetails(projectName) {
 
 function processForm(data) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
+  const uniqueId = Utilities.getUuid();
 
   if (sheet.getLastRow() === 0) {
     const baseHeaders = [
+      "ID",
       "Project Name",
       "Invoice Number",
       "Client Name",
@@ -158,6 +160,7 @@ function processForm(data) {
   });
 
   const row = [
+    uniqueId,
     data.projectName,
     data.invoiceNumber,
     data.clientName,
@@ -370,6 +373,7 @@ function getInvoiceList() {
     const headers = data[0].map((h) => (h || "").toString().trim());
 
     const colIndex = {
+      id: headers.indexOf("ID"),
       projectName: headers.indexOf("Project Name"),
       invoiceNumber: headers.indexOf("Invoice Number"),
       invoiceDate: headers.indexOf("Invoice Date"),
@@ -398,6 +402,7 @@ function getInvoiceList() {
     }
 
     return data.slice(1).map((row) => ({
+      id: row[colIndex.id] || "",
       projectName: row[colIndex.projectName] || "",
       invoiceNumber: row[colIndex.invoiceNumber] || "",
       invoiceDate: formatDate(row[colIndex.invoiceDate]),
