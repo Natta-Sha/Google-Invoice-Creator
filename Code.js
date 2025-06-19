@@ -377,7 +377,9 @@ function getInvoiceList() {
       projectName: headers.indexOf("Project Name"),
       invoiceNumber: headers.indexOf("Invoice Number"),
       invoiceDate: headers.indexOf("Invoice Date"),
+      dueDate: headers.indexOf("Due Date"),
       total: headers.indexOf("Total"),
+      currency: headers.indexOf("Currency"),
     };
 
     for (let key in colIndex) {
@@ -406,10 +408,12 @@ function getInvoiceList() {
       projectName: row[colIndex.projectName] || "",
       invoiceNumber: row[colIndex.invoiceNumber] || "",
       invoiceDate: formatDate(row[colIndex.invoiceDate]),
+      dueDate: formatDate(row[colIndex.dueDate]),
       total:
         row[colIndex.total] !== undefined && row[colIndex.total] !== ""
           ? parseFloat(row[colIndex.total]).toFixed(2)
           : "",
+      currency: row[colIndex.currency] || "",
     }));
   } catch (error) {
     return [];

@@ -20,25 +20,46 @@
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
     <style>
+      body {
+        font-size: 0.875rem; /* уменьшенный шрифт */
+      }
+
+      th,
+      td {
+        padding: 4px 8px !important; /* компактнее строки */
+      }
+
+      table.dataTable {
+        width: 100% !important;
+      }
+
       th:nth-child(1),
       td:nth-child(1) {
-        width: 30%;
+        width: 20%;
       }
       th:nth-child(2),
       td:nth-child(2) {
-        width: 15%;
+        width: 10%;
       }
       th:nth-child(3),
       td:nth-child(3) {
-        width: 20%;
+        width: 12%;
       }
       th:nth-child(4),
       td:nth-child(4) {
-        width: 10%;
+        width: 12%;
       }
       th:nth-child(5),
       td:nth-child(5) {
-        width: 25%;
+        width: 10%;
+      }
+      th:nth-child(6),
+      td:nth-child(6) {
+        width: 10%;
+      }
+      th:nth-child(7),
+      td:nth-child(7) {
+        width: 26%;
         white-space: nowrap;
       }
 
@@ -73,14 +94,18 @@
           <th>Project Name</th>
           <th>Invoice Number</th>
           <th>Invoice Date</th>
+          <th>Due Date</th>
           <th>Total</th>
+          <th>Currency</th>
           <th>Actions</th>
         </tr>
         <tr>
           <th><input type="text" placeholder="Search Project" /></th>
           <th><input type="text" placeholder="Search Number" /></th>
           <th><input type="text" placeholder="Search Date" /></th>
+          <th><input type="text" placeholder="Search Due" /></th>
           <th><input type="text" placeholder="Search Total" /></th>
+          <th><input type="text" placeholder="Search Currency" /></th>
           <th></th>
         </tr>
       </thead>
@@ -118,13 +143,15 @@
                 row.projectName || "",
                 row.invoiceNumber || "",
                 row.invoiceDate || "",
+                row.dueDate || "",
                 row.total || "",
+                row.currency || "",
                 `
-                <button class="btn btn-sm btn-outline-primary me-1">View</button>
-                <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-                <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
-                <button class="btn btn-sm btn-outline-success">Copy</button>
-              `,
+      <button class="btn btn-sm btn-outline-primary me-1">View</button>
+      <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+      <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
+      <button class="btn btn-sm btn-outline-success">Copy</button>
+    `,
               ]);
             });
 
