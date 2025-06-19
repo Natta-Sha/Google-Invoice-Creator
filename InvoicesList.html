@@ -4,8 +4,6 @@
     <base target="_top" />
     <meta charset="UTF-8" />
     <title>List of Invoices</title>
-
-    <!-- Bootstrap + DataTables -->
     <link
       rel="stylesheet"
       href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"
@@ -21,14 +19,9 @@
     <button class="btn btn-link mb-3" onclick="goHome()">
       ← Back to Main Page
     </button>
-
     <h2 class="mb-4">List of Invoices</h2>
 
-    <table
-      id="invoiceTable"
-      class="display table table-bordered"
-      style="width: 100%"
-    >
+    <table id="invoiceTable" class="table table-bordered" style="width: 100%">
       <thead class="table-light">
         <tr>
           <th>Project Name</th>
@@ -52,10 +45,8 @@
           .loadPage("Home");
       }
 
-      // Инициализируем таблицу и загружаем данные
+      // Загружаем данные и инициализируем DataTable
       $(document).ready(function () {
-        const table = $("#invoiceTable").DataTable(); // инициализируем DataTable
-
         google.script.run
           .withSuccessHandler(function (data) {
             console.log("Получены данные:", data);
@@ -73,7 +64,17 @@
             `,
             ]);
 
-            table.rows.add(rows).draw(); // добавляем все строки сразу
+            // ✅ только после загрузки данных инициализируем DataTable
+            $("#invoiceTable").DataTable({
+              data: rows,
+              columns: [
+                { title: "Project Name" },
+                { title: "Invoice Number" },
+                { title: "Invoice Date" },
+                { title: "Total" },
+                { title: "Actions", orderable: false },
+              ],
+            });
           })
           .getInvoiceList();
       });
