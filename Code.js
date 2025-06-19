@@ -2,15 +2,8 @@ const FOLDER_ID = "1eHbDCawBYyRse6UNuTS3Z3coxeb80Zqr";
 const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 
 function doGet(e) {
-  const page = e.parameter.page;
-
-  if (page === "generate") {
-    return HtmlService.createHtmlOutputFromFile("Index").setTitle(
-      "Generate Invoice"
-    );
-  }
-
-  return HtmlService.createHtmlOutputFromFile("Home").setTitle("Welcome");
+  const page = e.parameter.page || "Home";
+  return HtmlService.createHtmlOutputFromFile(page).setTitle(page);
 }
 
 function loadPage(name) {
