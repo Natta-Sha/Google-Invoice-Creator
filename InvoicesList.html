@@ -21,12 +21,12 @@
 
     <style>
       body {
-        font-size: 0.875rem; /* уменьшенный шрифт */
+        font-size: 0.875rem;
       }
 
       th,
       td {
-        padding: 4px 8px !important; /* компактнее строки */
+        padding: 4px 8px !important;
       }
 
       table.dataTable {
@@ -57,27 +57,32 @@
       td:nth-child(6) {
         width: 10%;
       }
-      th:nth-child(7),
-      td:nth-child(7) {
-        width: 26%;
-        white-space: nowrap;
-      }
 
       thead input {
         width: 100%;
         box-sizing: border-box;
         padding: 4px;
       }
-      #invoice-actions-container {
+
+      .table-wrapper {
         position: relative;
+      }
+
+      #invoice-actions-container {
+        position: absolute;
+        top: 0;
+        right: 0;
         z-index: 10;
+        pointer-events: none;
       }
 
       .invoice-actions {
-        display: flex;
         position: absolute;
+        right: 0;
+        display: flex;
         gap: 4px;
         white-space: nowrap;
+        pointer-events: all;
       }
 
       .invoice-actions button {
@@ -91,54 +96,43 @@
       >← Back to Main Page</a
     >
 
-    <script>
-      function goHome() {
-        window.location.href = "?page=Home";
-      }
-    </script>
-
     <h2 class="mb-4">List of Invoices</h2>
 
-    <table
-      id="invoiceTable"
-      class="display table table-bordered"
-      style="width: 100%"
-    >
-      <thead class="table-light">
-        <tr>
-          <th>Project Name</th>
-          <th>Invoice Number</th>
-          <th>Invoice Date</th>
-          <th>Due Date</th>
-          <th>Total</th>
-          <th>Currency</th>
-        </tr>
-        <tr>
-          <th><input type="text" placeholder="Search Project" /></th>
-          <th><input type="text" placeholder="Search Number" /></th>
-          <th><input type="text" placeholder="Search Date" /></th>
-          <th><input type="text" placeholder="Search Due" /></th>
-          <th><input type="text" placeholder="Search Total" /></th>
-          <th><input type="text" placeholder="Search Currency" /></th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <div id="invoice-actions-container"></div>
+    <div class="table-wrapper">
+      <table id="invoiceTable" class="display table table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>Project Name</th>
+            <th>Invoice Number</th>
+            <th>Invoice Date</th>
+            <th>Due Date</th>
+            <th>Total</th>
+            <th>Currency</th>
+          </tr>
+          <tr>
+            <th><input type="text" placeholder="Search Project" /></th>
+            <th><input type="text" placeholder="Search Number" /></th>
+            <th><input type="text" placeholder="Search Date" /></th>
+            <th><input type="text" placeholder="Search Due" /></th>
+            <th><input type="text" placeholder="Search Total" /></th>
+            <th><input type="text" placeholder="Search Currency" /></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div id="invoice-actions-container"></div>
+    </div>
 
     <script>
-      function goHome() {
-        window.location.href = "?page=Home";
-      }
-
       $(document).ready(function () {
         const table = $("#invoiceTable").DataTable({
-          dom: "lrtip", // Убирает верхний глобальный фильтр
+          dom: "lrtip",
           orderCellsTop: true,
           fixedHeader: true,
         });
 
-        // Фильтрация по колонкам (нижняя строка thead)
+        // Фильтрация
         $("#invoiceTable thead tr:eq(1) th").each(function (i) {
           $("input", this).on("keyup change", function () {
             if (table.column(i).search() !== this.value) {
@@ -147,7 +141,6 @@
           });
         });
 
-        // Загружаем данные
         google.script.run
           .withSuccessHandler(function (data) {
             if (!Array.isArray(data) || data.length === 0) return;
@@ -164,36 +157,36 @@
             });
 
             table.draw();
-            const actionContainer = document.getElementById(
-              "invoice-actions-container"
-            );
-            actionContainer.innerHTML = ""; // на всякий случай очистить
 
-            const tbodyRows = document.querySelectorAll(
-              "#invoiceTable tbody tr"
-            );
+            // Создаем блоки кнопок после отрисовки
+            setTimeout(() => {
+              const actionContainer = document.getElementById(
+                "invoice-actions-container"
+              );
+              actionContainer.innerHTML = "";
 
-            tbodyRows.forEach((rowEl, index) => {
-              const rect = rowEl.getBoundingClientRect();
-              const tableRect = document
-                .querySelector("#invoiceTable")
-                .getBoundingClientRect();
+              const tableTop =
+                document.querySelector("#invoiceTable").getBoundingClientRect()
+                  .top + window.scrollY;
+              const rows = document.querySelectorAll("#invoiceTable tbody tr");
 
-              const actionBlock = document.createElement("div");
-              actionBlock.className = "invoice-actions";
-              actionBlock.style.position = "absolute";
-              actionBlock.style.top = `${
-                rowEl.offsetTop + rowEl.offsetHeight / 2 - 12
-              }px`;
-              actionBlock.style.right = "10px";
-              actionBlock.innerHTML = `
-    <button class="btn btn-sm btn-outline-primary me-1">View</button>
-    <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-    <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
-    <button class="btn btn-sm btn-outline-success">Copy</button>
-  `;
-              actionContainer.appendChild(actionBlock);
-            });
+              rows.forEach((rowEl, index) => {
+                const rowTop =
+                  rowEl.getBoundingClientRect().top + window.scrollY;
+                const offsetY = rowTop - tableTop;
+
+                const actionBlock = document.createElement("div");
+                actionBlock.className = "invoice-actions";
+                actionBlock.style.top = `${offsetY}px`;
+                actionBlock.innerHTML = `
+                <button class="btn btn-sm btn-outline-primary me-1">View</button>
+                <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
+                <button class="btn btn-sm btn-outline-success">Copy</button>
+              `;
+                actionContainer.appendChild(actionBlock);
+              });
+            }, 50);
           })
           .getInvoiceList();
       });
