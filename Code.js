@@ -2,9 +2,9 @@ const FOLDER_ID = "1eHbDCawBYyRse6UNuTS3Z3coxeb80Zqr";
 const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 
 function doGet(e) {
-  const page = e.parameter.page;
+  const page = e.parameter.page || "home";
 
-  switch (page) {
+  switch (page.toLowerCase()) {
     case "generate":
       return HtmlService.createHtmlOutputFromFile("Index").setTitle(
         "Generate Invoice"
@@ -13,6 +13,7 @@ function doGet(e) {
       return HtmlService.createHtmlOutputFromFile("InvoicesList").setTitle(
         "List of Invoices"
       );
+    case "home":
     default:
       return HtmlService.createHtmlOutputFromFile("Home").setTitle("Welcome");
   }

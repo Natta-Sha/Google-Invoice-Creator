@@ -35,24 +35,11 @@
 
     <script>
       function navigateToGenerate() {
-        google.script.run
-          .withSuccessHandler(function (html) {
-            document.open();
-            document.write(html);
-            document.close();
-          })
-          .loadPage("Index");
+        window.location.href = "?page=generate";
       }
-    </script>
-    <script>
+
       function navigateToList() {
-        google.script.run
-          .withSuccessHandler(function (html) {
-            document.open();
-            document.write(html);
-            document.close();
-          })
-          .loadPage("InvoicesList");
+        window.location.href = "?page=invoices";
       }
     </script>
   </body>
