@@ -69,17 +69,13 @@
         padding: 4px;
       }
       #invoice-actions-container {
-        position: absolute;
-        top: 235px; /* может потребоваться подогнать вручную */
-        right: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+        position: relative;
         z-index: 10;
       }
 
       .invoice-actions {
         display: flex;
+        position: absolute;
         gap: 4px;
         white-space: nowrap;
       }
@@ -173,9 +169,23 @@
             );
             actionContainer.innerHTML = ""; // на всякий случай очистить
 
-            data.forEach((row, index) => {
+            const tbodyRows = document.querySelectorAll(
+              "#invoiceTable tbody tr"
+            );
+
+            tbodyRows.forEach((rowEl, index) => {
+              const rect = rowEl.getBoundingClientRect();
+              const tableRect = document
+                .querySelector("#invoiceTable")
+                .getBoundingClientRect();
+
               const actionBlock = document.createElement("div");
               actionBlock.className = "invoice-actions";
+              actionBlock.style.position = "absolute";
+              actionBlock.style.top = `${
+                rowEl.offsetTop + rowEl.offsetHeight / 2 - 12
+              }px`;
+              actionBlock.style.right = "10px";
               actionBlock.innerHTML = `
     <button class="btn btn-sm btn-outline-primary me-1">View</button>
     <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
