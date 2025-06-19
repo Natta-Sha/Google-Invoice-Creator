@@ -114,7 +114,7 @@
         `;
       }
 
-      // 🟡 Получаем параметр number из URL
+      // ✅ Получаем параметр number из URL вручную
       const urlParams = new URLSearchParams(window.location.search);
       const invoiceNumber = urlParams.get("number");
 
@@ -124,7 +124,7 @@
           .getInvoiceByNumber(invoiceNumber);
       } else {
         document.getElementById("invoice-content").innerHTML =
-          '<div class="alert alert-warning">No invoice number provided.</div>';
+          '<div class="alert alert-warning">No invoice number provided in URL.</div>';
       }
     </script>
   </body>
