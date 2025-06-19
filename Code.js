@@ -421,6 +421,7 @@ function getInvoiceList() {
 }
 
 function getInvoiceByNumber(number) {
+  Logger.log("getInvoiceByNumber called with: " + number); // 👈
   const sheet =
     SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
   const data = sheet.getDataRange().getValues();
