@@ -21,7 +21,11 @@
     </button>
     <h2 class="mb-4">List of Invoices</h2>
 
-    <table id="invoiceTable" class="table table-bordered" style="width: 100%">
+    <table
+      id="invoiceTable"
+      class="display table table-bordered"
+      style="width: 100%"
+    >
       <thead class="table-light">
         <tr>
           <th>Project Name</th>
@@ -45,36 +49,29 @@
           .loadPage("Home");
       }
 
-      // Загружаем данные и инициализируем DataTable
       $(document).ready(function () {
+        const table = $("#invoiceTable").DataTable(); // Инициализация заранее
+
         google.script.run
           .withSuccessHandler(function (data) {
             console.log("Получены данные:", data);
 
-            const rows = data.map((row) => [
-              row.projectName,
-              row.invoiceNumber,
-              row.invoiceDate,
-              row.total,
-              `
+            data.forEach((row) => {
+              table.row.add([
+                row.projectName,
+                row.invoiceNumber,
+                row.invoiceDate,
+                row.total,
+                `
               <button class="btn btn-sm btn-outline-primary me-1">View</button>
               <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
               <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
               <button class="btn btn-sm btn-outline-success">Copy</button>
-            `,
-            ]);
-
-            // ✅ только после загрузки данных инициализируем DataTable
-            $("#invoiceTable").DataTable({
-              data: rows,
-              columns: [
-                { title: "Project Name" },
-                { title: "Invoice Number" },
-                { title: "Invoice Date" },
-                { title: "Total" },
-                { title: "Actions", orderable: false },
-              ],
+              `,
+              ]);
             });
+
+            table.draw(); // обновляем таблицу
           })
           .getInvoiceList();
       });
