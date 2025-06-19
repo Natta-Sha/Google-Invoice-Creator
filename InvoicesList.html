@@ -111,6 +111,7 @@
           fixedHeader: true,
         });
 
+        // Фильтры по колонкам
         $("#invoiceTable thead tr:eq(1) th").each(function (i) {
           $("input", this).on("keyup change", function () {
             if (table.column(i).search() !== this.value) {
@@ -119,6 +120,7 @@
           });
         });
 
+        // Загрузка данных из Google Sheets
         google.script.run
           .withSuccessHandler(function (data) {
             if (!Array.isArray(data) || data.length === 0) return;
@@ -132,7 +134,7 @@
                 row.total || "",
                 row.currency || "",
                 `
-                <button class="btn btn-sm btn-outline-primary me-1">View</button>
+                <button class="btn btn-sm btn-outline-primary me-1 view-invoice" data-id="${row.id}">View</button>
                 <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
                 <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
                 <button class="btn btn-sm btn-outline-success">Copy</button>
@@ -141,6 +143,16 @@
             });
 
             table.draw();
+
+            // Обработчик клика по кнопке View
+            $("#invoiceTable tbody").on(
+              "click",
+              "button.view-invoice",
+              function () {
+                const invoiceId = $(this).data("id");
+                window.location.href = `<?= baseUrl ?>?page=InvoiceViewer&id=${invoiceId}`;
+              }
+            );
           })
           .getInvoiceList();
       });
