@@ -29,8 +29,8 @@
     <button class="btn btn-primary btn-lg mb-3" onclick="navigateToGenerate()">
       Generate Invoice
     </button>
-    <button class="btn btn-secondary btn-lg" disabled>
-      List of Invoices (coming soon)
+    <button class="btn btn-secondary btn-lg" onclick="navigateToList()">
+      List of Invoices
     </button>
 
     <script>
@@ -42,6 +42,17 @@
             document.close();
           })
           .loadPage("Index");
+      }
+    </script>
+    <script>
+      function navigateToList() {
+        google.script.run
+          .withSuccessHandler(function (html) {
+            document.open();
+            document.write(html);
+            document.close();
+          })
+          .loadPage("InvoicesList");
       }
     </script>
   </body>

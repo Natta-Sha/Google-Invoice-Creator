@@ -364,3 +364,43 @@ function createInvoiceDoc(
   doc.saveAndClose();
   return doc;
 }
+
+function getInvoiceList() {
+  const sheet =
+    SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+
+  const headers = data[0]; // первая строка — заголовки
+
+  // Найдём нужные колонки по имени
+  const colIndex = {
+    projectName: headers.indexOf("Project Name"),
+    invoiceNumber: headers.indexOf("Invoice Number"),
+    invoiceDate: headers.indexOf("Invoice Date"),
+    total: headers.indexOf("Total"),
+  };
+
+  // Проверка: все ли заголовки найдены
+  for (let key in colIndex) {
+    if (colIndex[key] === -1)
+      throw new Error(`Колонка "${key}" не найдена в заголовках Invoices`);
+  }
+
+  const result = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    result.push({
+      projectName: row[colIndex.projectName] || "",
+      invoiceNumber: row[colIndex.invoiceNumber] || "",
+      invoiceDate: row[colIndex.invoiceDate] || "",
+      total:
+        row[colIndex.total] !== undefined
+          ? parseFloat(row[colIndex.total]).toFixed(2)
+          : "",
+    });
+  }
+
+  return result;
+}
