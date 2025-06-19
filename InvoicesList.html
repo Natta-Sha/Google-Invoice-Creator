@@ -20,48 +20,31 @@
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
     <style>
-      /* Ширина колонок */
-      #invoiceTable {
-        width: 100% !important;
-      }
-
-      #invoiceTable th,
-      #invoiceTable td {
-        vertical-align: middle;
-      }
-
-      #invoiceTable th:nth-child(1),
-      #invoiceTable td:nth-child(1) {
+      /* Настраиваем ширину колонок */
+      th:nth-child(1),
+      td:nth-child(1) {
         width: 30%;
       }
-
-      #invoiceTable th:nth-child(2),
-      #invoiceTable td:nth-child(2) {
+      th:nth-child(2),
+      td:nth-child(2) {
         width: 15%;
       }
-
-      #invoiceTable th:nth-child(3),
-      #invoiceTable td:nth-child(3) {
+      th:nth-child(3),
+      td:nth-child(3) {
         width: 20%;
       }
-
-      #invoiceTable th:nth-child(4),
-      #invoiceTable td:nth-child(4) {
+      th:nth-child(4),
+      td:nth-child(4) {
         width: 10%;
-        text-align: right;
       }
-
-      #invoiceTable th:nth-child(5),
-      #invoiceTable td:nth-child(5) {
+      th:nth-child(5),
+      td:nth-child(5) {
         width: 25%;
-        text-align: center;
+        white-space: nowrap;
       }
 
-      /* Фильтры */
       thead input {
         width: 100%;
-        padding: 3px;
-        font-size: 0.875rem;
         box-sizing: border-box;
       }
     </style>
@@ -73,9 +56,12 @@
     </button>
     <h2 class="mb-4">List of Invoices</h2>
 
-    <table id="invoiceTable" class="display table table-bordered align-middle">
+    <table
+      id="invoiceTable"
+      class="display table table-bordered"
+      style="width: 100%"
+    >
       <thead class="table-light">
-        <!-- Основной заголовок -->
         <tr>
           <th>Project Name</th>
           <th>Invoice Number</th>
@@ -83,36 +69,11 @@
           <th>Total</th>
           <th>Actions</th>
         </tr>
-        <!-- Фильтры -->
         <tr>
-          <th>
-            <input
-              type="text"
-              placeholder="Search"
-              class="form-control form-control-sm"
-            />
-          </th>
-          <th>
-            <input
-              type="text"
-              placeholder="Search"
-              class="form-control form-control-sm"
-            />
-          </th>
-          <th>
-            <input
-              type="text"
-              placeholder="Search"
-              class="form-control form-control-sm"
-            />
-          </th>
-          <th>
-            <input
-              type="text"
-              placeholder="Search"
-              class="form-control form-control-sm text-end"
-            />
-          </th>
+          <th><input type="text" placeholder="Search" /></th>
+          <th><input type="text" placeholder="Search" /></th>
+          <th><input type="text" placeholder="Search" /></th>
+          <th><input type="text" placeholder="Search" /></th>
           <th></th>
         </tr>
       </thead>
@@ -132,20 +93,18 @@
 
       $(document).ready(function () {
         const table = $("#invoiceTable").DataTable({
-          orderCellsTop: true,
-          fixedHeader: true,
+          searching: false, // ❌ отключает верхний общий фильтр
         });
 
-        // Фильтрация по каждому столбцу
-        $("#invoiceTable thead tr:eq(1) th input").on(
-          "keyup change",
-          function () {
-            const colIndex = $(this).parent().index();
-            table.column(colIndex).search(this.value).draw();
-          }
-        );
+        // Подключаем фильтры по колонкам
+        $("#invoiceTable thead tr:eq(1) th").each(function (i) {
+          $("input", this).on("keyup change", function () {
+            if (table.column(i).search() !== this.value) {
+              table.column(i).search(this.value).draw();
+            }
+          });
+        });
 
-        // Загрузка данных
         google.script.run
           .withSuccessHandler(function (data) {
             if (!Array.isArray(data) || data.length === 0) return;
