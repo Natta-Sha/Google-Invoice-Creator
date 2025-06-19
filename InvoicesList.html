@@ -58,6 +58,7 @@
         width: 26%;
         background: none !important;
         border: none !important;
+        box-shadow: none !important;
       }
 
       thead input {
@@ -69,6 +70,14 @@
       /* скрываем заголовок последнего столбца */
       thead th.actions {
         visibility: hidden;
+      }
+
+      /* Убираем любые рамки и фон DataTables у ячеек с кнопками */
+      table.dataTable tbody td.actions,
+      table.dataTable thead th.actions {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
       }
 
       td.actions {
@@ -137,10 +146,12 @@
                 row.total || "",
                 row.currency || "",
                 `
-                <button class="btn btn-sm btn-outline-primary me-1">View</button>
-                <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-                <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
-                <button class="btn btn-sm btn-outline-success">Copy</button>
+ <td class="actions">
+    <button class="btn btn-sm btn-outline-primary me-1">View</button>
+    <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+    <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
+    <button class="btn btn-sm btn-outline-success">Copy</button>
+  </td>
               `,
               ]);
             });
