@@ -116,6 +116,10 @@
           </div>
         `;
       }
+<script type="text/javascript">
+  const invoiceNumber = <?= JSON.stringify(invoiceNumber) ?>;
+  console.log("invoiceNumber из шаблона:", invoiceNumber);
+</script>
 
       // ✅ Загружаем данные и отрисовываем
       google.script.run
