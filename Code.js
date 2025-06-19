@@ -369,11 +369,10 @@ function getInvoiceList() {
   const sheet =
     SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("Invoices");
   const data = sheet.getDataRange().getValues();
-  if (data.length < 2) return [];
+  Logger.log("Rows loaded: " + data.length); // ➕ добавлено
 
-  const headers = data[0]; // первая строка — заголовки
+  const headers = data[0];
 
-  // Найдём нужные колонки по имени
   const colIndex = {
     projectName: headers.indexOf("Project Name"),
     invoiceNumber: headers.indexOf("Invoice Number"),
@@ -381,11 +380,7 @@ function getInvoiceList() {
     total: headers.indexOf("Total"),
   };
 
-  // Проверка: все ли заголовки найдены
-  for (let key in colIndex) {
-    if (colIndex[key] === -1)
-      throw new Error(`Колонка "${key}" не найдена в заголовках Invoices`);
-  }
+  Logger.log("Header indexes: " + JSON.stringify(colIndex)); // ➕
 
   const result = [];
 
@@ -401,6 +396,8 @@ function getInvoiceList() {
           : "",
     });
   }
+
+  Logger.log("Returning " + result.length + " records"); // ➕
 
   return result;
 }
