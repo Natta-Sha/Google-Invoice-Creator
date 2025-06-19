@@ -410,6 +410,7 @@ function getInvoiceList() {
     }
 
     Logger.log("✅ Returning data: " + JSON.stringify(result));
+    Logger.log("📦 JSON Output: " + JSON.stringify(result));
     return result;
   } catch (error) {
     Logger.log("❌ ERROR in getInvoiceList: " + error.message);
