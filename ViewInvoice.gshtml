@@ -33,12 +33,9 @@
 
     <div id="invoice-content">Loading...</div>
 
-    <!-- ✅ Отдельный JS-блок с шаблонной переменной -->
-    <script type="text/javascript">
-      const invoiceNumber = <?= JSON.stringify(invoiceNumber) ?>;
-
+    <script>
       function goHome() {
-        window.location.href = "<?= baseUrl ?>?page=Home";
+        window.location.href = "?page=Home";
       }
 
       function renderInvoice(data) {
@@ -116,15 +113,19 @@
           </div>
         `;
       }
-<script type="text/javascript">
-  const invoiceNumber = <?= JSON.stringify(invoiceNumber) ?>;
-  console.log("invoiceNumber из шаблона:", invoiceNumber);
-</script>
 
-      // ✅ Загружаем данные и отрисовываем
-      google.script.run
-        .withSuccessHandler(renderInvoice)
-        .getInvoiceByNumber(invoiceNumber);
+      // 🟡 Получаем параметр number из URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const invoiceNumber = urlParams.get("number");
+
+      if (invoiceNumber) {
+        google.script.run
+          .withSuccessHandler(renderInvoice)
+          .getInvoiceByNumber(invoiceNumber);
+      } else {
+        document.getElementById("invoice-content").innerHTML =
+          '<div class="alert alert-warning">No invoice number provided.</div>';
+      }
     </script>
   </body>
 </html>
