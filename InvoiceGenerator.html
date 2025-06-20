@@ -637,7 +637,7 @@
     <script>
       function getInvoiceIdFromUrl() {
         try {
-          const href = window.location.href;
+          const href = (window.top || window).location.href;
           const search = href.includes("?")
             ? href.substring(href.indexOf("?"))
             : "";
