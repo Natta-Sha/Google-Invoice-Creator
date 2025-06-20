@@ -60,6 +60,8 @@
     </div>
 
     <script>
+      const invoiceId = "<?= invoiceId ?>";
+
       function goHome() {
         window.location.href = "?page=Home";
       }
@@ -327,6 +329,80 @@
         updateTotals();
       }
 
+      function fillInvoiceFormFromSavedData(data) {
+        document.getElementById("project_name").value = data.projectName;
+        document.getElementById("invoice_number").value = data.invoiceNumber;
+        document.getElementById("client_name").textContent = data.clientName;
+        document.getElementById("client_address").textContent =
+          data.clientAddress;
+        document.getElementById("client_number").textContent =
+          data.clientNumber;
+        document.getElementById("our_company").textContent =
+          data.ourCompany || "";
+        document.getElementById("tax").textContent = data.tax || "0";
+
+        const currencyMap = { $: "$ (USD)", "€": "€ (EUR)", "₴": "₴ (UAH)" };
+        document.getElementById("currency").textContent =
+          currencyMap[data.currency] || data.currency;
+
+        document.getElementById("bank_details_1").textContent =
+          data.bankDetails1 || "";
+        document.getElementById("bank_details_2").textContent =
+          data.bankDetails2 || "";
+        document.getElementById("invoice_date").value = formatInputDate(
+          data.invoiceDate
+        );
+        document.getElementById("due_date").textContent = data.dueDate || "";
+
+        if (data.currency === "$") {
+          document.getElementById("exchange_rate").style.display = "block";
+          document.getElementById("exchange_rate").value =
+            data.exchangeRate || "1.0000";
+          document.getElementById("amount_in_eur").textContent =
+            data.amountInEUR || "";
+        }
+
+        document.getElementById("comment").value = data.comment || "";
+
+        // Добавить строки в таблицу
+        const tbody = document.getElementById("invoice-body");
+        tbody.innerHTML = ""; // Очистить
+        data.items.forEach((item, i) => {
+          const row = document.createElement("tr");
+          item.forEach((value, j) => {
+            const cell = document.createElement("td");
+            const input = document.createElement("input");
+            input.type = "text";
+            input.className = "form-control";
+            input.value = value;
+            if (j === 5) input.classList.add("amount");
+            input.oninput = updateTotals;
+            input.onfocus = markManualAmount;
+            cell.appendChild(input);
+            row.appendChild(cell);
+          });
+          const delCell = document.createElement("td");
+          delCell.innerHTML = `
+      <button type="button" class="icon-button" onclick="deleteRow(this)" title="Delete row">
+        <i class="bi bi-trash"></i>
+      </button>
+    `;
+          row.appendChild(delCell);
+          tbody.appendChild(row);
+        });
+
+        updateTotals();
+      }
+
+      // Преобразование даты для input type="date"
+      function formatInputDate(dateVal) {
+        if (typeof dateVal === "string" && dateVal.includes("/")) {
+          const [dd, mm, yyyy] = dateVal.split("/");
+          return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+        }
+        return dateVal;
+      }
+
       document
         .getElementById("project_name")
         .addEventListener("change", function () {
@@ -549,7 +625,16 @@
           .processForm(data);
       }
 
-      window.onload = populateProjectNames;
+      window.onload = function () {
+        populateProjectNames();
+
+        if (invoiceId) {
+          google.script.run
+            .withSuccessHandler(fillInvoiceFormFromSavedData)
+            .getInvoiceDataById(invoiceId);
+        }
+      };
+
       function showValidationError(messages) {
         const result = document.getElementById("result");
         result.innerHTML = `

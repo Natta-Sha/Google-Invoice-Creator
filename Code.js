@@ -4,9 +4,16 @@ const SPREADSHEET_ID = "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8";
 function doGet(e) {
   const page = e.parameter.page || "Home";
   const template = HtmlService.createTemplateFromFile(page);
-  template.baseUrl = ScriptApp.getService().getUrl(); // <- ключевая строка
+  template.baseUrl = ScriptApp.getService().getUrl();
+
+  // ➕ Добавляем передачу ID в HTML
+  if (e.parameter.id) {
+    template.invoiceId = e.parameter.id;
+  }
+
   return template.evaluate().setTitle(page);
 }
+
 function loadPage(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
@@ -434,4 +441,48 @@ function getInvoiceList() {
   } catch (error) {
     return [];
   }
+}
+
+function getInvoiceDataById(id) {
+  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0]; // Первая вкладка (Invoices)
+  const data = sheet.getDataRange().getValues();
+
+  const headers = data[0];
+  const indexMap = headers.reduce((acc, h, i) => {
+    acc[h] = i;
+    return acc;
+  }, {});
+
+  const row = data.find((r, i) => i > 0 && r[indexMap["ID"]] === id);
+  if (!row) throw new Error("Invoice not found");
+
+  const items = [];
+  for (let i = 0; i < 20; i++) {
+    const base = 21 + i * 6; // items начинаются с 22-й колонки
+    const item = row.slice(base, base + 6);
+    if (item.some((cell) => cell && cell.toString().trim() !== "")) {
+      items.push(item);
+    }
+  }
+
+  return {
+    projectName: row[indexMap["Project Name"]],
+    invoiceNumber: row[indexMap["Invoice Number"]],
+    clientName: row[indexMap["Client Name"]],
+    clientAddress: row[indexMap["Client Address"]],
+    clientNumber: row[indexMap["Client Number"]],
+    invoiceDate: row[indexMap["Invoice Date"]],
+    dueDate: row[indexMap["Due Date"]],
+    tax: row[indexMap["Tax Rate (%)"]],
+    subtotal: row[indexMap["Subtotal"]],
+    total: row[indexMap["Total"]],
+    exchangeRate: row[indexMap["Exchange Rate"]],
+    currency: row[indexMap["Currency"]],
+    amountInEUR: row[indexMap["Amount in EUR"]],
+    bankDetails1: row[indexMap["Bank Details 1"]],
+    bankDetails2: row[indexMap["Bank Details 2"]],
+    ourCompany: row[indexMap["Our Company"]],
+    comment: row[indexMap["Comment"]],
+    items: items,
+  };
 }
