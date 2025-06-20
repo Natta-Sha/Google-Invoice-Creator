@@ -408,7 +408,7 @@
         .getElementById("project_name")
         .addEventListener("change", function () {
           const value = this.value.trim();
-          if (validProjectNames.includes(value)) {
+          if (validProjectNames.includes(value) && !invoiceId) {
             google.script.run
               .withSuccessHandler(fillProjectDetails)
               .getProjectDetails(value);
@@ -420,7 +420,7 @@
         .addEventListener("change", function () {
           const value = this.value.trim();
           const project = document.getElementById("project_name").value.trim();
-          if (value && validProjectNames.includes(project)) {
+          if (value && validProjectNames.includes(project) && !invoiceId) {
             google.script.run
               .withSuccessHandler(fillProjectDetails)
               .getProjectDetails(project);
