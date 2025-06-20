@@ -147,8 +147,7 @@
                 row.total || "",
                 row.currency || "",
                 `
-      <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=test-id-123" class="btn btn-sm btn-outline-primary me-1">View</a>
-
+      <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}" class="btn btn-sm btn-outline-primary me-1">View</a>
       <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
       <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
       <button class="btn btn-sm btn-outline-success">Copy</button>
