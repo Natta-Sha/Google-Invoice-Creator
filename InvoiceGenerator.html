@@ -634,30 +634,18 @@
       }
     </script>
 
-
-<script>
-  function getInvoiceIdFromUrl() {
-    try {
-      const href = window.location.href;
-      const search = href.includes("?") ? href.substring(href.indexOf("?")) : "";
-      return new URLSearchParams(search).get("id");
-    } catch (e) {
-      return null;
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const invoiceId = getInvoiceIdFromUrl();
-    console.log("🧾 invoiceId from URL:", invoiceId);
-
-    if (invoiceId) {
-      document.getElementById("invoice-id-display").textContent = `(ID: ${invoiceId})`;
-      const resultEl = document.getElementById("result");
-      resultEl.innerHTML = `<div class="alert alert-info">Opened with ID: <strong>${invoiceId}</strong></div>`;
-    }
-  });
-</script>
-
+    <script>
+      function getInvoiceIdFromUrl() {
+        try {
+          const href = window.location.href;
+          const search = href.includes("?")
+            ? href.substring(href.indexOf("?"))
+            : "";
+          return new URLSearchParams(search).get("id");
+        } catch (e) {
+          return null;
+        }
+      }
 
       document.addEventListener("DOMContentLoaded", () => {
         const invoiceId = getInvoiceIdFromUrl();
