@@ -65,7 +65,10 @@
       }
     </script>
 
-    <h2 class="mb-4">Create invoice</h2>
+    <h2 class="mb-4">
+      Create Invoice
+      <span id="invoice-id-display" class="text-muted fs-6 ms-3"></span>
+    </h2>
 
     <!-- Invoice details -->
     <div class="row mb-3">
@@ -630,6 +633,21 @@
         populateProjectNames();
       }
     </script>
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const invoiceId = urlParams.get("id");
+
+      if (invoiceId) {
+        document.getElementById(
+          "invoice-id-display"
+        ).textContent = `(ID: ${invoiceId})`;
+
+        // Также можно показать ниже, в блоке с результатами:
+        const resultEl = document.getElementById("result");
+        resultEl.innerHTML = `<div class="alert alert-info">Opened with ID: <strong>${invoiceId}</strong></div>`;
+      }
+    </script>
+
     <!-- Custom modal -->
     <div class="modal fade" id="confirmModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
