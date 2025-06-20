@@ -633,28 +633,20 @@
         populateProjectNames();
       }
     </script>
+
     <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      const invoiceId = urlParams.get("id");
-
-      if (invoiceId) {
-        document.getElementById(
-          "invoice-id-display"
-        ).textContent = `(ID: ${invoiceId})`;
-
-        // Также можно показать ниже, в блоке с результатами:
-        const resultEl = document.getElementById("result");
-        resultEl.innerHTML = `<div class="alert alert-info">Opened with ID: <strong>${invoiceId}</strong></div>`;
+      function getInvoiceIdFromUrl() {
+        try {
+          // Пытаемся взять из родительского окна (если разрешено)
+          return new URLSearchParams(window.top.location.search).get("id");
+        } catch (e) {
+          // Если доступ запрещён (SecurityError) — берём из текущего окна
+          return new URLSearchParams(window.location.search).get("id");
+        }
       }
-    </script>
 
-    <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const urlParams = new URLSearchParams(
-          (window.top || window).location.search
-        );
-        const invoiceId = urlParams.get("id");
-
+        const invoiceId = getInvoiceIdFromUrl();
         console.log("🧾 invoiceId from URL:", invoiceId);
 
         if (invoiceId) {
