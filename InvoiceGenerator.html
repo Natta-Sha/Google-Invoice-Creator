@@ -638,10 +638,26 @@
       function getInvoiceIdFromUrl() {
         try {
           // Пытаемся взять из родительского окна (если разрешено)
-          return new URLSearchParams(window.top.location.search).get("id");
+          return function getInvoiceIdFromUrl() {
+            try {
+              const href = window.location.href;
+              const search = href.substring(href.indexOf("?"));
+              return new URLSearchParams(search).get("id");
+            } catch (e) {
+              return null;
+            }
+          };
         } catch (e) {
           // Если доступ запрещён (SecurityError) — берём из текущего окна
-          return new URLSearchParams(window.location.search).get("id");
+          return new (function getInvoiceIdFromUrl() {
+            try {
+              const href = window.location.href;
+              const search = href.substring(href.indexOf("?"));
+              return new URLSearchParams(search).get("id");
+            } catch (e) {
+              return null;
+            }
+          })();
         }
       }
 
