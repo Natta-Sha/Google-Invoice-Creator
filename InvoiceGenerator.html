@@ -650,16 +650,17 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(
+          (window.top || window).location.search
+        );
         const invoiceId = urlParams.get("id");
 
-        console.log("🧾 invoiceId from URL:", invoiceId); // ⬅️ лог в консоль
+        console.log("🧾 invoiceId from URL:", invoiceId);
 
         if (invoiceId) {
           document.getElementById(
             "invoice-id-display"
           ).textContent = `(ID: ${invoiceId})`;
-
           const resultEl = document.getElementById("result");
           resultEl.innerHTML = `<div class="alert alert-info">Opened with ID: <strong>${invoiceId}</strong></div>`;
         }
