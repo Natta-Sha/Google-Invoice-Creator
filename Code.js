@@ -447,6 +447,16 @@ function getInvoiceDataById(id) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0]; // Первая вкладка (Invoices)
   const data = sheet.getDataRange().getValues();
 
+  function formatDate(val) {
+    if (val instanceof Date) {
+      const yyyy = val.getFullYear();
+      const mm = String(val.getMonth() + 1).padStart(2, "0");
+      const dd = String(val.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return val;
+  }
+
   const headers = data[0];
   const indexMap = headers.reduce((acc, h, i) => {
     acc[h] = i;
@@ -471,8 +481,9 @@ function getInvoiceDataById(id) {
     clientName: row[indexMap["Client Name"]],
     clientAddress: row[indexMap["Client Address"]],
     clientNumber: row[indexMap["Client Number"]],
-    invoiceDate: row[indexMap["Invoice Date"]],
-    dueDate: row[indexMap["Due Date"]],
+    invoiceDate: formatDate(row[indexMap["Invoice Date"]]),
+    dueDate: formatDate(row[indexMap["Due Date"]]),
+
     tax: row[indexMap["Tax Rate (%)"]],
     subtotal: row[indexMap["Subtotal"]],
     total: row[indexMap["Total"]],
