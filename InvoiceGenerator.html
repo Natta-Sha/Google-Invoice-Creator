@@ -60,7 +60,8 @@
     </div>
 
     <script>
-      const invoiceId = "<?= invoiceId ?>";
+      const invoiceId =
+        "<?= typeof invoiceId !== 'undefined' ? invoiceId : '' ?>";
 
       function goHome() {
         window.location.href = "?page=Home";
