@@ -215,7 +215,11 @@
       </tbody>
     </table>
 
-    <button class="btn btn-outline-primary mb-3" onclick="addRow()">
+    <button
+      class="btn btn-outline-primary mb-3"
+      onclick="addRow()"
+      id="add-row-btn"
+    >
       + Add Row
     </button>
 
@@ -648,6 +652,7 @@
           document.getElementById("page-title").textContent = "Invoice - view";
           document.getElementById("back-to-list").style.display = "block";
           document.getElementById("action-buttons").style.display = "none";
+          document.getElementById("add-row-btn").style.display = "none";
           document.getElementById("comment").style.display = "none";
           document.getElementById("comment-display").style.display = "block";
 

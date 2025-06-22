@@ -350,3 +350,21 @@ function saveInvoiceData(data) {
     throw error;
   }
 }
+
+/**
+ * Update spreadsheet with URLs
+ * @param {number} newRowIndex - Index of the new row
+ * @param {string} docUrl - URL of the Google Doc
+ * @param {string} pdfUrl - URL of the PDF file
+ */
+function updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl) {
+  try {
+    const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
+    const sheet = spreadsheet.getSheets()[0];
+    sheet.getRange(newRowIndex, 20).setValue(docUrl);
+    sheet.getRange(newRowIndex, 21).setValue(pdfUrl);
+  } catch (error) {
+    console.error("Error updating spreadsheet with URLs:", error);
+    throw error;
+  }
+}
