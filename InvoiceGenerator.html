@@ -721,7 +721,7 @@
         const isFormDisabled = document.getElementById("project_name").disabled;
 
         if (isFormDisabled) {
-          resetForm(); // уже создан — просто очистить
+          resetForm(); // просто очистить
           return;
         }
 
@@ -731,7 +731,7 @@
 
         if (hasFilledFields) {
           showModalDialog(
-            "You have unsaved data. Do you want to discard and create a new invoice?",
+            "Are you sure? Your entered data will not be saved.",
             () => resetForm()
           );
         } else {
