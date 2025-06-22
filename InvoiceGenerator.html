@@ -651,9 +651,8 @@
         if (invoiceId) {
           document.getElementById("page-title").textContent = "Invoice - view";
           document.getElementById("back-to-list").style.display = "block";
-
-          const actionButtons = document.getElementById("action-buttons");
-          if (actionButtons) actionButtons.style.display = "none";
+          document.getElementById("generate-btn").style.display = "none";
+          document.getElementById("new-invoice-btn").style.display = "none";
 
           const addRowBtn = document.getElementById("add-row-btn");
           if (addRowBtn) addRowBtn.style.display = "none";
