@@ -290,6 +290,22 @@ function saveInvoiceData(data) {
     const taxAmount = calculateTaxAmount(subtotalNum, taxRate);
     const totalAmount = calculateTotalAmount(subtotalNum, taxAmount);
 
+    const invoiceDateObject = data.invoiceDate
+      ? new Date(data.invoiceDate)
+      : null;
+    let dueDateObject = null;
+    if (data.dueDate) {
+      const parts = data.dueDate.split("/");
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+          dueDateObject = new Date(year, month, day);
+        }
+      }
+    }
+
     // Prepare item cells
     const itemCells = [];
     data.items.forEach((row, i) => {
@@ -306,8 +322,8 @@ function saveInvoiceData(data) {
       data.clientName,
       data.clientAddress,
       data.clientNumber,
-      new Date(data.invoiceDate),
-      new Date(data.dueDate),
+      invoiceDateObject,
+      dueDateObject,
       taxRate.toFixed(0),
       subtotalNum.toFixed(2),
       taxAmount.toFixed(2),
