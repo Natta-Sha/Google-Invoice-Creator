@@ -491,9 +491,9 @@
 `;
       }
 
-      function deleteRow(button) {
-        const row = button.closest("tr");
-        row.remove();
+      function deleteRow(btn) {
+        const row = btn.parentNode.parentNode;
+        row.parentNode.removeChild(row);
         updateTotals();
       }
 
@@ -651,10 +651,18 @@
         if (invoiceId) {
           document.getElementById("page-title").textContent = "Invoice - view";
           document.getElementById("back-to-list").style.display = "block";
-          document.getElementById("action-buttons").style.display = "none";
-          document.getElementById("add-row-btn").style.display = "none";
-          document.getElementById("comment").style.display = "none";
-          document.getElementById("comment-display").style.display = "block";
+
+          const actionButtons = document.getElementById("action-buttons");
+          if (actionButtons) actionButtons.style.display = "none";
+
+          const addRowBtn = document.getElementById("add-row-btn");
+          if (addRowBtn) addRowBtn.style.display = "none";
+
+          const commentInput = document.getElementById("comment");
+          if (commentInput) commentInput.style.display = "none";
+
+          const commentDisplay = document.getElementById("comment-display");
+          if (commentDisplay) commentDisplay.style.display = "block";
 
           google.script.run
             .withSuccessHandler(function (data) {

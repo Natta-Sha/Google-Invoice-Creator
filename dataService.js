@@ -335,8 +335,8 @@ function saveInvoiceData(data) {
       data.bankDetails2,
       data.ourCompany || "",
       data.comment || "",
-      "",
-      "", // URLs will be filled later
+      "", // Google Doc Link placeholder
+      "", // PDF Link placeholder
       ...itemCells,
     ];
 
