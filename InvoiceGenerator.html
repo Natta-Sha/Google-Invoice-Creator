@@ -488,16 +488,19 @@
 
         const deleteCell = row.insertCell();
         deleteCell.innerHTML = `
-  <button type="button" class="icon-button" onclick="deleteRow(this)" title="Delete row">
-    <i class="bi bi-trash"></i>
-  </button>
-`;
+    <button type="button" class="icon-button" onclick="deleteRow(this)" title="Delete row">
+      <i class="bi bi-trash"></i>
+    </button>
+  `;
       }
 
       function deleteRow(btn) {
-        const row = btn.closest("tr");
-        row.remove();
-        updateTotals();
+        const tbody = document.getElementById("invoice-body");
+        if (tbody.rows.length > 1) {
+          const row = btn.closest("tr");
+          row.remove();
+          updateTotals();
+        }
       }
 
       function updateTotals() {
