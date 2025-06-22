@@ -251,9 +251,9 @@ function updateSpreadsheetWithUrls(rowIndex, docUrl, pdfUrl) {
     const sheet = spreadsheet.getSheets()[0];
 
     // Update Google Doc Link (column 19)
-    sheet.getRange(rowIndex, 19).setValue(docUrl);
+    sheet.getRange(rowIndex, 20).setValue(docUrl);
     // Update PDF Link (column 20)
-    sheet.getRange(rowIndex, 20).setValue(pdfUrl);
+    sheet.getRange(rowIndex, 21).setValue(pdfUrl);
   } catch (error) {
     console.error("Error updating spreadsheet with URLs:", error);
     throw error;
