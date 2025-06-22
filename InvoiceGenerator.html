@@ -53,9 +53,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </head>
   <body class="container py-4">
-    <div class="mb-4">
+    <div class="mb-4 d-flex justify-content-between">
       <a href="<?= baseUrl ?>?page=Home" class="btn btn-link"
-        >← Back to Main Page</a
+        >&larr; Back to Main Page</a
+      >
+      <a
+        href="<?= baseUrl ?>?page=InvoicesList"
+        class="btn btn-link"
+        style="display: none"
+        id="back-to-list"
+        >&larr; Back to Invoices List</a
       >
     </div>
 
@@ -68,7 +75,7 @@
       }
     </script>
 
-    <h2 class="mb-4">Create invoice</h2>
+    <h2 class="mb-4" id="page-title">Create invoice</h2>
 
     <!-- Invoice details -->
     <div class="row mb-3">
@@ -160,6 +167,11 @@
     <!-- Comment -->
     <div class="mb-3">
       <label class="form-label">Comment</label>
+      <p
+        class="form-control-plaintext"
+        id="comment-display"
+        style="display: none"
+      ></p>
       <input
         type="text"
         id="comment"
@@ -227,7 +239,10 @@
     </div>
 
     <div class="row mt-4">
-      <div class="col-md-12 d-flex justify-content-end gap-2">
+      <div
+        class="col-md-12 d-flex justify-content-end gap-2"
+        id="action-buttons"
+      >
         <button
           id="generate-btn"
           class="btn btn-success"
@@ -630,8 +645,26 @@
         populateProjectNames();
 
         if (invoiceId) {
+          document.getElementById("page-title").textContent = "Invoice - view";
+          document.getElementById("back-to-list").style.display = "block";
+          document.getElementById("action-buttons").style.display = "none";
+          document.getElementById("comment").style.display = "none";
+          document.getElementById("comment-display").style.display = "block";
+
           google.script.run
-            .withSuccessHandler(fillInvoiceFormFromSavedData)
+            .withSuccessHandler(function (data) {
+              fillInvoiceFormFromSavedData(data);
+
+              document.querySelectorAll("input, textarea").forEach((el) => {
+                el.disabled = true;
+              });
+
+              document.getElementById("comment-display").textContent =
+                data.comment || "";
+              document.getElementById("due_date").textContent = data.dueDate
+                ? formatDateDDMMYYYY(new Date(data.dueDate))
+                : "";
+            })
             .getInvoiceDataById(invoiceId);
         }
       };
