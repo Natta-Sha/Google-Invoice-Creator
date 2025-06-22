@@ -402,11 +402,14 @@
             row.appendChild(cell);
           });
           const delCell = document.createElement("td");
-          delCell.innerHTML = `
-      <button type="button" class="icon-button" onclick="deleteRow(this)" title="Delete row">
-        <i class="bi bi-trash"></i>
-      </button>
-    `;
+          delCell.innerHTML = invoiceId
+            ? "" // скрыть кнопку удаления, если invoiceId существует (режим просмотра)
+            : `
+    <button type="button" class="icon-button" onclick="deleteRow(this)" title="Delete row">
+      <i class="bi bi-trash"></i>
+    </button>
+  `;
+
           row.appendChild(delCell);
           tbody.appendChild(row);
         });
