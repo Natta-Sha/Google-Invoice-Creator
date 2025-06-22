@@ -495,12 +495,9 @@
       }
 
       function deleteRow(btn) {
-        const tbody = document.getElementById("invoice-body");
-        if (tbody.rows.length > 1) {
-          const row = btn.closest("tr");
-          row.remove();
-          updateTotals();
-        }
+        const row = btn.closest("tr");
+        row.remove();
+        updateTotals();
       }
 
       function updateTotals() {
