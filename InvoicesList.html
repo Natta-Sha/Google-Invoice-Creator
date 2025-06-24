@@ -149,23 +149,13 @@
                 `
       <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}" class="btn btn-sm btn-outline-primary me-1">View</a>
       <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-      <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=delete" class="btn btn-sm btn-outline-danger me-1">Delete</a>
+      <button class="btn btn-sm btn-outline-danger me-1">Delete</button>
       <button class="btn btn-sm btn-outline-success">Copy</button>
     `,
               ]);
             });
 
             table.draw();
-
-            // Add click handler for Delete buttons
-            $("#invoiceTable tbody").on(
-              "click",
-              ".delete-invoice-btn",
-              function () {
-                const invoiceId = $(this).data("id");
-                window.location.href = `<?= baseUrl ?>?page=InvoiceGenerator&id=${invoiceId}&mode=delete`;
-              }
-            );
           })
           .getInvoiceList();
       });
