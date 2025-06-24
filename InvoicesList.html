@@ -150,11 +150,10 @@
         // Загружаем данные
         google.script.run
           .withSuccessHandler(function (data) {
-            document.getElementById("spinner").style.display = "none";
-            document.getElementById("invoiceTable").style.display = "";
-
             if (!Array.isArray(data) || data.length === 0) {
               table.clear().draw();
+              document.getElementById("spinner").style.display = "none";
+              document.getElementById("invoiceTable").style.display = "";
               return;
             }
 
@@ -176,6 +175,8 @@
             });
 
             table.draw();
+            document.getElementById("spinner").style.display = "none";
+            document.getElementById("invoiceTable").style.display = "";
 
             // Add click handler for Delete buttons
             $("#invoiceTable tbody").on(
