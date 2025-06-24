@@ -38,7 +38,9 @@ function doGet(e) {
  */
 function loadPage(name) {
   try {
-    return HtmlService.createHtmlOutputFromFile(name).getContent();
+    return typeof dataService !== "undefined" && dataService.loadPage
+      ? dataService.loadPage(name)
+      : HtmlService.createHtmlOutputFromFile(name).getContent();
   } catch (error) {
     console.error(`Error loading page ${name}:`, error);
     return `<h1>Error</h1><p>Failed to load page: ${error.message}</p>`;
@@ -51,65 +53,9 @@ function loadPage(name) {
  * @returns {Object} Result with document and PDF URLs
  */
 function processForm(data) {
-  try {
-    // Validate required fields
-    const requiredFields = [
-      "projectName",
-      "invoiceNumber",
-      "invoiceDate",
-      "items",
-    ];
-    const validation = validateRequiredFields(data, requiredFields);
-
-    if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
-    }
-
-    // Calculate amounts
-    const subtotalNum = parseFloat(data.subtotal) || 0;
-    const taxRate = parseFloat(data.tax) || 0;
-    const taxAmount = calculateTaxAmount(subtotalNum, taxRate);
-    const totalAmount = calculateTotalAmount(subtotalNum, taxAmount);
-
-    // Format dates
-    const formattedDate = formatDate(data.invoiceDate);
-    const formattedDueDate = formatDate(data.dueDate);
-
-    // Save data to spreadsheet
-    const { newRowIndex, uniqueId } = saveInvoiceData(data);
-
-    // Create document
-    const doc = createInvoiceDoc(
-      data,
-      formattedDate,
-      formattedDueDate,
-      subtotalNum,
-      taxRate,
-      taxAmount,
-      totalAmount,
-      data.templateId
-    );
-
-    // Generate PDF
-    const filename = generateInvoiceFilename(data);
-    const pdfFile = generateAndSavePDF(doc, filename);
-
-    // Update spreadsheet with URLs
-    updateSpreadsheetWithUrls(newRowIndex, doc.getUrl(), pdfFile.getUrl());
-
-    return {
-      success: true,
-      docUrl: doc.getUrl(),
-      pdfUrl: pdfFile.getUrl(),
-      message: "Invoice created successfully!",
-    };
-  } catch (error) {
-    console.error("Error processing form:", error);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+  return typeof dataService !== "undefined" && dataService.processForm
+    ? dataService.processForm(data)
+    : { success: false, error: "processForm not implemented" };
 }
 
 // Export functions for use in other modules
@@ -121,7 +67,9 @@ function processForm(data) {
  * @returns {Array} Array of project names
  */
 function getProjectNames() {
-  return getProjectNames();
+  return this.getProjectNames
+    ? this.getProjectNames()
+    : getProjectNamesFromDataService();
 }
 
 /**
@@ -130,7 +78,9 @@ function getProjectNames() {
  * @returns {Object} Project details
  */
 function getProjectDetails(projectName) {
-  return getProjectDetails(projectName);
+  return this.getProjectDetails
+    ? this.getProjectDetails(projectName)
+    : getProjectDetailsFromDataService(projectName);
 }
 
 /**
@@ -138,7 +88,9 @@ function getProjectDetails(projectName) {
  * @returns {Array} Array of invoice objects
  */
 function getInvoiceList() {
-  return getInvoiceList();
+  return this.getInvoiceList
+    ? this.getInvoiceList()
+    : getInvoiceListFromDataService();
 }
 
 /**
@@ -147,7 +99,31 @@ function getInvoiceList() {
  * @returns {Object} Invoice data
  */
 function getInvoiceDataById(id) {
-  return getInvoiceDataById(id);
+  return this.getInvoiceDataById
+    ? this.getInvoiceDataById(id)
+    : getInvoiceDataByIdFromDataService(id);
+}
+
+// Helper functions to call the real implementations in dataService.js
+function getProjectNamesFromDataService() {
+  return typeof dataService !== "undefined" && dataService.getProjectNames
+    ? dataService.getProjectNames()
+    : [];
+}
+function getProjectDetailsFromDataService(projectName) {
+  return typeof dataService !== "undefined" && dataService.getProjectDetails
+    ? dataService.getProjectDetails(projectName)
+    : {};
+}
+function getInvoiceListFromDataService() {
+  return typeof dataService !== "undefined" && dataService.getInvoiceList
+    ? dataService.getInvoiceList()
+    : [];
+}
+function getInvoiceDataByIdFromDataService(id) {
+  return typeof dataService !== "undefined" && dataService.getInvoiceDataById
+    ? dataService.getInvoiceDataById(id)
+    : {};
 }
 
 // Error handling wrapper for better debugging
@@ -192,3 +168,84 @@ const monitoredCreateInvoiceDoc = logPerformance(
   createInvoiceDoc,
   "createInvoiceDoc"
 );
+
+function validateRequiredFields(data, requiredFields) {
+  return typeof dataService !== "undefined" &&
+    dataService.validateRequiredFields
+    ? dataService.validateRequiredFields(data, requiredFields)
+    : { isValid: true, errors: [] };
+}
+
+function calculateTaxAmount(subtotal, taxRate) {
+  return typeof dataService !== "undefined" && dataService.calculateTaxAmount
+    ? dataService.calculateTaxAmount(subtotal, taxRate)
+    : 0;
+}
+
+function calculateTotalAmount(subtotal, taxAmount) {
+  return typeof dataService !== "undefined" && dataService.calculateTotalAmount
+    ? dataService.calculateTotalAmount(subtotal, taxAmount)
+    : 0;
+}
+
+function saveInvoiceData(data) {
+  return typeof dataService !== "undefined" && dataService.saveInvoiceData
+    ? dataService.saveInvoiceData(data)
+    : { newRowIndex: -1, uniqueId: "" };
+}
+
+function createInvoiceDoc(
+  data,
+  formattedDate,
+  formattedDueDate,
+  subtotal,
+  taxRate,
+  taxAmount,
+  totalAmount,
+  templateId
+) {
+  return typeof dataService !== "undefined" && dataService.createInvoiceDoc
+    ? dataService.createInvoiceDoc(
+        data,
+        formattedDate,
+        formattedDueDate,
+        subtotal,
+        taxRate,
+        taxAmount,
+        totalAmount,
+        templateId
+      )
+    : null;
+}
+
+function generateInvoiceFilename(data) {
+  return typeof dataService !== "undefined" &&
+    dataService.generateInvoiceFilename
+    ? dataService.generateInvoiceFilename(data)
+    : "";
+}
+
+function generateAndSavePDF(doc, filename) {
+  return typeof dataService !== "undefined" && dataService.generateAndSavePDF
+    ? dataService.generateAndSavePDF(doc, filename)
+    : null;
+}
+
+function updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl) {
+  return typeof dataService !== "undefined" &&
+    dataService.updateSpreadsheetWithUrls
+    ? dataService.updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl)
+    : null;
+}
+
+function formatDate(dateStr) {
+  return typeof dataService !== "undefined" && dataService.formatDate
+    ? dataService.formatDate(dateStr)
+    : dateStr;
+}
+
+function formatDateForInput(val) {
+  return typeof dataService !== "undefined" && dataService.formatDateForInput
+    ? dataService.formatDateForInput(val)
+    : val;
+}
