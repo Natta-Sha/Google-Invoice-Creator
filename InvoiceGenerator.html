@@ -652,6 +652,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         invoiceId = urlParams.get("id");
         mode = urlParams.get("mode");
+        console.log("Loaded InvoiceGenerator:", { invoiceId, mode });
 
         if (invoiceId) {
           // Set the form title based on mode
@@ -678,9 +679,15 @@
           const commentDisplay = document.getElementById("comment-display");
           if (commentDisplay) commentDisplay.style.display = "block";
 
-          // Only call getInvoiceDataById if invoiceId is present
           google.script.run
             .withSuccessHandler(function (data) {
+              console.log("Loaded invoice data:", data);
+              if (!data || !data.projectName) {
+                alert("Invoice not found or data is empty!");
+                document.getElementById("page-title").textContent =
+                  "Invoice not found";
+                return;
+              }
               fillInvoiceFormFromSavedData(data);
               document.querySelectorAll("input, textarea").forEach((el) => {
                 el.disabled = true;
@@ -692,6 +699,10 @@
                 : "";
             })
             .getInvoiceDataById(invoiceId);
+        } else {
+          document.getElementById("page-title").textContent = "Create invoice";
+          // Optionally clear fields here
+          console.log("No invoiceId found in URL, showing blank form.");
         }
       };
 
