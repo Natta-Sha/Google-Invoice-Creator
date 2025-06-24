@@ -84,6 +84,16 @@
 
     <h2 class="mb-4">List of Invoices</h2>
 
+    <div
+      id="spinner"
+      class="d-flex justify-content-center my-4"
+      style="display: none"
+    >
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
     <table
       id="invoiceTable"
       class="display table table-bordered"
@@ -118,6 +128,10 @@
       }
 
       $(document).ready(function () {
+        // Show spinner, hide table
+        document.getElementById("spinner").style.display = "block";
+        document.getElementById("invoiceTable").style.display = "none";
+
         const table = $("#invoiceTable").DataTable({
           dom: "lrtip", // Убирает верхний глобальный фильтр
           orderCellsTop: true,
@@ -136,7 +150,13 @@
         // Загружаем данные
         google.script.run
           .withSuccessHandler(function (data) {
-            if (!Array.isArray(data) || data.length === 0) return;
+            document.getElementById("spinner").style.display = "none";
+            document.getElementById("invoiceTable").style.display = "";
+
+            if (!Array.isArray(data) || data.length === 0) {
+              table.clear().draw();
+              return;
+            }
 
             data.forEach((row) => {
               table.row.add([
