@@ -67,9 +67,7 @@ function processForm(data) {
  * @returns {Array} Array of project names
  */
 function getProjectNames() {
-  return this.getProjectNames
-    ? this.getProjectNames()
-    : getProjectNamesFromDataService();
+  return getProjectNamesFromData();
 }
 
 /**
@@ -78,9 +76,7 @@ function getProjectNames() {
  * @returns {Object} Project details
  */
 function getProjectDetails(projectName) {
-  return this.getProjectDetails
-    ? this.getProjectDetails(projectName)
-    : getProjectDetailsFromDataService(projectName);
+  return getProjectDetailsFromData(projectName);
 }
 
 /**
@@ -88,9 +84,7 @@ function getProjectDetails(projectName) {
  * @returns {Array} Array of invoice objects
  */
 function getInvoiceList() {
-  return this.getInvoiceList
-    ? this.getInvoiceList()
-    : getInvoiceListFromDataService();
+  return getInvoiceListFromData();
 }
 
 /**
@@ -99,28 +93,26 @@ function getInvoiceList() {
  * @returns {Object} Invoice data
  */
 function getInvoiceDataById(id) {
-  return this.getInvoiceDataById
-    ? this.getInvoiceDataById(id)
-    : getInvoiceDataByIdFromDataService(id);
+  return getInvoiceDataByIdFromData(id);
 }
 
 // Helper functions to call the real implementations in dataService.js
-function getProjectNamesFromDataService() {
+function getProjectNamesFromData() {
   return typeof dataService !== "undefined" && dataService.getProjectNames
     ? dataService.getProjectNames()
     : [];
 }
-function getProjectDetailsFromDataService(projectName) {
+function getProjectDetailsFromData(projectName) {
   return typeof dataService !== "undefined" && dataService.getProjectDetails
     ? dataService.getProjectDetails(projectName)
     : {};
 }
-function getInvoiceListFromDataService() {
+function getInvoiceListFromData() {
   return typeof dataService !== "undefined" && dataService.getInvoiceList
     ? dataService.getInvoiceList()
     : [];
 }
-function getInvoiceDataByIdFromDataService(id) {
+function getInvoiceDataByIdFromData(id) {
   return typeof dataService !== "undefined" && dataService.getInvoiceDataById
     ? dataService.getInvoiceDataById(id)
     : {};

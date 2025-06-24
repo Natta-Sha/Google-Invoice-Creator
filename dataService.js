@@ -4,7 +4,7 @@
  * Get project names from the Lists sheet
  * @returns {Array} Array of unique project names
  */
-function getProjectNames() {
+function getProjectNamesFromData() {
   try {
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = getSheet(spreadsheet, CONFIG.SHEETS.LISTS);
@@ -21,7 +21,7 @@ function getProjectNames() {
  * @param {string} projectName - Name of the project
  * @returns {Object} Project details object
  */
-function getProjectDetails(projectName) {
+function getProjectDetailsFromData(projectName) {
   try {
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = getSheet(spreadsheet, CONFIG.SHEETS.LISTS);
@@ -129,7 +129,7 @@ function getProjectDetails(projectName) {
  * Get invoice list from the Invoices sheet
  * @returns {Array} Array of invoice objects
  */
-function getInvoiceList() {
+function getInvoiceListFromData() {
   try {
     var cache = CacheService.getScriptCache();
     var cached = cache.get("invoiceList");
@@ -188,7 +188,7 @@ function getInvoiceList() {
  * @param {string} id - Invoice ID
  * @returns {Object} Invoice data object
  */
-function getInvoiceDataById(id) {
+function getInvoiceDataByIdFromData(id) {
   try {
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = spreadsheet.getSheets()[0]; // First sheet (Invoices)
