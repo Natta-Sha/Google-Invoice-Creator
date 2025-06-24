@@ -97,7 +97,7 @@
     <table
       id="invoiceTable"
       class="display table table-bordered"
-      style="width: 100%"
+      style="width: 100%; display: none"
     >
       <thead class="table-light">
         <tr>
@@ -128,8 +128,7 @@
       }
 
       $(document).ready(function () {
-        // Show spinner, hide table
-        document.getElementById("spinner").style.display = "block";
+        // Hide table initially
         document.getElementById("invoiceTable").style.display = "none";
 
         const table = $("#invoiceTable").DataTable({
@@ -152,7 +151,6 @@
           .withSuccessHandler(function (data) {
             if (!Array.isArray(data) || data.length === 0) {
               table.clear().draw();
-              document.getElementById("spinner").style.display = "none";
               document.getElementById("invoiceTable").style.display = "";
               return;
             }
@@ -166,16 +164,15 @@
                 row.total || "",
                 row.currency || "",
                 `
-        <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=view" class="btn btn-sm btn-outline-primary me-1">View</a>
-        <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-        <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=delete" class="btn btn-sm btn-outline-danger me-1">Delete</a>
-        <button class="btn btn-sm btn-outline-success">Copy</button>
-      `,
+      <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=view" class="btn btn-sm btn-outline-primary me-1">View</a>
+      <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+      <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=delete" class="btn btn-sm btn-outline-danger me-1">Delete</a>
+      <button class="btn btn-sm btn-outline-success">Copy</button>
+    `,
               ]);
             });
 
             table.draw();
-            document.getElementById("spinner").style.display = "none";
             document.getElementById("invoiceTable").style.display = "";
 
             // Add click handler for Delete buttons
