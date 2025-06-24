@@ -651,8 +651,21 @@
       window.onload = function () {
         populateProjectNames();
 
+        // Get mode from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get("mode");
+
         if (invoiceId) {
-          document.getElementById("page-title").textContent = "Invoice - view";
+          if (mode === "delete") {
+            document.getElementById("page-title").textContent =
+              "Invoice - Delete";
+          } else if (mode === "view") {
+            document.getElementById("page-title").textContent =
+              "Invoice - view";
+          } else {
+            document.getElementById("page-title").textContent =
+              "Invoice - view";
+          }
           document.getElementById("back-to-list").style.display = "block";
           document.getElementById("generate-btn").style.display = "none";
           document.getElementById("new-invoice-btn").style.display = "none";
