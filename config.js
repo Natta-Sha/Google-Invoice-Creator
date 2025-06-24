@@ -60,7 +60,7 @@ const ERROR_MESSAGES = {
   NO_TEMPLATE_ID:
     "🚫 No invoice template found for the selected project. Please check Clients details and ensure the template of invoice is chosen.",
   TABLE_NOT_FOUND:
-    "❗ No table found with the needed column names (#, Services, Period, ...)",
+    "❗ Не найдена таблица с нужной шапкой (#, Services, Period, ...)",
   INVOICE_NOT_FOUND: "Invoice not found",
   MISSING_COLUMN: (name) => `Missing column: "${name}"`,
 };
