@@ -77,6 +77,54 @@
 
     <h2 class="mb-4" id="page-title">Create invoice</h2>
 
+    <div id="delete-section" style="display: none">
+      <button id="delete-btn" class="btn btn-danger">Delete</button>
+      <div
+        id="delete-spinner"
+        class="spinner-border text-danger ms-3"
+        style="display: none"
+        role="status"
+      >
+        <span class="visually-hidden">Deleting...</span>
+      </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div
+      class="modal fade"
+      id="deleteModal"
+      tabindex="-1"
+      aria-labelledby="deleteModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">Are you sure that you want to delete?</div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              No
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+              Yes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Invoice details -->
     <div class="row mb-3">
       <div class="col-md-3">
@@ -651,36 +699,96 @@
       window.onload = function () {
         populateProjectNames();
 
+        // Detect mode from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get("mode");
+
         if (invoiceId) {
-          document.getElementById("page-title").textContent = "Invoice - view";
-          document.getElementById("back-to-list").style.display = "block";
-          document.getElementById("generate-btn").style.display = "none";
-          document.getElementById("new-invoice-btn").style.display = "none";
+          if (mode === "delete") {
+            document.getElementById("page-title").textContent =
+              "Invoice - Delete";
+            document.getElementById("delete-section").style.display = "block";
+            document.getElementById("back-to-list").style.display = "block";
+            document.getElementById("generate-btn").style.display = "none";
+            document.getElementById("new-invoice-btn").style.display = "none";
+            const addRowBtn = document.getElementById("add-row-btn");
+            if (addRowBtn) addRowBtn.style.display = "none";
+            const commentInput = document.getElementById("comment");
+            if (commentInput) commentInput.style.display = "none";
+            const commentDisplay = document.getElementById("comment-display");
+            if (commentDisplay) commentDisplay.style.display = "block";
+            google.script.run
+              .withSuccessHandler(function (data) {
+                fillInvoiceFormFromSavedData(data);
+                document.querySelectorAll("input, textarea").forEach((el) => {
+                  el.disabled = true;
+                });
+                document.getElementById("comment-display").textContent =
+                  data.comment || "";
+                document.getElementById("due_date").textContent = data.dueDate
+                  ? formatDateDDMMYYYY(new Date(data.dueDate))
+                  : "";
+              })
+              .getInvoiceDataById(invoiceId);
+          } else {
+            document.getElementById("page-title").textContent =
+              "Invoice - view";
+            document.getElementById("back-to-list").style.display = "block";
+            document.getElementById("generate-btn").style.display = "none";
+            document.getElementById("new-invoice-btn").style.display = "none";
 
-          const addRowBtn = document.getElementById("add-row-btn");
-          if (addRowBtn) addRowBtn.style.display = "none";
+            const addRowBtn = document.getElementById("add-row-btn");
+            if (addRowBtn) addRowBtn.style.display = "none";
 
-          const commentInput = document.getElementById("comment");
-          if (commentInput) commentInput.style.display = "none";
+            const commentInput = document.getElementById("comment");
+            if (commentInput) commentInput.style.display = "none";
 
-          const commentDisplay = document.getElementById("comment-display");
-          if (commentDisplay) commentDisplay.style.display = "block";
+            const commentDisplay = document.getElementById("comment-display");
+            if (commentDisplay) commentDisplay.style.display = "block";
 
-          google.script.run
-            .withSuccessHandler(function (data) {
-              fillInvoiceFormFromSavedData(data);
+            google.script.run
+              .withSuccessHandler(function (data) {
+                fillInvoiceFormFromSavedData(data);
 
-              document.querySelectorAll("input, textarea").forEach((el) => {
-                el.disabled = true;
-              });
+                document.querySelectorAll("input, textarea").forEach((el) => {
+                  el.disabled = true;
+                });
 
-              document.getElementById("comment-display").textContent =
-                data.comment || "";
-              document.getElementById("due_date").textContent = data.dueDate
-                ? formatDateDDMMYYYY(new Date(data.dueDate))
-                : "";
-            })
-            .getInvoiceDataById(invoiceId);
+                document.getElementById("comment-display").textContent =
+                  data.comment || "";
+                document.getElementById("due_date").textContent = data.dueDate
+                  ? formatDateDDMMYYYY(new Date(data.dueDate))
+                  : "";
+              })
+              .getInvoiceDataById(invoiceId);
+          }
+        }
+
+        // Delete button logic
+        const deleteBtn = document.getElementById("delete-btn");
+        if (deleteBtn) {
+          deleteBtn.onclick = function () {
+            const modal = new bootstrap.Modal(
+              document.getElementById("deleteModal")
+            );
+            modal.show();
+            document.getElementById("confirmDeleteBtn").onclick = function () {
+              modal.hide();
+              document.getElementById("delete-spinner").style.display =
+                "inline-block";
+              google.script.run
+                .withSuccessHandler(function (result) {
+                  document.getElementById("delete-spinner").style.display =
+                    "none";
+                  if (result.success) {
+                    window.location.href = "?page=InvoicesList";
+                  } else {
+                    alert(result.message || "Error deleting invoice.");
+                  }
+                })
+                .deleteInvoiceById(invoiceId);
+            };
+          };
         }
       };
 
