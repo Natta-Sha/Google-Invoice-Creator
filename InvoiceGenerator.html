@@ -67,8 +67,9 @@
     </div>
 
     <script>
-      const invoiceId =
-        "<?= typeof invoiceId !== 'undefined' ? invoiceId : '' ?>";
+      const urlParams = new URLSearchParams(window.location.search);
+      const invoiceId = urlParams.get("id");
+      const mode = urlParams.get("mode");
 
       function goHome() {
         window.location.href = "?page=Home";
@@ -650,10 +651,6 @@
 
       window.onload = function () {
         populateProjectNames();
-
-        // Get mode from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get("mode");
 
         if (invoiceId) {
           if (mode === "delete") {
