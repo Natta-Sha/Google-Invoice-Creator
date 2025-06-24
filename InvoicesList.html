@@ -84,16 +84,6 @@
 
     <h2 class="mb-4">List of Invoices</h2>
 
-    <div
-      id="spinner"
-      class="d-flex justify-content-center my-4"
-      style="display: none"
-    >
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-
     <table
       id="invoiceTable"
       class="display table table-bordered"
@@ -126,18 +116,15 @@
       function goHome() {
         window.location.href = "?page=Home";
       }
-
+    </script>
+    <script>
       $(document).ready(function () {
-        // Hide table initially
-        document.getElementById("invoiceTable").style.display = "none";
-
         const table = $("#invoiceTable").DataTable({
-          dom: "lrtip", // Убирает верхний глобальный фильтр
+          dom: "lrtip",
           orderCellsTop: true,
           fixedHeader: true,
         });
 
-        // Фильтрация по колонкам (нижняя строка thead)
         $("#invoiceTable thead tr:eq(1) th").each(function (i) {
           $("input", this).on("keyup change", function () {
             if (table.column(i).search() !== this.value) {
@@ -146,14 +133,11 @@
           });
         });
 
-        // Загружаем данные
         google.script.run
           .withSuccessHandler(function (data) {
             if (!Array.isArray(data) || data.length === 0) {
               table.clear().draw();
               document.getElementById("invoiceTable").style.display = "";
-              document.getElementById("spinner").style.display = "none";
-
               return;
             }
 
@@ -166,29 +150,20 @@
                 row.total || "",
                 row.currency || "",
                 `
-      <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=view" class="btn btn-sm btn-outline-primary me-1">View</a>
-      <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-      <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=delete" class="btn btn-sm btn-outline-danger me-1">Delete</a>
-      <button class="btn btn-sm btn-outline-success">Copy</button>
-    `,
+                  <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=view" class="btn btn-sm btn-outline-primary me-1">View</a>
+                  <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                  <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=delete" class="btn btn-sm btn-outline-danger me-1">Delete</a>
+                  <button class="btn btn-sm btn-outline-success">Copy</button>
+                `,
               ]);
             });
 
             table.draw();
             document.getElementById("invoiceTable").style.display = "";
-            document.getElementById("spinner").style.display = "none";
-
-            // Add click handler for Delete buttons
-            $("#invoiceTable tbody").on(
-              "click",
-              ".delete-invoice-btn",
-              function () {
-                const invoiceId = $(this).data("id");
-                window.location.href = `<?= baseUrl ?>?page=InvoiceForm&id=${invoiceId}&mode=delete`;
-              }
-            );
-            // Add click handler for Edit/Copy buttons (future)
-            // ...
+          })
+          .withFailureHandler(function (error) {
+            console.error("Error loading invoice list:", error);
+            alert("Failed to load invoice list.");
           })
           .getInvoiceList();
       });
