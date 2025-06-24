@@ -11,10 +11,15 @@ function doGet(e) {
     const page = e.parameter.page || "Home";
     const template = HtmlService.createTemplateFromFile(page);
     template.baseUrl = ScriptApp.getService().getUrl();
+    template.invoiceId = e.parameter.id || "";
+    template.mode = e.parameter.mode || "";
 
     // Pass invoice ID if provided
     if (e.parameter.id) {
       template.invoiceId = e.parameter.id;
+    }
+    if (e.parameter.mode) {
+      template.mode = e.parameter.mode;
     }
 
     return template.evaluate().setTitle(page);

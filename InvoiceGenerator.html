@@ -273,8 +273,8 @@
 
     <script>
       let validProjectNames = [];
-      let invoiceId = null;
-      let mode = null;
+      let invoiceId = "<?= invoiceId ?>";
+      let mode = "<?= mode ?>";
 
       function populateProjectNames() {
         google.script.run
@@ -649,9 +649,6 @@
 
       window.onload = function () {
         populateProjectNames();
-        const urlParams = new URLSearchParams(window.location.search);
-        invoiceId = urlParams.get("id");
-        mode = urlParams.get("mode");
         console.log("Loaded InvoiceGenerator:", { invoiceId, mode });
 
         if (invoiceId) {
