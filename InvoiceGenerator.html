@@ -654,6 +654,7 @@
         mode = urlParams.get("mode");
 
         if (invoiceId) {
+          // Set the form title based on mode
           if (mode === "delete") {
             document.getElementById("page-title").textContent =
               "Invoice - Delete";
@@ -677,14 +678,13 @@
           const commentDisplay = document.getElementById("comment-display");
           if (commentDisplay) commentDisplay.style.display = "block";
 
+          // Only call getInvoiceDataById if invoiceId is present
           google.script.run
             .withSuccessHandler(function (data) {
               fillInvoiceFormFromSavedData(data);
-
               document.querySelectorAll("input, textarea").forEach((el) => {
                 el.disabled = true;
               });
-
               document.getElementById("comment-display").textContent =
                 data.comment || "";
               document.getElementById("due_date").textContent = data.dueDate
