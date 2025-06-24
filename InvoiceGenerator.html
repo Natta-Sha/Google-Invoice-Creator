@@ -67,10 +67,6 @@
     </div>
 
     <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      const invoiceId = urlParams.get("id");
-      const mode = urlParams.get("mode");
-
       function goHome() {
         window.location.href = "?page=Home";
       }
@@ -277,6 +273,8 @@
 
     <script>
       let validProjectNames = [];
+      let invoiceId = null;
+      let mode = null;
 
       function populateProjectNames() {
         google.script.run
@@ -651,6 +649,9 @@
 
       window.onload = function () {
         populateProjectNames();
+        const urlParams = new URLSearchParams(window.location.search);
+        invoiceId = urlParams.get("id");
+        mode = urlParams.get("mode");
 
         if (invoiceId) {
           if (mode === "delete") {
