@@ -131,6 +131,12 @@ function getProjectDetails(projectName) {
  */
 function getInvoiceList() {
   try {
+    var cache = CacheService.getScriptCache();
+    var cached = cache.get("invoiceList");
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
     const data = sheet.getDataRange().getValues();
@@ -156,7 +162,7 @@ function getInvoiceList() {
       }
     }
 
-    return data.slice(1).map((row) => ({
+    const result = data.slice(1).map((row) => ({
       id: row[colIndex.id] || "",
       projectName: row[colIndex.projectName] || "",
       invoiceNumber: row[colIndex.invoiceNumber] || "",
@@ -168,6 +174,9 @@ function getInvoiceList() {
           : "",
       currency: row[colIndex.currency] || "",
     }));
+
+    cache.put("invoiceList", JSON.stringify(result), 300); // cache for 5 minutes
+    return result;
   } catch (error) {
     console.error("Error getting invoice list:", error);
     return [];
