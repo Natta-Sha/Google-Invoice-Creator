@@ -688,12 +688,38 @@
             document.getElementById(
               "delete-bottom-btn-container"
             ).style.display = "block";
+            // Add click handler for bottom Delete button
+            document.getElementById("delete-bottom-btn").onclick = function () {
+              document.getElementById("delete-bottom-btn").disabled = true;
+              document.getElementById("delete-bottom-btn").textContent =
+                "Deleting...";
+              google.script.run
+                .withSuccessHandler(function (result) {
+                  if (result.success) {
+                    window.location.href = "?page=InvoicesList";
+                  } else {
+                    alert(result.message || "Error deleting invoice.");
+                    document.getElementById(
+                      "delete-bottom-btn"
+                    ).disabled = false;
+                    document.getElementById("delete-bottom-btn").textContent =
+                      "Delete";
+                  }
+                })
+                .deleteInvoiceById(invoiceId);
+            };
           } else if (mode === "view") {
             document.getElementById("page-title").textContent =
               "Invoice - view";
+            document.getElementById(
+              "delete-bottom-btn-container"
+            ).style.display = "none";
           } else {
             document.getElementById("page-title").textContent =
               "Invoice - view";
+            document.getElementById(
+              "delete-bottom-btn-container"
+            ).style.display = "none";
           }
           document.getElementById("back-to-list").style.display = "block";
           document.getElementById("generate-btn").style.display = "none";
