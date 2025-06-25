@@ -85,6 +85,14 @@
 
     <h2 class="mb-4">List of Invoices</h2>
 
+    <div
+      id="fallback-message"
+      style="display: none"
+      class="alert alert-warning mt-4"
+    >
+      No data available or failed to load invoices.
+    </div>
+
     <table
       id="invoiceTable"
       class="display table table-bordered"
@@ -139,6 +147,8 @@
             if (!Array.isArray(data) || data.length === 0) {
               table.clear().draw();
               document.getElementById("invoiceTable").style.display = "";
+              document.getElementById("fallback-message").style.display =
+                "block";
               return;
             }
 
@@ -161,10 +171,12 @@
 
             table.draw();
             document.getElementById("invoiceTable").style.display = "";
+            document.getElementById("fallback-message").style.display = "none";
           })
           .withFailureHandler(function (error) {
             console.error("Error loading invoice list:", error);
             alert("Failed to load invoice list.");
+            document.getElementById("fallback-message").style.display = "block";
           })
           .getInvoiceList();
       });
@@ -196,8 +208,10 @@
     <script>
       // Show modal if deleted=1 in URL
       $(function () {
+        console.log("[DEBUG] Modal script running");
         const params = new URLSearchParams(window.location.search);
         if (params.get("deleted") === "1") {
+          console.log("[DEBUG] Showing deleted modal");
           const modal = new bootstrap.Modal(
             document.getElementById("deletedModal")
           );
