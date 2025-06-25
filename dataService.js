@@ -377,3 +377,38 @@ function updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl) {
     throw error;
   }
 }
+
+/**
+ * Delete invoice by ID from the Invoices sheet
+ * @param {string} id - Invoice ID
+ * @returns {Object} { success: true } or { success: false, message }
+ */
+function deleteInvoiceById(id) {
+  try {
+    const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
+    const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const idCol = headers.indexOf("ID");
+    if (idCol === -1) {
+      return { success: false, message: "ID column not found." };
+    }
+    let rowToDelete = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][idCol] === id) {
+        rowToDelete = i + 1; // 1-based for Sheets
+        break;
+      }
+    }
+    if (rowToDelete === -1) {
+      return { success: false, message: "Invoice not found." };
+    }
+    sheet.deleteRow(rowToDelete);
+    // Clear cache
+    CacheService.getScriptCache().remove("invoiceList");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting invoice:", error);
+    return { success: false, message: error.message };
+  }
+}

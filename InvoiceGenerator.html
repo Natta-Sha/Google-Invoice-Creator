@@ -696,7 +696,7 @@
               google.script.run
                 .withSuccessHandler(function (result) {
                   if (result.success) {
-                    window.location.href = "?page=InvoicesList";
+                    window.location.href = "?page=InvoicesList&deleted=1";
                   } else {
                     alert(result.message || "Error deleting invoice.");
                     document.getElementById(

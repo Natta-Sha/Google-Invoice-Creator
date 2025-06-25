@@ -241,3 +241,14 @@ function formatDateForInput(val) {
     ? dataService.formatDateForInput(val)
     : val;
 }
+
+/**
+ * Delete invoice by ID (global endpoint for frontend)
+ * @param {string} id - Invoice ID
+ * @returns {Object} { success: true } or { success: false, message }
+ */
+function deleteInvoiceById(id) {
+  return typeof dataService !== "undefined" && dataService.deleteInvoiceById
+    ? dataService.deleteInvoiceById(id)
+    : { success: false, message: "deleteInvoiceById not implemented" };
+}

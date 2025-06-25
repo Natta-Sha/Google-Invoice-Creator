@@ -168,5 +168,41 @@
           .getInvoiceList();
       });
     </script>
+
+    <!-- Modal for deletion info -->
+    <div
+      class="modal fade"
+      id="deletedModal"
+      tabindex="-1"
+      aria-labelledby="deletedModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deletedModalLabel">Invoice Deleted</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">The invoice was deleted.</div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Show modal if deleted=1 in URL
+      $(function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("deleted") === "1") {
+          const modal = new bootstrap.Modal(
+            document.getElementById("deletedModal")
+          );
+          modal.show();
+        }
+      });
+    </script>
   </body>
 </html>
