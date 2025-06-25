@@ -12,7 +12,6 @@ function doGet(e) {
     const template = HtmlService.createTemplateFromFile(page);
     template.baseUrl = ScriptApp.getService().getUrl();
     template.invoiceId = e.parameter.invoiceId || e.parameter.id || "";
-
     template.mode = e.parameter.mode || "";
 
     // Pass invoice ID if provided
