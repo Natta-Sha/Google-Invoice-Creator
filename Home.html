@@ -26,25 +26,14 @@
   <body>
     <h1 class="mb-5">Welcome to Invoice App</h1>
 
-<a href="<?= baseUrl ?>?page=InvoiceGenerator" class="btn btn-primary btn-lg mb-3">
-  Generate Invoice
-</a>
-<a href="<?= baseUrl ?>?page=InvoicesList" class="btn btn-secondary btn-lg">
-  List of Invoices
-</a>
+    <a href="<?= baseUrl ?>?page=InvoicesList" class="btn btn-secondary btn-lg">
+      List of Invoices
+    </a>
 
-
- 
-<script>
-  function navigateToGenerate() {
-    window.location.href = "?page=InvoiceGenerator";
-  }
-
-  function navigateToList() {
-    window.location.href = "?page=InvoicesList";
-  }
-</script>
-
+    <script>
+      function navigateToList() {
+        window.location.href = "?page=InvoicesList";
+      }
     </script>
   </body>
 </html>
