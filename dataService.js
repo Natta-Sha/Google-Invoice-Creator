@@ -509,26 +509,76 @@ function deleteInvoiceById(id) {
     const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
+
     const idCol = headers.indexOf("ID");
-    if (idCol === -1) {
-      return { success: false, message: "ID column not found." };
-    }
+    const docLinkCol = headers.indexOf("Google Doc Link");
+    const pdfLinkCol = headers.indexOf("PDF Link");
+
+    if (idCol === -1) throw new Error("ID column not found.");
+
     let rowToDelete = -1;
+    let docUrl = "";
+    let pdfUrl = "";
+
     for (let i = 1; i < data.length; i++) {
       if (data[i][idCol] === id) {
-        rowToDelete = i + 1; // 1-based for Sheets
+        rowToDelete = i + 1; // 1-based index
+        docUrl = data[i][docLinkCol] || "";
+        pdfUrl = data[i][pdfLinkCol] || "";
         break;
       }
     }
+
     if (rowToDelete === -1) {
       return { success: false, message: "Invoice not found." };
     }
+
+    // 🔹 Удаляем файлы (если есть), логируем ошибки
+    let deletedNotes = [];
+
+    if (docUrl) {
+      try {
+        const docId = extractFileIdFromUrl(docUrl);
+        DriveApp.getFileById(docId).setTrashed(true);
+      } catch (err) {
+        const msg = "Google Doc already deleted or not found.";
+        Logger.log(msg + " " + err.message);
+        deletedNotes.push(msg);
+      }
+    }
+
+    if (pdfUrl) {
+      try {
+        const pdfId = extractFileIdFromUrl(pdfUrl);
+        DriveApp.getFileById(pdfId).setTrashed(true);
+      } catch (err) {
+        const msg = "PDF already deleted or not found.";
+        Logger.log(msg + " " + err.message);
+        deletedNotes.push(msg);
+      }
+    }
+
+    // 🧹 Удаляем строку
     sheet.deleteRow(rowToDelete);
-    // Clear cache
+
+    // 🧼 Очищаем кэш
     CacheService.getScriptCache().remove("invoiceList");
-    return { success: true };
+
+    // ✅ Возвращаем результат
+    return {
+      success: true,
+      note: deletedNotes.length ? deletedNotes.join(" ") : undefined,
+    };
   } catch (error) {
     console.error("Error deleting invoice:", error);
     return { success: false, message: error.message };
   }
+}
+
+function extractFileIdFromUrl(url) {
+  const match = url.match(/[-\w]{25,}/);
+  if (!match) {
+    throw new Error("Invalid file URL: " + url);
+  }
+  return match[0];
 }
