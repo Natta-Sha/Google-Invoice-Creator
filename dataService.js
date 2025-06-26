@@ -345,6 +345,7 @@ function processFormFromData(data) {
 
   const newRowIndex = sheet.getLastRow() + 1;
   sheet.getRange(newRowIndex, 1, 1, row.length).setValues([row]);
+  SpreadsheetApp.flush();
 
   const doc = createInvoiceDoc(
     data,
@@ -358,6 +359,8 @@ function processFormFromData(data) {
   );
 
   const pdf = doc.getAs("application/pdf");
+  doc.saveAndClose();
+
   const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
 
   const cleanCompany = (data.ourCompany || "")
@@ -372,6 +375,7 @@ function processFormFromData(data) {
 
   sheet.getRange(newRowIndex, 20).setValue(doc.getUrl());
   sheet.getRange(newRowIndex, 21).setValue(pdfFile.getUrl());
+  SpreadsheetApp.flush();
 
   return {
     docUrl: doc.getUrl(),

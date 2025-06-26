@@ -51,7 +51,7 @@ function createInvoiceDoc(
       totalAmount
     );
 
-    doc.saveAndClose();
+    // doc.saveAndClose(); // Removed to allow PDF generation from live doc
     return doc;
   } catch (error) {
     console.error("Error creating invoice document:", error);
