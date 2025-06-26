@@ -101,7 +101,6 @@
           <th>Due Date</th>
           <th>Total</th>
           <th>Currency</th>
-          <th>Actions</th>
         </tr>
         <tr>
           <th><input type="text" placeholder="Search Project" /></th>
@@ -110,7 +109,6 @@
           <th><input type="text" placeholder="Search Due" /></th>
           <th><input type="text" placeholder="Search Total" /></th>
           <th><input type="text" placeholder="Search Currency" /></th>
-          <th></th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -153,12 +151,6 @@
                 row.dueDate || "",
                 row.total || "",
                 row.currency || "",
-                `
-                  <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=view" class="btn btn-sm btn-outline-primary me-1">View</a>
-                  <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
-                  <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=delete" class="btn btn-sm btn-outline-danger me-1">Delete</a>
-                  <button class="btn btn-sm btn-outline-success">Copy</button>
-                `,
               ]);
             });
 
@@ -170,6 +162,18 @@
             alert("Failed to load invoice list.");
           })
           .getInvoiceList();
+        $("#invoiceTable tbody").on("click", "tr", function () {
+          const data = table.row(this).data();
+          if (!data) return;
+          const invoiceNumber = data[1];
+          google.script.run
+            .withSuccessHandler(function (row) {
+              if (row && row.id) {
+                window.location.href = `?page=InvoiceGenerator&id=${row.id}&mode=view`;
+              }
+            })
+            .getInvoiceByNumber(invoiceNumber);
+        });
       });
     </script>
 

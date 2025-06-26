@@ -254,3 +254,7 @@ function deleteInvoiceById(id) {
 function testLogger(message) {
   Logger.log(`[CLIENT TEST]: ${message}`);
 }
+
+function getInvoiceByNumber(invoiceNumber) {
+  return getInvoiceByNumberInternal(invoiceNumber);
+}
