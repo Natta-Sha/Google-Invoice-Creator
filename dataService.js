@@ -249,109 +249,45 @@ function getInvoiceDataByIdFromData(id) {
 function saveInvoiceData(data) {
   try {
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
-    const sheet = spreadsheet.getSheets()[0];
+    const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
     const uniqueId = Utilities.getUuid();
 
-    // Initialize headers if sheet is empty
-    if (sheet.getLastRow() === 0) {
-      const baseHeaders = [
-        "ID",
-        "Project Name",
-        "Invoice Number",
-        "Client Name",
-        "Client Address",
-        "Client Number",
-        "Invoice Date",
-        "Due Date",
-        "Tax Rate (%)",
-        "Subtotal",
-        "Tax Amount",
-        "Total",
-        "Exchange Rate",
-        "Currency",
-        "Amount in EUR",
-        "Bank Details 1",
-        "Bank Details 2",
-        "Our Company",
-        "Comment",
-        "Google Doc Link",
-        "PDF Link",
-      ];
+    // Parse DD/MM/YYYY date
+    const [day, month, year] = data.dueDate.split("/");
+    const dueDateObject = new Date(year, month - 1, day);
 
-      const itemHeaders = [];
-      for (let i = 1; i <= CONFIG.INVOICE_TABLE.MAX_ROWS; i++) {
-        itemHeaders.push(
-          `Row ${i} #`,
-          `Row ${i} Service`,
-          `Row ${i} Period`,
-          `Row ${i} Quantity`,
-          `Row ${i} Rate/hour`,
-          `Row ${i} Amount`
-        );
-      }
-
-      sheet.appendRow([...baseHeaders, ...itemHeaders]);
-    }
-
-    // Calculate amounts
-    const subtotalNum = parseFloat(data.subtotal) || 0;
-    const taxRate = parseFloat(data.tax) || 0;
-    const taxAmount = calculateTaxAmount(subtotalNum, taxRate);
-    const totalAmount = calculateTotalAmount(subtotalNum, taxAmount);
-
-    const invoiceDateObject = data.invoiceDate
-      ? new Date(data.invoiceDate)
-      : null;
-    let dueDateObject = null;
-    if (data.dueDate) {
-      const parts = data.dueDate.split("/");
-      if (parts.length === 3) {
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const year = parseInt(parts[2], 10);
-        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-          dueDateObject = new Date(year, month, day);
-        }
-      }
-    }
-
-    // Prepare item cells
-    const itemCells = [];
-    data.items.forEach((row, i) => {
-      const newRow = [...row];
-      newRow[0] = (i + 1).toString();
-      itemCells.push(...newRow);
-    });
-
-    // Prepare row data
-    const row = [
+    const newRow = [
       uniqueId,
       data.projectName,
       data.invoiceNumber,
       data.clientName,
       data.clientAddress,
       data.clientNumber,
-      invoiceDateObject,
+      new Date(data.invoiceDate), // YYYY-MM-DD is fine
       dueDateObject,
-      taxRate.toFixed(0),
-      subtotalNum.toFixed(2),
-      taxAmount.toFixed(2),
-      totalAmount.toFixed(2),
-      data.currency === "$" ? parseFloat(data.exchangeRate).toFixed(4) : "",
+      data.tax,
+      data.subtotal,
+      calculateTaxAmount(data.subtotal, data.tax),
+      calculateTotalAmount(
+        data.subtotal,
+        calculateTaxAmount(data.subtotal, data.tax)
+      ),
+      data.currency === "$" ? data.exchangeRate : "",
       data.currency,
-      data.currency === "$" ? parseFloat(data.amountInEUR).toFixed(2) : "",
+      data.currency === "$" ? data.amountInEUR : "",
       data.bankDetails1,
       data.bankDetails2,
       data.ourCompany || "",
       data.comment || "",
-      "doc-placeholder", // Google Doc Link placeholder
-      "pdf-placeholder", // PDF Link placeholder
-      ...itemCells,
+      "", // Placeholder for Doc URL
+      "", // Placeholder for PDF URL
     ];
 
-    // Save to spreadsheet
+    const itemCells = data.items.flat();
+    const fullRow = newRow.concat(itemCells);
+
     const newRowIndex = sheet.getLastRow() + 1;
-    sheet.getRange(newRowIndex, 1, 1, row.length).setValues([row]);
+    sheet.getRange(newRowIndex, 1, 1, fullRow.length).setValues([fullRow]);
 
     return { newRowIndex, uniqueId };
   } catch (error) {
@@ -360,153 +296,16 @@ function saveInvoiceData(data) {
   }
 }
 
-function createInvoiceDoc(
-  data,
-  formattedDate,
-  formattedDueDate,
-  subtotal,
-  taxRate,
-  taxAmount,
-  totalAmount,
-  templateId
-) {
-  if (!templateId) {
-    throw new Error(
-      "🚫 No invoice template found for the selected project. Please check Clients details and ensure the template of invoice is chosen."
-    );
-  }
-
-  const template = DriveApp.getFileById(templateId);
-  const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
-
-  const cleanCompany = (data.ourCompany || "")
-    .replace(/[\\/:*?"<>|]/g, "")
-    .trim();
-  const cleanClient = (data.clientName || "")
-    .replace(/[\\/:*?"<>|]/g, "")
-    .trim();
-  const filename = `${data.invoiceDate}_Invoice${data.invoiceNumber}_${cleanCompany}-${cleanClient}`;
-
-  const copy = template.makeCopy(filename, folder);
-  const doc = DocumentApp.openById(copy.getId());
-  const body = doc.getBody();
-
-  if (data.currency !== "$") {
-    const paragraphs = body.getParagraphs();
-    for (let i = 0; i < paragraphs.length; i++) {
-      const text = paragraphs[i].getText();
-      if (text.includes("Exchange Rate Notice")) {
-        paragraphs[i].removeFromParent();
-        if (i + 1 < paragraphs.length) paragraphs[i + 1].removeFromParent();
-        break;
-      }
-    }
-  } else {
-    body.replaceText(
-      "\\{Exchange Rate\\}",
-      parseFloat(data.exchangeRate).toFixed(4)
-    );
-    body.replaceText(
-      "\\{Amount in EUR\\}",
-      `€${parseFloat(data.amountInEUR).toFixed(2)}`
-    );
-  }
-
-  const tables = body.getTables();
-  let targetTable = null;
-
-  for (const table of tables) {
-    const headers = [];
-    for (let i = 0; i < table.getRow(0).getNumCells(); i++) {
-      headers.push(table.getRow(0).getCell(i).getText().trim());
-    }
-    if (
-      headers.length >= 6 &&
-      headers[0] === "#" &&
-      headers[1] === "Services" &&
-      headers[2] === "Period" &&
-      headers[3] === "Quantity" &&
-      headers[4] === "Rate/hour" &&
-      headers[5] === "Amount"
-    ) {
-      targetTable = table;
-      break;
-    }
-  }
-
-  if (!targetTable) {
-    throw new Error(
-      "❗ Не найдена таблица с нужной шапкой (#, Services, Period, ...)"
-    );
-  }
-
-  const numRows = targetTable.getNumRows();
-  for (let i = numRows - 1; i > 0; i--) {
-    targetTable.removeRow(i);
-  }
-
-  data.items.forEach((row) => {
-    const newRow = targetTable.appendTableRow();
-    row.forEach((cell, index) => {
-      if (index === 4 || index === 5) {
-        newRow.appendTableCell(
-          cell ? `${data.currency}${parseFloat(cell).toFixed(2)}` : ""
-        );
-      } else {
-        newRow.appendTableCell(cell || "");
-      }
-    });
-  });
-
-  body.replaceText("\\{Project Name\\}", data.projectName);
-  body.replaceText("\\{Название клиента\\}", data.clientName);
-  body.replaceText("\\{Адрес клиента\\}", data.clientAddress);
-  body.replaceText("\\{Номер клиента\\}", data.clientNumber);
-  body.replaceText("\\{Номер счета\\}", data.invoiceNumber);
-  body.replaceText("\\{Дата счета\\}", formattedDate);
-  body.replaceText("\\{Due date\\}", formattedDueDate);
-  body.replaceText("\\{VAT%\\}", taxRate.toFixed(0));
-  body.replaceText(
-    "\\{Сумма НДС\\}",
-    `${data.currency}${taxAmount.toFixed(2)}`
-  );
-  body.replaceText(
-    "\\{Сумма общая\\}",
-    `${data.currency}${totalAmount.toFixed(2)}`
-  );
-  body.replaceText("\\{Банковские реквизиты1\\}", data.bankDetails1);
-  body.replaceText("\\{Банковские реквизиты2\\}", data.bankDetails2);
-  body.replaceText("\\{Комментарий\\}", data.comment || "");
-
-  for (let i = 0; i < 20; i++) {
-    const item = data.items[i];
-    if (item) {
-      body.replaceText(`\\{Вид работ-${i + 1}\\}`, item[1] || "");
-      body.replaceText(`\\{Период работы-${i + 1}\\}`, item[2] || "");
-      body.replaceText(`\\{Часы-${i + 1}\\}`, item[3] || "");
-      if (item[4])
-        body.replaceText(
-          `\\{Рейт-${i + 1}\\}`,
-          `${data.currency}${parseFloat(item[4]).toFixed(2)}`
-        );
-      if (item[5])
-        body.replaceText(
-          `\\{Сумма-${i + 1}\\}`,
-          `${data.currency}${parseFloat(item[5]).toFixed(2)}`
-        );
-    }
-  }
-
-  doc.saveAndClose();
-  return doc;
-}
-
-function processForm(data) {
-  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
+function processFormFromData(data) {
+  const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
+  const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
   const uniqueId = Utilities.getUuid();
 
-  const formattedDate = this.formatDate(data.invoiceDate);
-  const formattedDueDate = this.formatDate(data.dueDate);
+  const formattedDate = formatDate(data.invoiceDate);
+
+  const [day, month, year] = data.dueDate.split("/");
+  const dueDateObject = new Date(year, month - 1, day);
+  const formattedDueDate = formatDate(dueDateObject);
 
   const subtotalNum = parseFloat(data.subtotal) || 0;
   const taxRate = parseFloat(data.tax) || 0;
@@ -528,7 +327,7 @@ function processForm(data) {
     data.clientAddress,
     data.clientNumber,
     new Date(data.invoiceDate),
-    new Date(data.dueDate),
+    dueDateObject,
     taxRate.toFixed(0),
     subtotalNum.toFixed(2),
     taxAmount.toFixed(2),
@@ -547,7 +346,7 @@ function processForm(data) {
   const newRowIndex = sheet.getLastRow() + 1;
   sheet.getRange(newRowIndex, 1, 1, row.length).setValues([row]);
 
-  const doc = this.createInvoiceDoc(
+  const doc = createInvoiceDoc(
     data,
     formattedDate,
     formattedDueDate,
@@ -559,7 +358,7 @@ function processForm(data) {
   );
 
   const pdf = doc.getAs("application/pdf");
-  const folder = DriveApp.getFolderById(FOLDER_ID);
+  const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
 
   const cleanCompany = (data.ourCompany || "")
     .replace(/[\\/:*?"<>|]/g, "")
