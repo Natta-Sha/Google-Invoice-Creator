@@ -140,12 +140,12 @@
           google.script.run
             .withSuccessHandler(function (list) {
               console.log("getInvoiceList returned:", list);
+              table.clear();
               if (!Array.isArray(list) || list.length === 0) {
-                table.clear().draw();
+                table.draw();
                 document.getElementById("invoiceTable").style.display = "";
                 return;
               }
-
               list.forEach((row) => {
                 table.row.add([
                   row.projectName || "",
@@ -156,7 +156,6 @@
                   row.currency || "",
                 ]);
               });
-
               table.draw();
               document.getElementById("invoiceTable").style.display = "";
             })
@@ -165,31 +164,6 @@
               alert("Failed to load invoice list: " + (err.message || err));
             })
             .getInvoiceList();
-        }
-
-        function renderInvoiceList(list) {
-          // Your existing code to render the invoice list goes here
-          // For example:
-          const tableBody = document.getElementById("invoice-list-body");
-          if (!tableBody) return;
-          tableBody.innerHTML = "";
-          if (!list || !list.length) {
-            tableBody.innerHTML =
-              '<tr><td colspan="6">No invoices found.</td></tr>';
-            return;
-          }
-          list.forEach(function (inv) {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${inv.projectName || ""}</td>
-              <td>${inv.invoiceNumber || ""}</td>
-              <td>${inv.invoiceDate || ""}</td>
-              <td>${inv.dueDate || ""}</td>
-              <td>${inv.total || ""}</td>
-              <td>${inv.currency || ""}</td>
-            `;
-            tableBody.appendChild(row);
-          });
         }
 
         window.onload = loadInvoiceList;
