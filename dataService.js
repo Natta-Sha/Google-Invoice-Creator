@@ -99,6 +99,8 @@ function getProjectDetailsFromData(projectName) {
       .toString()
       .trim();
 
+    Logger.log("Selected templateId: " + selectedTemplateId);
+
     return {
       clientName: projectRow[CONFIG.COLUMNS.CLIENT_NAME] || "",
       clientNumber: `${projectRow[CONFIG.COLUMNS.CLIENT_NUMBER_PART1] || ""} ${
