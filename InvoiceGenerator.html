@@ -696,11 +696,7 @@
               el.disabled = true;
             });
 
-            // Не отключаем кнопку "Create New Invoice"
             document.getElementById("generate-btn").disabled = true;
-
-            // Immediately redirect to Invoices List after creation
-            window.location.href = "<?= baseUrl ?>?page=InvoicesList";
           })
           .processForm(data);
       }
