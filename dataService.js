@@ -360,6 +360,51 @@ function saveInvoiceData(data) {
   }
 }
 
+function processForm(data) {
+  try {
+    // 1. Сохранить инвойс в таблицу
+    const { newRowIndex, uniqueId } = saveInvoiceData(data);
+
+    // 2. Форматировать даты для документа
+    const formattedDate = formatDate(data.invoiceDate);
+    const formattedDueDate = formatDate(data.dueDate);
+
+    // 3. Подсчёт
+    const subtotal = parseFloat(data.subtotal) || 0;
+    const taxRate = parseFloat(data.tax) || 0;
+    const taxAmount = calculateTaxAmount(subtotal, taxRate);
+    const totalAmount = calculateTotalAmount(subtotal, taxAmount);
+
+    // 4. Создать Google Doc
+    const doc = createInvoiceDoc(
+      data,
+      formattedDate,
+      formattedDueDate,
+      subtotal,
+      taxRate,
+      taxAmount,
+      totalAmount,
+      data.templateId
+    );
+
+    // 5. Создать и сохранить PDF
+    const filename = generateInvoiceFilename(data);
+    const pdf = generateAndSavePDF(doc, filename);
+
+    // 6. Обновить таблицу ссылками
+    updateSpreadsheetWithUrls(newRowIndex, doc.getUrl(), pdf.getUrl());
+
+    // 7. Вернуть ссылки в интерфейс
+    return {
+      docUrl: doc.getUrl(),
+      pdfUrl: pdf.getUrl(),
+    };
+  } catch (error) {
+    console.error("Error in processForm:", error);
+    throw error;
+  }
+}
+
 /**
  * Update spreadsheet with URLs
  * @param {number} newRowIndex - Index of the new row
