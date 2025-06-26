@@ -53,9 +53,7 @@ function loadPage(name) {
  * @returns {Object} Result with document and PDF URLs
  */
 function processForm(data) {
-  return typeof dataService !== "undefined" && dataService.processFormFromData
-    ? dataService.processFormFromData(data)
-    : { success: false, error: "processForm not implemented" };
+  return processFormFromData(data);
 }
 
 // Export functions for use in other modules
