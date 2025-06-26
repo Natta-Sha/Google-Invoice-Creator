@@ -103,9 +103,9 @@ function getProjectDetailsFromData(projectName) {
 
     return {
       clientName: projectRow[CONFIG.COLUMNS.CLIENT_NAME] || "",
-      clientNumber: ${projectRow[CONFIG.COLUMNS.CLIENT_NUMBER_PART1] || ""} ${
+      clientNumber: `${projectRow[CONFIG.COLUMNS.CLIENT_NUMBER_PART1] || ""} ${
         projectRow[CONFIG.COLUMNS.CLIENT_NUMBER_PART2] || ""
-      }.trim(),
+      }`.trim(),
       clientAddress: projectRow[CONFIG.COLUMNS.CLIENT_ADDRESS] || "",
       tax: isNaN(tax) ? 0 : tax.toFixed(0),
       currency:
@@ -303,13 +303,13 @@ function processFormFromData(data) {
   try {
     Logger.log("processFormFromData: Starting invoice creation.");
     Logger.log(
-      processFormFromData: Received data for project: ${data.projectName}, invoice: ${data.invoiceNumber}
+      `processFormFromData: Received data for project: ${data.projectName}, invoice: ${data.invoiceNumber}`
     );
 
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
     const uniqueId = Utilities.getUuid();
-    Logger.log(processFormFromData: Generated new unique ID: ${uniqueId});
+    Logger.log(`processFormFromData: Generated new unique ID: ${uniqueId}`);
 
     if (sheet.getLastRow() === 0) {
       const baseHeaders = [
@@ -339,12 +339,12 @@ function processFormFromData(data) {
       const itemHeaders = [];
       for (let i = 1; i <= CONFIG.INVOICE_TABLE.MAX_ROWS; i++) {
         itemHeaders.push(
-          Row ${i} #,
-          Row ${i} Service,
-          Row ${i} Period,
-          Row ${i} Quantity,
-          Row ${i} Rate/hour,
-          Row ${i} Amount
+          `Row ${i} #`,
+          `Row ${i} Service`,
+          `Row ${i} Period`,
+          `Row ${i} Quantity`,
+          `Row ${i} Rate/hour`,
+          `Row ${i} Amount`
         );
       }
       sheet.appendRow([...baseHeaders, ...itemHeaders]);
@@ -398,7 +398,7 @@ function processFormFromData(data) {
     sheet.getRange(newRowIndex, 1, 1, row.length).setValues([row]);
     SpreadsheetApp.flush();
     Logger.log(
-      processFormFromData: Wrote main data to sheet '${CONFIG.SHEETS.INVOICES}' at row ${newRowIndex}.
+      `processFormFromData: Wrote main data to sheet '${CONFIG.SHEETS.INVOICES}' at row ${newRowIndex}.`
     );
 
     const doc = createInvoiceDoc(
@@ -420,7 +420,7 @@ function processFormFromData(data) {
       );
     }
     Logger.log(
-      processFormFromData: createInvoiceDoc successful. Doc ID: ${doc.getId()}, URL: ${doc.getUrl()}
+      `processFormFromData: createInvoiceDoc successful. Doc ID: ${doc.getId()}, URL: ${doc.getUrl()}`
     );
 
     Utilities.sleep(1000);
@@ -434,9 +434,9 @@ function processFormFromData(data) {
       throw new Error("Failed to generate PDF content from the document.");
     }
     Logger.log(
-      processFormFromData: Got PDF blob. Name: ${pdf.getName()}, Type: ${pdf.getContentType()}, Size: ${
+      `processFormFromData: Got PDF blob. Name: ${pdf.getName()}, Type: ${pdf.getContentType()}, Size: ${
         pdf.getBytes().length
-      } bytes.
+      } bytes.`
     );
 
     const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
@@ -447,18 +447,18 @@ function processFormFromData(data) {
     const cleanClient = (data.clientName || "")
       .replace(/[\\/:*?"<>|]/g, "")
       .trim();
-    const filename = ${data.invoiceDate}_Invoice${data.invoiceNumber}_${cleanCompany}-${cleanClient};
+    const filename = `${data.invoiceDate}_Invoice${data.invoiceNumber}_${cleanCompany}-${cleanClient}`;
 
-    const pdfFile = folder.createFile(pdf).setName(${filename}.pdf);
+    const pdfFile = folder.createFile(pdf).setName(`${filename}.pdf`);
     Logger.log(
-      processFormFromData: Created PDF file. ID: ${pdfFile.getId()}, URL: ${pdfFile.getUrl()}
+      `processFormFromData: Created PDF file. ID: ${pdfFile.getId()}, URL: ${pdfFile.getUrl()}`
     );
 
     sheet.getRange(newRowIndex, 20).setValue(doc.getUrl());
     sheet.getRange(newRowIndex, 21).setValue(pdfFile.getUrl());
     SpreadsheetApp.flush();
     Logger.log(
-      processFormFromData: Wrote Doc and PDF URLs to sheet at row ${newRowIndex}.
+      `processFormFromData: Wrote Doc and PDF URLs to sheet at row ${newRowIndex}.`
     );
 
     const result = {
@@ -473,9 +473,9 @@ function processFormFromData(data) {
 
     return result;
   } catch (e) {
-    Logger.log(processFormFromData: CRITICAL ERROR - ${e.toString()});
-    Logger.log(Stack Trace: ${e.stack});
-    // Re-throw the error so the client-side .withFailureHandler can catch it if one is added.
+    Logger.log(`processFormFromData: CRITICAL ERROR - ${e.toString()}`);
+    Logger.log(`Stack Trace: ${e.stack}`);
+    // Re-throw the error so the client-side `.withFailureHandler` can catch it if one is added.
     throw e;
   }
 }
@@ -574,7 +574,6 @@ function deleteInvoiceById(id) {
     return { success: false, message: error.message };
   }
 }
-
 
 function extractFileIdFromUrl(url) {
   const match = url.match(/[-\w]{25,}/);
