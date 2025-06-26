@@ -22,7 +22,9 @@ function createInvoiceDoc(
   totalAmount,
   templateId
 ) {
+  Logger.log(`createInvoiceDoc: Starting for template ID: ${templateId}`);
   if (!templateId) {
+    Logger.log("createInvoiceDoc: ERROR - No templateId provided.");
     throw new Error(ERROR_MESSAGES.NO_TEMPLATE_ID);
   }
 
@@ -30,7 +32,11 @@ function createInvoiceDoc(
     const template = DriveApp.getFileById(templateId);
     const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
     const filename = generateInvoiceFilename(data);
+    Logger.log(`createInvoiceDoc: Generated filename: ${filename}`);
+
     const copy = template.makeCopy(filename, folder);
+    Logger.log(`createInvoiceDoc: Created copy with ID: ${copy.getId()}`);
+
     const doc = DocumentApp.openById(copy.getId());
     const body = doc.getBody();
 
@@ -51,9 +57,17 @@ function createInvoiceDoc(
       totalAmount
     );
 
+    Logger.log(
+      `createInvoiceDoc: Placeholders replaced. Saving and closing doc.`
+    );
     doc.saveAndClose();
+    Logger.log(
+      `createInvoiceDoc: Document saved and closed. Returning doc object.`
+    );
     return doc;
   } catch (error) {
+    Logger.log(`createInvoiceDoc: CRITICAL ERROR - ${error.toString()}`);
+    Logger.log(`Stack Trace: ${error.stack}`);
     console.error("Error creating invoice document:", error);
     throw error;
   }
