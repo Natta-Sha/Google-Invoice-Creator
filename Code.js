@@ -65,7 +65,7 @@ function processForm(data) {
  * @returns {Array} Array of project names
  */
 function getProjectNames() {
-  return dataService.getProjectNames();
+  return getProjectNamesFromData();
 }
 
 /**
@@ -74,7 +74,7 @@ function getProjectNames() {
  * @returns {Object} Project details
  */
 function getProjectDetails(projectName) {
-  return dataService.getProjectDetails(projectName);
+  return getProjectDetailsFromData(projectName);
 }
 
 /**
@@ -82,7 +82,7 @@ function getProjectDetails(projectName) {
  * @returns {Array} Array of invoice objects
  */
 function getInvoiceList() {
-  return dataService.getInvoiceList();
+  return getInvoiceListFromData();
 }
 
 /**
@@ -253,8 +253,4 @@ function deleteInvoiceById(id) {
 
 function testLogger(message) {
   Logger.log(`[CLIENT TEST]: ${message}`);
-}
-
-function getInvoiceByNumber(invoiceNumber) {
-  return getInvoiceByNumberInternal(invoiceNumber);
 }

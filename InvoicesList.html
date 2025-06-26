@@ -84,10 +84,6 @@
 
     <h2 class="mb-4">List of Invoices</h2>
 
-    <a href="<?= baseUrl ?>?page=InvoiceGenerator" class="btn btn-primary mb-3">
-      Generate Invoice
-    </a>
-
     <table
       id="invoiceTable"
       class="display table table-bordered"
@@ -101,6 +97,7 @@
           <th>Due Date</th>
           <th>Total</th>
           <th>Currency</th>
+          <th>Actions</th>
         </tr>
         <tr>
           <th><input type="text" placeholder="Search Project" /></th>
@@ -109,6 +106,7 @@
           <th><input type="text" placeholder="Search Due" /></th>
           <th><input type="text" placeholder="Search Total" /></th>
           <th><input type="text" placeholder="Search Currency" /></th>
+          <th></th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -135,51 +133,39 @@
           });
         });
 
-        function loadInvoiceList() {
-          console.log("Calling getInvoiceList...");
-          google.script.run
-            .withSuccessHandler(function (list) {
-              console.log("getInvoiceList returned:", list);
-              table.clear();
-              if (!Array.isArray(list) || list.length === 0) {
-                table.draw();
-                document.getElementById("invoiceTable").style.display = "";
-                return;
-              }
-              list.forEach((row) => {
-                table.row.add([
-                  row.projectName || "",
-                  row.invoiceNumber || "",
-                  row.invoiceDate || "",
-                  row.dueDate || "",
-                  row.total || "",
-                  row.currency || "",
-                ]);
-              });
-              table.draw();
+        google.script.run
+          .withSuccessHandler(function (data) {
+            if (!Array.isArray(data) || data.length === 0) {
+              table.clear().draw();
               document.getElementById("invoiceTable").style.display = "";
-            })
-            .withFailureHandler(function (err) {
-              console.error("getInvoiceList failed:", err);
-              alert("Failed to load invoice list: " + (err.message || err));
-            })
-            .getInvoiceList();
-        }
+              return;
+            }
 
-        window.onload = loadInvoiceList;
+            data.forEach((row) => {
+              table.row.add([
+                row.projectName || "",
+                row.invoiceNumber || "",
+                row.invoiceDate || "",
+                row.dueDate || "",
+                row.total || "",
+                row.currency || "",
+                `
+                  <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=view" class="btn btn-sm btn-outline-primary me-1">View</a>
+                  <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                  <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=delete" class="btn btn-sm btn-outline-danger me-1">Delete</a>
+                  <button class="btn btn-sm btn-outline-success">Copy</button>
+                `,
+              ]);
+            });
 
-        $("#invoiceTable tbody").on("click", "tr", function () {
-          const data = table.row(this).data();
-          if (!data) return;
-          const invoiceNumber = data[1];
-          google.script.run
-            .withSuccessHandler(function (row) {
-              if (row && row.id) {
-                window.location.href = `?page=InvoiceGenerator&id=${row.id}&mode=view`;
-              }
-            })
-            .getInvoiceByNumber(invoiceNumber);
-        });
+            table.draw();
+            document.getElementById("invoiceTable").style.display = "";
+          })
+          .withFailureHandler(function (error) {
+            console.error("Error loading invoice list:", error);
+            alert("Failed to load invoice list.");
+          })
+          .getInvoiceList();
       });
     </script>
 
