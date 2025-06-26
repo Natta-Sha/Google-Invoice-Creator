@@ -699,10 +699,8 @@
             // Не отключаем кнопку "Create New Invoice"
             document.getElementById("generate-btn").disabled = true;
 
-            // Redirect to Invoices List after short delay
-            setTimeout(function () {
-              window.location.href = "<?= baseUrl ?>?page=InvoicesList";
-            }, 1500);
+            // Immediately redirect to Invoices List after creation
+            window.location.href = "<?= baseUrl ?>?page=InvoicesList";
           })
           .processForm(data);
       }
@@ -743,7 +741,7 @@
                     modal._element.addEventListener(
                       "hidden.bs.modal",
                       function () {
-                        window.top.location.href =
+                        window.location.href =
                           "<?= baseUrl ?>?page=InvoicesList";
                       }
                     );
