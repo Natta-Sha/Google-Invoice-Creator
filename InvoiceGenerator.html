@@ -730,23 +730,15 @@
                     const modal = new bootstrap.Modal(
                       document.getElementById("deleteSuccessModal")
                     );
-                    console.log("About to show delete success modal...");
                     modal.show();
 
-                    let redirected = false;
-                    function doRedirect() {
-                      if (!redirected) {
-                        redirected = true;
+                    modal._element.addEventListener(
+                      "hidden.bs.modal",
+                      function () {
                         window.location.href =
                           "<?= baseUrl ?>?page=InvoicesList";
                       }
-                    }
-                    modal._element.addEventListener(
-                      "hidden.bs.modal",
-                      doRedirect
                     );
-                    // Fallback: redirect after 3 seconds if modal event doesn't fire
-                    setTimeout(doRedirect, 3000);
                   } else {
                     alert(result.message || "Error deleting invoice.");
                     document.getElementById(
