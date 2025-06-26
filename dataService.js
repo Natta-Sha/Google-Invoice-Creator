@@ -290,6 +290,7 @@ function saveInvoiceData(data) {
 
     const newRowIndex = sheet.getLastRow() + 1;
     sheet.getRange(newRowIndex, 1, 1, fullRow.length).setValues([fullRow]);
+    CacheService.getScriptCache().remove("invoiceList");
 
     return { newRowIndex, uniqueId };
   } catch (error) {
@@ -467,6 +468,9 @@ function processFormFromData(data) {
     Logger.log(
       "processFormFromData: Successfully completed. Returning URLs to client."
     );
+
+    CacheService.getScriptCache().remove("invoiceList");
+
     return result;
   } catch (e) {
     Logger.log(`processFormFromData: CRITICAL ERROR - ${e.toString()}`);
