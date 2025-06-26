@@ -273,13 +273,6 @@
         >
           Generate Invoice
         </button>
-        <button
-          class="btn btn-secondary"
-          onclick="createNewInvoice()"
-          id="new-invoice-btn"
-        >
-          Create New Invoice
-        </button>
         <div
           id="spinner"
           class="spinner-border text-primary ms-3"
@@ -684,7 +677,7 @@
             alert(
               "An error occurred: " +
                 error.message +
-                "\\n\\nPlease check the browser console (View > Developer > JavaScript Console) for more details."
+                "\n\nPlease check the browser console (View > Developer > JavaScript Console) for more details."
             );
             console.error("Server-side call failed:", error);
           })
@@ -705,6 +698,11 @@
 
             // Не отключаем кнопку "Create New Invoice"
             document.getElementById("generate-btn").disabled = true;
+
+            // Redirect to Invoices List after short delay
+            setTimeout(function () {
+              window.location.href = "<?= baseUrl ?>?page=InvoicesList";
+            }, 1500);
           })
           .processForm(data);
       }
