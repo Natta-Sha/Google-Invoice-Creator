@@ -592,6 +592,9 @@
       function submitForm() {
         const errors = [];
 
+        // Test client-server communication
+        google.script.run.testLogger("Test from client before invoice submit");
+
         const invoiceNumberEl = document.getElementById("invoice_number");
         const invoiceDateEl = document.getElementById("invoice_date");
         const projectNameEl = document.getElementById("project_name");

@@ -252,3 +252,7 @@ function deleteInvoiceById(id) {
     ? dataService.deleteInvoiceById(id)
     : { success: false, message: "deleteInvoiceById not implemented" };
 }
+
+function testLogger(message) {
+  Logger.log(`[CLIENT TEST]: ${message}`);
+}
