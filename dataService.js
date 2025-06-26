@@ -301,6 +301,46 @@ function processFormFromData(data) {
   const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
   const uniqueId = Utilities.getUuid();
 
+  if (sheet.getLastRow() === 0) {
+    const baseHeaders = [
+      "ID",
+      "Project Name",
+      "Invoice Number",
+      "Client Name",
+      "Client Address",
+      "Client Number",
+      "Invoice Date",
+      "Due Date",
+      "Tax Rate (%)",
+      "Subtotal",
+      "Tax Amount",
+      "Total",
+      "Exchange Rate",
+      "Currency",
+      "Amount in EUR",
+      "Bank Details 1",
+      "Bank Details 2",
+      "Our Company",
+      "Comment",
+      "Google Doc Link",
+      "PDF Link",
+    ];
+
+    const itemHeaders = [];
+    for (let i = 1; i <= CONFIG.INVOICE_TABLE.MAX_ROWS; i++) {
+      itemHeaders.push(
+        `Row ${i} #`,
+        `Row ${i} Service`,
+        `Row ${i} Period`,
+        `Row ${i} Quantity`,
+        `Row ${i} Rate/hour`,
+        `Row ${i} Amount`
+      );
+    }
+    sheet.appendRow([...baseHeaders, ...itemHeaders]);
+    SpreadsheetApp.flush();
+  }
+
   const formattedDate = formatDate(data.invoiceDate);
 
   const [day, month, year] = data.dueDate.split("/");
@@ -358,8 +398,8 @@ function processFormFromData(data) {
     data.templateId
   );
 
+  Utilities.sleep(1000);
   const pdf = doc.getAs("application/pdf");
-  doc.saveAndClose();
 
   const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
 
