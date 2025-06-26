@@ -669,7 +669,22 @@
           data.items.push(rowData);
         }
 
+        console.log(
+          "Data being sent to server:",
+          JSON.stringify(data, null, 2)
+        );
+
         google.script.run
+          .withFailureHandler(function (error) {
+            document.getElementById("spinner").style.display = "none";
+            document.getElementById("generate-btn").disabled = false;
+            alert(
+              "An error occurred: " +
+                error.message +
+                "\\n\\nPlease check the browser console (View > Developer > JavaScript Console) for more details."
+            );
+            console.error("Server-side call failed:", error);
+          })
           .withSuccessHandler(function (result) {
             document.getElementById("spinner").style.display = "none";
             document.getElementById("result").innerHTML = `
