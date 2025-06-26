@@ -58,3 +58,9 @@ function getProjectNamesFromData() {
 
   return [...projectNames];
 }
+
+var dataService = {
+  getInvoiceList: getInvoiceListFromData,
+  getProjectNames: getProjectNamesFromData,
+  getInvoiceByNumber: getInvoiceByNumberInternal,
+};
