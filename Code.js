@@ -65,7 +65,7 @@ function processForm(data) {
  * @returns {Array} Array of project names
  */
 function getProjectNames() {
-  return getProjectNamesFromData();
+  return dataService.getProjectNames();
 }
 
 /**
@@ -74,7 +74,7 @@ function getProjectNames() {
  * @returns {Object} Project details
  */
 function getProjectDetails(projectName) {
-  return getProjectDetailsFromData(projectName);
+  return dataService.getProjectDetails(projectName);
 }
 
 /**
@@ -82,7 +82,7 @@ function getProjectDetails(projectName) {
  * @returns {Array} Array of invoice objects
  */
 function getInvoiceList() {
-  return getInvoiceListFromData();
+  return dataService.getInvoiceList();
 }
 
 /**
