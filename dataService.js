@@ -22,24 +22,67 @@ function getInvoiceByNumberInternal(invoiceNumber) {
   return null;
 }
 function getInvoiceListFromData() {
+  Logger.log("getInvoiceListFromData: started");
   const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(
     CONFIG.SHEETS.INVOICES
   );
   const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
+  Logger.log("getInvoiceListFromData: got data, rows=" + data.length);
 
-  return data.map((row) => {
-    const rowObj = {};
-    headers.forEach((h, i) => (rowObj[h] = row[i]));
-    return {
-      projectName: rowObj["Project Name"],
-      invoiceNumber: rowObj["Invoice Number"],
-      invoiceDate: rowObj["Invoice Date"],
-      dueDate: rowObj["Due Date"],
-      total: rowObj["Total"],
-      currency: rowObj["Currency"],
-    };
-  });
+  if (!data || data.length < 2) {
+    Logger.log("getInvoiceListFromData: No data or only header row.");
+    return [];
+  }
+
+  const headers = data[0];
+  Logger.log("getInvoiceListFromData: headers=" + JSON.stringify(headers));
+
+  const colIndex = {
+    id: headers.indexOf("ID"),
+    projectName: headers.indexOf("Project Name"),
+    invoiceNumber: headers.indexOf("Invoice Number"),
+    invoiceDate: headers.indexOf("Invoice Date"),
+    dueDate: headers.indexOf("Due Date"),
+    total: headers.indexOf("Total"),
+    currency: headers.indexOf("Currency"),
+  };
+  for (let key in colIndex) {
+    if (colIndex[key] === -1) {
+      Logger.log("getInvoiceListFromData: Missing column: " + key);
+      throw new Error("Missing column: " + key);
+    }
+  }
+
+  Logger.log("getInvoiceListFromData: mapping data rows");
+  const result = data
+    .slice(1)
+    .map((row, idx) => {
+      if (!row || row.length < headers.length) {
+        Logger.log(
+          `getInvoiceListFromData: Skipping row ${
+            idx + 1
+          } due to insufficient columns.`
+        );
+        return null;
+      }
+      return {
+        id: row[colIndex.id] || "",
+        projectName: row[colIndex.projectName] || "",
+        invoiceNumber: row[colIndex.invoiceNumber] || "",
+        invoiceDate: row[colIndex.invoiceDate] || "",
+        dueDate: row[colIndex.dueDate] || "",
+        total:
+          row[colIndex.total] !== undefined && row[colIndex.total] !== ""
+            ? parseFloat(row[colIndex.total]).toFixed(2)
+            : "",
+        currency: row[colIndex.currency] || "",
+      };
+    })
+    .filter(Boolean);
+  Logger.log(
+    "getInvoiceListFromData: finished, returning " + result.length + " rows"
+  );
+  return result;
 }
 function getProjectNamesFromData() {
   const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(
