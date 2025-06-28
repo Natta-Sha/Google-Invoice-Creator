@@ -400,6 +400,9 @@ function processFormFromData(data) {
       `processFormFromData: Wrote main data to sheet '${CONFIG.SHEETS.INVOICES}' at row ${newRowIndex}.`
     );
 
+    const folderId = getProjectFolderId(data.projectName);
+    Logger.log(">>> Resolved folderId: " + folderId);
+
     const doc = createInvoiceDoc(
       data,
       formattedDate,
@@ -408,7 +411,8 @@ function processFormFromData(data) {
       taxRate,
       taxAmount,
       totalAmount,
-      data.templateId
+      data.templateId,
+      folderId
     );
     if (!doc) {
       Logger.log(
