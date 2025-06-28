@@ -769,7 +769,7 @@
                         .addEventListener(
                           "hidden.bs.modal",
                           function () {
-                            window.location.href =
+                            window.top.location.href =
                               BASE_URL + "?page=InvoicesList";
                           },
                           { once: true }
