@@ -193,9 +193,8 @@ function getInvoiceListFromData() {
 function getInvoiceDataByIdFromData(id) {
   try {
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
-    const sheet = spreadsheet.getSheets()[0]; // First sheet (Invoices)
+    const sheet = spreadsheet.getSheets()[0];
     const data = sheet.getDataRange().getValues();
-
     const headers = data[0];
     const indexMap = headers.reduce((acc, h, i) => {
       acc[h] = i;
@@ -204,10 +203,10 @@ function getInvoiceDataByIdFromData(id) {
 
     const row = data.find((r, i) => i > 0 && r[indexMap["ID"]] === id);
     if (!row) {
-      throw new Error(ERROR_MESSAGES.INVOICE_NOT_FOUND);
+      console.log(`Invoice with ID ${id} not found.`);
+      return {}; // ⚠️ вместо throw
     }
 
-    // Extract items from the row
     const items = [];
     for (let i = 0; i < CONFIG.INVOICE_TABLE.MAX_ROWS; i++) {
       const base = 21 + i * CONFIG.INVOICE_TABLE.COLUMNS_PER_ROW;
@@ -239,7 +238,7 @@ function getInvoiceDataByIdFromData(id) {
     };
   } catch (error) {
     console.error("Error getting invoice data by ID:", error);
-    throw error;
+    return {}; // ⚠️ тоже вернём пустой объект
   }
 }
 
