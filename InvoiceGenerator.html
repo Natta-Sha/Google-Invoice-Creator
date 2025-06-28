@@ -718,9 +718,6 @@
             .withSuccessHandler(function (data) {
               console.log("Loaded invoice data (DOMContentLoaded):", data);
               if (!data || !data.projectName) {
-                alert(
-                  "Invoice not found or data is empty! Returning to invoice list."
-                );
                 window.location.href = "?page=InvoicesList";
                 return;
               }
