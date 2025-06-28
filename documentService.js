@@ -20,7 +20,8 @@ function createInvoiceDoc(
   taxRate,
   taxAmount,
   totalAmount,
-  templateId
+  templateId,
+  folderId
 ) {
   Logger.log(`createInvoiceDoc: Starting for template ID: ${templateId}`);
   if (!templateId) {
@@ -30,7 +31,8 @@ function createInvoiceDoc(
 
   try {
     const template = DriveApp.getFileById(templateId);
-    const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
+    const folder = DriveApp.getFolderById(folderId);
+
     const filename = generateInvoiceFilename(data);
     Logger.log(`createInvoiceDoc: Generated filename: ${filename}`);
 
@@ -244,6 +246,7 @@ function generateAndSavePDF(doc, filename) {
 
     const pdf = doc.getAs("application/pdf");
     const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
+
     const pdfFile = folder.createFile(pdf).setName(`${filename}.pdf`);
 
     return pdfFile;
@@ -272,4 +275,33 @@ function updateSpreadsheetWithUrls(rowIndex, docUrl, pdfUrl) {
     console.error("Error updating spreadsheet with URLs:", error);
     throw error;
   }
+}
+
+/**
+ * Get Google Drive folder ID for the given project name from the Lists sheet.
+ * @param {string} projectName - The project name to look up.
+ * @returns {string} The extracted folder ID.
+ */
+function getProjectFolderId(projectName) {
+  const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
+  const sheet = getSheet(spreadsheet, CONFIG.SHEETS.LISTS);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    // skip header
+    const rowName = (values[i][CONFIG.COLUMNS.PROJECT_NAME] || "")
+      .toString()
+      .trim();
+    if (rowName.toLowerCase() === projectName.toLowerCase()) {
+      const folderUrl = (values[i][12] || "").toString().trim(); // column M -> index 12
+      const match = folderUrl.match(/[-\w]{25,}/);
+      if (match) {
+        return match[0];
+      } else {
+        throw new Error(`Invalid folder URL for project "${projectName}".`);
+      }
+    }
+  }
+
+  throw new Error(ERROR_MESSAGES.PROJECT_NOT_FOUND(projectName));
 }
