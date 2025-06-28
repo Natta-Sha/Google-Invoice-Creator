@@ -31,6 +31,8 @@ function createInvoiceDoc(
 
   try {
     const template = DriveApp.getFileById(templateId);
+    Logger.log(">>> Using folderId: " + folderId);
+
     const folder = DriveApp.getFolderById(folderId);
 
     const filename = generateInvoiceFilename(data);
@@ -295,6 +297,9 @@ function getProjectFolderId(projectName) {
     if (rowName.toLowerCase() === projectName.toLowerCase()) {
       const folderUrl = (values[i][12] || "").toString().trim(); // column M -> index 12
       const match = folderUrl.match(/[-\w]{25,}/);
+      Logger.log(`>>> Found folder URL for ${projectName}: ${folderUrl}`);
+      Logger.log(`>>> Extracted folderId: ${match ? match[0] : "NONE"}`);
+
       if (match) {
         return match[0];
       } else {
