@@ -311,6 +311,7 @@
       let validProjectNames = [];
       let invoiceId = "<?= invoiceId ?>";
       let mode = "<?= mode ?>";
+      const BASE_URL = "<?= baseUrl ?>";
 
       function populateProjectNames() {
         google.script.run
@@ -768,7 +769,8 @@
                         .addEventListener(
                           "hidden.bs.modal",
                           function () {
-                            window.top.location.href = "?page=InvoicesList";
+                            window.location.href =
+                              BASE_URL + "?page=InvoicesList";
                           },
                           { once: true }
                         );
