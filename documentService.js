@@ -281,6 +281,7 @@ function updateSpreadsheetWithUrls(rowIndex, docUrl, pdfUrl) {
 
 /**
  * Get Google Drive folder ID for the given project name from the Lists sheet.
+ * Falls back to CONFIG.FOLDER_ID if folder link is missing or invalid.
  * @param {string} projectName - The project name to look up.
  * @returns {string} The extracted folder ID.
  */
@@ -289,24 +290,38 @@ function getProjectFolderId(projectName) {
   const sheet = getSheet(spreadsheet, CONFIG.SHEETS.LISTS);
   const values = sheet.getDataRange().getValues();
 
+  Logger.log(
+    ">>> Looking for project folder. Input projectName: " + projectName
+  );
+
   for (let i = 1; i < values.length; i++) {
-    // skip header
     const rowName = (values[i][CONFIG.COLUMNS.PROJECT_NAME] || "")
       .toString()
       .trim();
-    if (rowName.toLowerCase() === projectName.toLowerCase()) {
-      const folderUrl = (values[i][12] || "").toString().trim(); // column M -> index 12
+    Logger.log(`Row ${i}: rowName="${rowName}"`);
+
+    if (!rowName || !projectName) continue;
+
+    if (rowName.toLowerCase() === projectName.toString().trim().toLowerCase()) {
+      const folderUrl = (values[i][12] || "").toString().trim(); // column M
       const match = folderUrl.match(/[-\w]{25,}/);
+
       Logger.log(`>>> Found folder URL for ${projectName}: ${folderUrl}`);
       Logger.log(`>>> Extracted folderId: ${match ? match[0] : "NONE"}`);
 
       if (match) {
         return match[0];
       } else {
-        throw new Error(`Invalid folder URL for project "${projectName}".`);
+        Logger.log(
+          `>>> No valid folder ID for ${projectName}, fallback to CONFIG.FOLDER_ID`
+        );
+        return CONFIG.FOLDER_ID;
       }
     }
   }
 
-  throw new Error(ERROR_MESSAGES.PROJECT_NOT_FOUND(projectName));
+  Logger.log(
+    `>>> Project ${projectName} not found in Lists, fallback to CONFIG.FOLDER_ID`
+  );
+  return CONFIG.FOLDER_ID;
 }
