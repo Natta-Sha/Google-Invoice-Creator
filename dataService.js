@@ -311,6 +311,8 @@ function saveInvoiceData(data) {
 
     const newRowIndex = sheet.getLastRow() + 1;
     sheet.getRange(newRowIndex, 1, 1, fullRow.length).setValues([fullRow]);
+    sheet.getRange(newRowIndex, 7).setNumberFormat("dd/mm/yyyy");
+    sheet.getRange(newRowIndex, 8).setNumberFormat("dd/mm/yyyy");
     CacheService.getScriptCache().remove("invoiceList");
 
     return { newRowIndex, uniqueId };
@@ -417,6 +419,8 @@ function processFormFromData(data) {
 
     const newRowIndex = sheet.getLastRow() + 1;
     sheet.getRange(newRowIndex, 1, 1, row.length).setValues([row]);
+    sheet.getRange(newRowIndex, 7).setNumberFormat("dd/mm/yyyy");
+    sheet.getRange(newRowIndex, 8).setNumberFormat("dd/mm/yyyy");
     SpreadsheetApp.flush();
     Logger.log(
       `processFormFromData: Wrote main data to sheet '${CONFIG.SHEETS.INVOICES}' at row ${newRowIndex}.`
@@ -606,4 +610,11 @@ function extractFileIdFromUrl(url) {
     throw new Error("Invalid file URL: " + url);
   }
   return match[0];
+}
+
+function fixDateFormatsInSheet() {
+  const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
+  const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
+  sheet.getRange("G2:G").setNumberFormat("dd/mm/yyyy");
+  sheet.getRange("H2:H").setNumberFormat("dd/mm/yyyy");
 }
