@@ -18,6 +18,8 @@
     <!-- Скрипты -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.13.4/sorting/datetime-moment.js"></script>
 
     <style>
       body {
@@ -125,6 +127,7 @@
     </script>
     <script>
       $(document).ready(function () {
+        $.fn.dataTable.moment("DD/MM/YYYY");
         const table = $("#invoiceTable").DataTable({
           dom: "lrtip",
           orderCellsTop: true,
