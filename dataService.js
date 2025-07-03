@@ -164,21 +164,43 @@ function getInvoiceListFromData() {
       }
     }
 
-    const result = data.slice(1).map((row) => ({
-      id: row[colIndex.id] || "",
-      projectName: row[colIndex.projectName] || "",
-      invoiceNumber: row[colIndex.invoiceNumber] || "",
-      invoiceDate: formatDate(row[colIndex.invoiceDate]),
-      dueDate: formatDate(row[colIndex.dueDate]),
-      total:
-        row[colIndex.total] !== undefined && row[colIndex.total] !== ""
-          ? parseFloat(row[colIndex.total]).toFixed(2)
-          : "",
-      currency: row[colIndex.currency] || "",
-    }));
+    const result = data.slice(1).map((row) => {
+      // Parse dates for correct sorting
+      let invoiceDateObj =
+        row[colIndex.invoiceDate] instanceof Date
+          ? row[colIndex.invoiceDate]
+          : new Date(row[colIndex.invoiceDate]);
+      let dueDateObj =
+        row[colIndex.dueDate] instanceof Date
+          ? row[colIndex.dueDate]
+          : new Date(row[colIndex.dueDate]);
+      return {
+        id: row[colIndex.id] || "",
+        projectName: row[colIndex.projectName] || "",
+        invoiceNumber: row[colIndex.invoiceNumber] || "",
+        invoiceDate: formatDate(invoiceDateObj),
+        dueDate: formatDate(dueDateObj),
+        dueDateObj: dueDateObj, // for sorting
+        total:
+          row[colIndex.total] !== undefined && row[colIndex.total] !== ""
+            ? parseFloat(row[colIndex.total]).toFixed(2)
+            : "",
+        currency: row[colIndex.currency] || "",
+      };
+    });
 
-    cache.put("invoiceList", JSON.stringify(result), 300); // cache for 5 minutes
-    return result;
+    // Sort by dueDate as date, not as text
+    result.sort((a, b) => {
+      if (a.dueDateObj && b.dueDateObj) {
+        return a.dueDateObj - b.dueDateObj;
+      }
+      return 0;
+    });
+
+    // Remove dueDateObj before caching/returning
+    const cleanedResult = result.map(({ dueDateObj, ...rest }) => rest);
+    cache.put("invoiceList", JSON.stringify(cleanedResult), 300); // cache for 5 minutes
+    return cleanedResult;
   } catch (error) {
     console.error("Error getting invoice list:", error);
     return [];
