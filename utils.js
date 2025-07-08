@@ -81,7 +81,10 @@ function formatCurrency(amount, currency) {
   if (!amount) return "";
   const num = parseFloat(amount);
   if (isNaN(num)) return "";
-  return `${currency}${num.toFixed(2)}`;
+  return `${currency}${num.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 /**
