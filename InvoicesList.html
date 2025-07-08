@@ -71,9 +71,16 @@
         padding: 4px;
       }
 
-      thead th {
+      thead tr:nth-child(1) th {
         position: sticky;
         top: 0;
+        background: #fff;
+        z-index: 3;
+      }
+
+      thead tr:nth-child(2) th {
+        position: sticky;
+        top: 35px; /* или подкорректируй под высоту первой строки */
         background: #fff;
         z-index: 2;
       }
