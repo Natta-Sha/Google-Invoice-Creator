@@ -324,6 +324,24 @@
               opt.value = name;
               datalist.appendChild(opt);
             });
+
+            // ✅ ДОБАВЬ ЭТО ↓↓↓
+            const selectedProject = document
+              .getElementById("project_name")
+              .value.trim();
+            const invoiceDate = document
+              .getElementById("invoice_date")
+              .value.trim();
+
+            if (
+              ["create", "edit"].includes(mode) &&
+              selectedProject &&
+              validProjectNames.includes(selectedProject)
+            ) {
+              google.script.run
+                .withSuccessHandler(fillProjectDetails)
+                .getProjectDetails(selectedProject);
+            }
           })
           .getProjectNames();
       }
@@ -894,6 +912,22 @@
           document.getElementById("page-title").textContent = "Create invoice";
           // Optionally clear fields here
           console.log("No invoiceId found in URL, showing blank form.");
+          const selectedProject = document
+            .getElementById("project_name")
+            .value.trim();
+          const invoiceDate = document
+            .getElementById("invoice_date")
+            .value.trim();
+
+          if (
+            ["create", "edit"].includes(mode) &&
+            selectedProject &&
+            validProjectNames.includes(selectedProject)
+          ) {
+            google.script.run
+              .withSuccessHandler(fillProjectDetails)
+              .getProjectDetails(selectedProject);
+          }
         }
       });
 
