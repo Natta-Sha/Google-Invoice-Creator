@@ -5,7 +5,7 @@
  * @param {string|Date} dateStr - Date string or Date object
  * @returns {string} Formatted date string
  */
-function formatDate(dateStr) {
+function formatDateFromUtils(dateStr) {
   if (!dateStr) return "";
 
   // If it's already a Date object
@@ -41,7 +41,7 @@ function formatDate(dateStr) {
  * @param {string|Date} val - Date value
  * @returns {string} YYYY-MM-DD formatted string
  */
-function formatDateForInput(val) {
+function formatDateForInputFromUtils(val) {
   if (val instanceof Date) {
     const yyyy = val.getFullYear();
     const mm = String(val.getMonth() + 1).padStart(2, "0");
