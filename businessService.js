@@ -20,6 +20,14 @@ function processInvoiceCreation(data) {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
 
+    // Get folderId from project details
+    const projectDetails = getProjectDetailsWithValidation(data.projectName);
+    const projectFolderId = projectDetails.folderId;
+
+    if (!projectFolderId) {
+      throw new Error("Missing folderId for this project.");
+    }
+
     // Save invoice data to spreadsheet
     const saveResult = saveInvoiceData(data);
     Logger.log(
