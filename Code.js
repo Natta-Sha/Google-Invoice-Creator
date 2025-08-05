@@ -112,28 +112,6 @@ function calculateTotalAmount(subtotal, taxAmount) {
 
 // saveInvoiceData is handled directly in businessService.js
 
-function createInvoiceDoc(
-  data,
-  formattedDate,
-  formattedDueDate,
-  subtotal,
-  taxRate,
-  taxAmount,
-  totalAmount,
-  templateId
-) {
-  return createInvoiceDocFromDocumentService(
-    data,
-    formattedDate,
-    formattedDueDate,
-    subtotal,
-    taxRate,
-    taxAmount,
-    totalAmount,
-    templateId
-  );
-}
-
 function formatDate(dateStr) {
   return formatDateFromUtils(dateStr);
 }
