@@ -39,7 +39,7 @@ function processInvoiceCreation(data) {
     const totalAmount = calculateTotalAmountFromUtils(subtotalNum, taxAmount);
 
     // Create document
-    const doc = createInvoiceDocFromDocumentService(
+    const doc = createInvoiceDoc(
       data,
       formattedDate,
       formattedDueDate,
