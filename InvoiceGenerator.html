@@ -694,9 +694,38 @@
           return;
         }
 
-        document.getElementById("generate-btn").disabled = true;
-        document.getElementById("spinner").style.display = "inline-block";
-        document.getElementById("result").innerHTML = "";
+        // Check if project details are loaded
+        if (
+          !window.currentProjectDetails ||
+          !window.currentProjectDetails.templateId
+        ) {
+          console.log("Project details not loaded, loading now...");
+          // Load project details first
+          google.script.run
+            .withSuccessHandler(function (details) {
+              window.currentProjectDetails = details;
+              console.log("Project details loaded:", details);
+              // Now submit the form with the loaded details
+              submitFormWithData();
+            })
+            .withFailureHandler(function (error) {
+              console.error("Failed to load project details:", error);
+              alert("Failed to load project details. Please try again.");
+              document.getElementById("generate-btn").disabled = false;
+              document.getElementById("spinner").style.display = "none";
+            })
+            .getProjectDetails(projectValue);
+          return;
+        }
+
+        // If project details are already loaded, submit directly
+        submitFormWithData();
+      }
+
+      function submitFormWithData() {
+        const projectValue = document
+          .getElementById("project_name")
+          .value.trim();
 
         const data = {
           projectName: projectValue,
@@ -745,6 +774,11 @@
           "Data being sent to server:",
           JSON.stringify(data, null, 2)
         );
+
+        // Enable spinner and disable button
+        document.getElementById("generate-btn").disabled = true;
+        document.getElementById("spinner").style.display = "inline-block";
+        document.getElementById("result").innerHTML = "";
 
         google.script.run
           .withFailureHandler(function (error) {

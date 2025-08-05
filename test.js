@@ -164,6 +164,175 @@ function testProjectDetails() {
 }
 
 /**
+ * Test validation function specifically
+ */
+function testValidationFunction() {
+  console.log("Testing validation function...");
+
+  try {
+    // Test with valid data
+    const validData = {
+      projectName: "Test Project",
+      invoiceNumber: "INV-001",
+      invoiceDate: "2025-01-15",
+      dueDate: "15/01/2025",
+      subtotal: "1000",
+      tax: "19",
+      items: [["1", "Service", "Period", "10", "100", "1000"]],
+      templateId: "test-template-id",
+    };
+
+    const validation = validateInvoiceData(validData);
+    console.log("✅ Valid data validation result:", validation);
+
+    // Test with missing required fields
+    const invalidData = {
+      projectName: "Test Project",
+      invoiceNumber: "INV-001",
+      // Missing invoiceDate, dueDate, subtotal, tax, items, templateId
+    };
+
+    const invalidValidation = validateInvoiceData(invalidData);
+    console.log("❌ Invalid data validation result:", invalidValidation);
+    console.log("Validation errors:", invalidValidation.errors);
+
+    console.log("Validation function test completed.");
+  } catch (error) {
+    console.error("❌ Validation test error:", error.message);
+    console.error("Stack trace:", error.stack);
+  }
+}
+
+/**
+ * Test the complete data flow for invoice creation
+ */
+function testInvoiceCreationFlow() {
+  console.log("Testing complete invoice creation flow...");
+
+  try {
+    // Get project names
+    const projectNames = getProjectNames();
+    if (projectNames.length === 0) {
+      console.log("⚠️ No projects available for testing");
+      return;
+    }
+
+    const testProject = projectNames[0];
+    console.log(`Using test project: ${testProject}`);
+
+    // Get project details
+    const projectDetails = getProjectDetails(testProject);
+    console.log("Project details:", projectDetails);
+
+    // Create test invoice data
+    const testInvoiceData = {
+      projectName: testProject,
+      invoiceNumber: "TEST-001",
+      invoiceDate: "2025-01-15",
+      dueDate: "15/01/2025",
+      subtotal: "1000",
+      tax: projectDetails.tax || "19",
+      items: [["1", "Test Service", "Jan 2025", "10", "100", "1000"]],
+      templateId: projectDetails.templateId,
+      clientName: projectDetails.clientName,
+      clientAddress: projectDetails.clientAddress,
+      clientNumber: projectDetails.clientNumber,
+      ourCompany: projectDetails.ourCompany,
+      currency: projectDetails.currency,
+      bankDetails1: projectDetails.bankDetails1,
+      bankDetails2: projectDetails.bankDetails2,
+      exchangeRate: "1.0000",
+      amountInEUR: "1000.00",
+      comment: "Test invoice",
+    };
+
+    console.log("Test invoice data:", testInvoiceData);
+
+    // Test validation
+    const validation = validateInvoiceData(testInvoiceData);
+    console.log("Validation result:", validation);
+
+    if (validation.isValid) {
+      console.log("✅ Test invoice data is valid");
+    } else {
+      console.log("❌ Test invoice data validation failed:", validation.errors);
+    }
+
+    console.log("Invoice creation flow test completed.");
+  } catch (error) {
+    console.error("❌ Invoice creation flow test error:", error.message);
+    console.error("Stack trace:", error.stack);
+  }
+}
+
+/**
+ * Debug function to check current project details state
+ */
+function debugProjectDetailsState() {
+  console.log("=== Debugging Project Details State ===");
+
+  try {
+    // Check if project names are loaded
+    const projectNames = getProjectNames();
+    console.log("Available projects:", projectNames);
+
+    if (projectNames.length > 0) {
+      const testProject = projectNames[0];
+      console.log(`Testing with project: ${testProject}`);
+
+      // Test getProjectDetails function
+      const projectDetails = getProjectDetails(testProject);
+      console.log("Project details returned:", projectDetails);
+
+      // Check specific fields
+      console.log("Template ID:", projectDetails.templateId);
+      console.log("Client Name:", projectDetails.clientName);
+      console.log("Client Address:", projectDetails.clientAddress);
+      console.log("Tax Rate:", projectDetails.tax);
+      console.log("Currency:", projectDetails.currency);
+
+      // Test validation with this data
+      const testData = {
+        projectName: testProject,
+        invoiceNumber: "TEST-001",
+        invoiceDate: "2025-01-15",
+        dueDate: "15/01/2025",
+        subtotal: "1000",
+        tax: projectDetails.tax || "19",
+        items: [["1", "Test Service", "Jan 2025", "10", "100", "1000"]],
+        templateId: projectDetails.templateId,
+        clientName: projectDetails.clientName,
+        clientAddress: projectDetails.clientAddress,
+        clientNumber: projectDetails.clientNumber,
+        ourCompany: projectDetails.ourCompany,
+        currency: projectDetails.currency,
+        bankDetails1: projectDetails.bankDetails1,
+        bankDetails2: projectDetails.bankDetails2,
+        exchangeRate: "1.0000",
+        amountInEUR: "1000.00",
+        comment: "Test invoice",
+      };
+
+      const validation = validateInvoiceData(testData);
+      console.log("Validation result:", validation);
+
+      if (validation.isValid) {
+        console.log("✅ Test data would pass validation");
+      } else {
+        console.log("❌ Test data would fail validation:", validation.errors);
+      }
+    } else {
+      console.log("⚠️ No projects found in the system");
+    }
+
+    console.log("=== Debug Complete ===");
+  } catch (error) {
+    console.error("❌ Debug error:", error.message);
+    console.error("Stack trace:", error.stack);
+  }
+}
+
+/**
  * Run all tests
  */
 function runAllTests() {
@@ -174,6 +343,8 @@ function runAllTests() {
   testBusinessServiceFunctions();
   testBackwardCompatibility();
   testProjectDetails(); // This is the most important test for your issue
+  testValidationFunction(); // Test the validation specifically
+  testInvoiceCreationFlow(); // Test the complete flow
 
   console.log("=== All Tests Completed ===");
 }
