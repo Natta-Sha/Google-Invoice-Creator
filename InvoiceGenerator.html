@@ -385,6 +385,66 @@
         updateTotals();
       }
 
+      function renderSavedDataRaw(data) {
+        document.getElementById("project_name").value = data.projectName;
+        document.getElementById("invoice_number").value = data.invoiceNumber;
+        document.getElementById("client_name").textContent = data.clientName;
+        document.getElementById("client_address").textContent =
+          data.clientAddress;
+        document.getElementById("client_number").textContent =
+          data.clientNumber;
+        document.getElementById("our_company").textContent =
+          data.ourCompany || "";
+        document.getElementById("tax").textContent = data.tax || "0";
+
+        const currencyMap = { $: "$ (USD)", "€": "€ (EUR)", "₴": "₴ (UAH)" };
+        document.getElementById("currency").textContent =
+          currencyMap[data.currency] || data.currency;
+
+        document.getElementById("bank_details_1").textContent =
+          data.bankDetails1 || "";
+        document.getElementById("bank_details_2").textContent =
+          data.bankDetails2 || "";
+
+        document.getElementById("invoice_date").value = formatInputDate(
+          data.invoiceDate
+        );
+        document.getElementById("due_date").textContent = data.dueDate || "";
+
+        if (data.currency === "$") {
+          document.getElementById("exchange_rate").style.display = "block";
+          document.getElementById("exchange_rate").value =
+            data.exchangeRate || "1.0000";
+          document.getElementById("amount_in_eur").textContent =
+            data.amountInEUR || "";
+        }
+
+        document.getElementById("comment").value = data.comment || "";
+
+        const tbody = document.getElementById("invoice-body");
+        tbody.innerHTML = "";
+
+        data.items.forEach((item) => {
+          const row = document.createElement("tr");
+          item.forEach((value, j) => {
+            const cell = document.createElement("td");
+            const input = document.createElement("input");
+            input.type = "text";
+            input.className = "form-control";
+            input.value = value;
+            if (j === 5) input.classList.add("amount");
+            input.disabled = true; // запретить редактирование
+            cell.appendChild(input);
+            row.appendChild(cell);
+          });
+          row.appendChild(document.createElement("td")); // пустая ячейка под кнопки
+          tbody.appendChild(row);
+        });
+
+        document.getElementById("subtotal").innerText = data.subtotal || "0.00";
+        document.getElementById("total").innerText = data.total || "0.00";
+      }
+
       function fillInvoiceFormFromSavedData(data) {
         document.getElementById("project_name").value = data.projectName;
         document.getElementById("invoice_number").value = data.invoiceNumber;
@@ -462,28 +522,32 @@
         return dateVal;
       }
 
-      document
-        .getElementById("project_name")
-        .addEventListener("change", function () {
-          const value = this.value.trim();
-          if (validProjectNames.includes(value) && !invoiceId) {
-            google.script.run
-              .withSuccessHandler(fillProjectDetails)
-              .getProjectDetails(value);
-          }
-        });
+      if (["create", "edit"].includes(mode)) {
+        document
+          .getElementById("project_name")
+          .addEventListener("change", function () {
+            const value = this.value.trim();
+            if (validProjectNames.includes(value) && !invoiceId) {
+              google.script.run
+                .withSuccessHandler(fillProjectDetails)
+                .getProjectDetails(value);
+            }
+          });
 
-      document
-        .getElementById("invoice_date")
-        .addEventListener("change", function () {
-          const value = this.value.trim();
-          const project = document.getElementById("project_name").value.trim();
-          if (value && validProjectNames.includes(project) && !invoiceId) {
-            google.script.run
-              .withSuccessHandler(fillProjectDetails)
-              .getProjectDetails(project);
-          }
-        });
+        document
+          .getElementById("invoice_date")
+          .addEventListener("change", function () {
+            const value = this.value.trim();
+            const project = document
+              .getElementById("project_name")
+              .value.trim();
+            if (value && validProjectNames.includes(project) && !invoiceId) {
+              google.script.run
+                .withSuccessHandler(fillProjectDetails)
+                .getProjectDetails(project);
+            }
+          });
+      }
 
       function formatDateDDMMYYYY(dateObj) {
         const dd = String(dateObj.getDate()).padStart(2, "0");
@@ -722,7 +786,12 @@
                 window.location.href = "?page=InvoicesList";
                 return;
               }
-              fillInvoiceFormFromSavedData(data);
+              if (["view", "delete", "copy"].includes(mode)) {
+                renderSavedDataRaw(data);
+              } else {
+                fillInvoiceFormFromSavedData(data);
+              }
+
               document.querySelectorAll("input, textarea").forEach((el) => {
                 el.disabled = true;
               });
@@ -839,12 +908,14 @@
         result.scrollIntoView({ behavior: "smooth" });
       }
 
-      ["project_name", "invoice_number", "invoice_date"].forEach((id) => {
-        document.getElementById(id).addEventListener("input", () => {
-          document.getElementById(id).classList.remove("is-invalid");
-          document.getElementById("result").innerHTML = "";
+      if (["create", "edit"].includes(mode)) {
+        ["project_name", "invoice_number", "invoice_date"].forEach((id) => {
+          document.getElementById(id).addEventListener("input", () => {
+            document.getElementById(id).classList.remove("is-invalid");
+            document.getElementById("result").innerHTML = "";
+          });
         });
-      });
+      }
 
       function showModalDialog(message, onConfirm) {
         document.getElementById("confirmModalText").textContent = message;
