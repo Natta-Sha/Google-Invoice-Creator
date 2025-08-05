@@ -77,7 +77,7 @@ function generateInvoiceFilenameFromUtils(data) {
  * @param {string} currency - Currency symbol
  * @returns {string} Formatted amount
  */
-function formatCurrency(amount, currency) {
+function formatCurrencyFromUtils(amount, currency) {
   if (!amount) return "";
   const num = parseFloat(amount);
   if (isNaN(num)) return "";
