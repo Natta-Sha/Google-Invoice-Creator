@@ -134,22 +134,6 @@ function createInvoiceDoc(
   );
 }
 
-function generateInvoiceFilename(data) {
-  return generateInvoiceFilenameFromUtils(data);
-}
-
-function generateAndSavePDF(doc, filename) {
-  return generateAndSavePDFFromDocumentService(doc, filename);
-}
-
-function updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl) {
-  return updateSpreadsheetWithUrlsFromDocumentService(
-    newRowIndex,
-    docUrl,
-    pdfUrl
-  );
-}
-
 function formatDate(dateStr) {
   return formatDateFromUtils(dateStr);
 }
