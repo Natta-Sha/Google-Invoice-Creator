@@ -112,6 +112,9 @@ function calculateTotalAmount(subtotal, taxAmount) {
 
 // saveInvoiceData is handled directly in businessService.js
 
+// Document service functions are available globally from documentService.js
+// No wrapper functions needed in Google Apps Script
+
 function formatDate(dateStr) {
   return formatDateFromUtils(dateStr);
 }

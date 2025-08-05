@@ -139,6 +139,13 @@ function validateRequiredFieldsFromUtils(data, requiredFields) {
  */
 function getSpreadsheet(spreadsheetId) {
   try {
+    if (
+      !spreadsheetId ||
+      typeof spreadsheetId !== "string" ||
+      spreadsheetId.trim() === ""
+    ) {
+      throw new Error("Invalid spreadsheet ID provided");
+    }
     return SpreadsheetApp.openById(spreadsheetId);
   } catch (error) {
     throw new Error(`Failed to open spreadsheet: ${error.message}`);
@@ -153,6 +160,16 @@ function getSpreadsheet(spreadsheetId) {
  */
 function getSheet(spreadsheet, sheetName) {
   try {
+    if (!spreadsheet) {
+      throw new Error("Spreadsheet object is null or undefined");
+    }
+    if (
+      !sheetName ||
+      typeof sheetName !== "string" ||
+      sheetName.trim() === ""
+    ) {
+      throw new Error("Invalid sheet name provided");
+    }
     return spreadsheet.getSheetByName(sheetName);
   } catch (error) {
     throw new Error(`Failed to get sheet "${sheetName}": ${error.message}`);

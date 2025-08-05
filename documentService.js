@@ -35,7 +35,7 @@ function createInvoiceDoc(
 
     const folder = DriveApp.getFolderById(folderId);
 
-    const filename = generateInvoiceFilename(data);
+    const filename = generateInvoiceFilenameFromUtils(data);
     Logger.log(`createInvoiceDoc: Generated filename: ${filename}`);
 
     const copy = template.makeCopy(filename, folder);
@@ -155,7 +155,9 @@ function updateInvoiceTable(body, data) {
     row.forEach((cell, index) => {
       if (index === 4 || index === 5) {
         // Format currency columns
-        newRow.appendTableCell(cell ? formatCurrency(cell, data.currency) : "");
+        newRow.appendTableCell(
+          cell ? formatCurrencyFromUtils(cell, data.currency) : ""
+        );
       } else {
         newRow.appendTableCell(cell || "");
       }
@@ -192,8 +194,8 @@ function replaceDocumentPlaceholders(
     "\\{Дата счета\\}": formattedDate,
     "\\{Due date\\}": formattedDueDate,
     "\\{VAT%\\}": taxRate.toFixed(0),
-    "\\{Сумма НДС\\}": formatCurrency(taxAmount, data.currency),
-    "\\{Сумма общая\\}": formatCurrency(totalAmount, data.currency),
+    "\\{Сумма НДС\\}": formatCurrencyFromUtils(taxAmount, data.currency),
+    "\\{Сумма общая\\}": formatCurrencyFromUtils(totalAmount, data.currency),
     "\\{Банковские реквизиты1\\}": data.bankDetails1,
     "\\{Банковские реквизиты2\\}": data.bankDetails2,
     "\\{Комментарий\\}": data.comment || "",
@@ -222,13 +224,13 @@ function replaceDocumentPlaceholders(
       if (item[4]) {
         body.replaceText(
           `\\{Рейт-${i + 1}\\}`,
-          formatCurrency(item[4], data.currency)
+          formatCurrencyFromUtils(item[4], data.currency)
         );
       }
       if (item[5]) {
         body.replaceText(
           `\\{Сумма-${i + 1}\\}`,
-          formatCurrency(item[5], data.currency)
+          formatCurrencyFromUtils(item[5], data.currency)
         );
       }
     }

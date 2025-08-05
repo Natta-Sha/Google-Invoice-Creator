@@ -192,6 +192,12 @@ function getInvoiceListFromData() {
  */
 function getInvoiceDataByIdFromData(id) {
   try {
+    // Validate input
+    if (!id || id.toString().trim() === "") {
+      console.log("Invalid ID provided to getInvoiceDataByIdFromData");
+      return {};
+    }
+
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = spreadsheet.getSheets()[0];
     const data = sheet.getDataRange().getValues();
@@ -204,7 +210,7 @@ function getInvoiceDataByIdFromData(id) {
     const row = data.find((r, i) => i > 0 && r[indexMap["ID"]] === id);
     if (!row) {
       console.log(`Invoice with ID ${id} not found.`);
-      return {}; // ⚠️ вместо throw
+      return {};
     }
 
     const items = [];
@@ -483,31 +489,21 @@ function processFormFromData(data) {
   }
 }
 
-/**
- * Update spreadsheet with URLs
- * @param {number} newRowIndex - Index of the new row
- * @param {string} docUrl - URL of the Google Doc
- * @param {string} pdfUrl - URL of the PDF file
- */
-function updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl) {
-  try {
-    const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
-    const sheet = spreadsheet.getSheets()[0];
-    sheet.getRange(newRowIndex, 21).setValue(docUrl);
-    sheet.getRange(newRowIndex, 22).setValue(pdfUrl);
-  } catch (error) {
-    console.error("Error updating spreadsheet with URLs:", error);
-    throw error;
-  }
-}
+// updateSpreadsheetWithUrls is handled in documentService.js
 
 /**
  * Delete invoice by ID from the Invoices sheet
  * @param {string} id - Invoice ID
  * @returns {Object} { success: true } or { success: false, message }
  */
-function deleteInvoiceById(id) {
+function deleteInvoiceByIdFromData(id) {
   try {
+    // Validate input
+    if (!id || id.toString().trim() === "") {
+      console.log("Invalid ID provided to deleteInvoiceByIdFromData");
+      return { success: false, message: "Invalid invoice ID provided" };
+    }
+
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
     const data = sheet.getDataRange().getValues();
@@ -539,10 +535,12 @@ function deleteInvoiceById(id) {
     // 🔹 Удаляем файлы (если есть), логируем ошибки
     let deletedNotes = [];
 
-    if (docUrl) {
+    if (docUrl && docUrl.trim() !== "") {
       try {
         const docId = extractFileIdFromUrl(docUrl);
-        DriveApp.getFileById(docId).setTrashed(true);
+        if (docId) {
+          DriveApp.getFileById(docId).setTrashed(true);
+        }
       } catch (err) {
         const msg = "Google Doc already deleted or not found.";
         Logger.log(msg + " " + err.message);
@@ -550,10 +548,12 @@ function deleteInvoiceById(id) {
       }
     }
 
-    if (pdfUrl) {
+    if (pdfUrl && pdfUrl.trim() !== "") {
       try {
         const pdfId = extractFileIdFromUrl(pdfUrl);
-        DriveApp.getFileById(pdfId).setTrashed(true);
+        if (pdfId) {
+          DriveApp.getFileById(pdfId).setTrashed(true);
+        }
       } catch (err) {
         const msg = "PDF already deleted or not found.";
         Logger.log(msg + " " + err.message);
@@ -579,6 +579,10 @@ function deleteInvoiceById(id) {
 }
 
 function extractFileIdFromUrl(url) {
+  if (!url || typeof url !== "string") {
+    throw new Error("Invalid URL provided: " + url);
+  }
+
   const match = url.match(/[-\w]{25,}/);
   if (!match) {
     throw new Error("Invalid file URL: " + url);
