@@ -1,5 +1,4 @@
-// Document service for Google Docs and PDF operations - Refactored version
-// This file handles all document creation, manipulation, and PDF generation
+// Document service for Google Docs and PDF operations
 
 /**
  * Create invoice document from template
@@ -13,7 +12,7 @@
  * @param {string} templateId - Template document ID
  * @returns {Document} Google Document object
  */
-function createInvoiceDocFromDocumentService(
+function createInvoiceDoc(
   data,
   formattedDate,
   formattedDueDate,
@@ -21,7 +20,8 @@ function createInvoiceDocFromDocumentService(
   taxRate,
   taxAmount,
   totalAmount,
-  templateId
+  templateId,
+  folderId
 ) {
   Logger.log(`createInvoiceDoc: Starting for template ID: ${templateId}`);
   if (!templateId) {
@@ -31,8 +31,11 @@ function createInvoiceDocFromDocumentService(
 
   try {
     const template = DriveApp.getFileById(templateId);
-    const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
-    const filename = generateInvoiceFilenameFromUtils(data);
+    Logger.log(">>> Using folderId: " + folderId);
+
+    const folder = DriveApp.getFolderById(folderId);
+
+    const filename = generateInvoiceFilename(data);
     Logger.log(`createInvoiceDoc: Generated filename: ${filename}`);
 
     const copy = template.makeCopy(filename, folder);
@@ -152,9 +155,7 @@ function updateInvoiceTable(body, data) {
     row.forEach((cell, index) => {
       if (index === 4 || index === 5) {
         // Format currency columns
-        newRow.appendTableCell(
-          cell ? formatCurrencyFromUtils(cell, data.currency) : ""
-        );
+        newRow.appendTableCell(cell ? formatCurrency(cell, data.currency) : "");
       } else {
         newRow.appendTableCell(cell || "");
       }
@@ -191,8 +192,8 @@ function replaceDocumentPlaceholders(
     "\\{Дата счета\\}": formattedDate,
     "\\{Due date\\}": formattedDueDate,
     "\\{VAT%\\}": taxRate.toFixed(0),
-    "\\{Сумма НДС\\}": formatCurrencyFromUtils(taxAmount, data.currency),
-    "\\{Сумма общая\\}": formatCurrencyFromUtils(totalAmount, data.currency),
+    "\\{Сумма НДС\\}": formatCurrency(taxAmount, data.currency),
+    "\\{Сумма общая\\}": formatCurrency(totalAmount, data.currency),
     "\\{Банковские реквизиты1\\}": data.bankDetails1,
     "\\{Банковские реквизиты2\\}": data.bankDetails2,
     "\\{Комментарий\\}": data.comment || "",
@@ -221,13 +222,13 @@ function replaceDocumentPlaceholders(
       if (item[4]) {
         body.replaceText(
           `\\{Рейт-${i + 1}\\}`,
-          formatCurrencyFromUtils(item[4], data.currency)
+          formatCurrency(item[4], data.currency)
         );
       }
       if (item[5]) {
         body.replaceText(
           `\\{Сумма-${i + 1}\\}`,
-          formatCurrencyFromUtils(item[5], data.currency)
+          formatCurrency(item[5], data.currency)
         );
       }
     }
@@ -240,13 +241,14 @@ function replaceDocumentPlaceholders(
  * @param {string} filename - Filename for PDF
  * @returns {File} PDF file object
  */
-function generateAndSavePDFFromDocumentService(doc, filename) {
+function generateAndSavePDF(doc, filename) {
   try {
     // Wait a bit for document to be fully processed
     Utilities.sleep(500);
 
     const pdf = doc.getAs("application/pdf");
     const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
+
     const pdfFile = folder.createFile(pdf).setName(`${filename}.pdf`);
 
     return pdfFile;
@@ -262,11 +264,7 @@ function generateAndSavePDFFromDocumentService(doc, filename) {
  * @param {string} docUrl - Document URL
  * @param {string} pdfUrl - PDF URL
  */
-function updateSpreadsheetWithUrlsFromDocumentService(
-  rowIndex,
-  docUrl,
-  pdfUrl
-) {
+function updateSpreadsheetWithUrls(rowIndex, docUrl, pdfUrl) {
   try {
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = spreadsheet.getSheets()[0];
@@ -279,4 +277,51 @@ function updateSpreadsheetWithUrlsFromDocumentService(
     console.error("Error updating spreadsheet with URLs:", error);
     throw error;
   }
+}
+
+/**
+ * Get Google Drive folder ID for the given project name from the Lists sheet.
+ * Falls back to CONFIG.FOLDER_ID if folder link is missing or invalid.
+ * @param {string} projectName - The project name to look up.
+ * @returns {string} The extracted folder ID.
+ */
+function getProjectFolderId(projectName) {
+  const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
+  const sheet = getSheet(spreadsheet, CONFIG.SHEETS.LISTS);
+  const values = sheet.getDataRange().getValues();
+
+  Logger.log(
+    ">>> Looking for project folder. Input projectName: " + projectName
+  );
+
+  for (let i = 1; i < values.length; i++) {
+    const rowName = (values[i][CONFIG.COLUMNS.PROJECT_NAME] || "")
+      .toString()
+      .trim();
+    Logger.log(`Row ${i}: rowName="${rowName}"`);
+
+    if (!rowName || !projectName) continue;
+
+    if (rowName.toLowerCase() === projectName.toString().trim().toLowerCase()) {
+      const folderUrl = (values[i][12] || "").toString().trim(); // column M
+      const match = folderUrl.match(/[-\w]{25,}/);
+
+      Logger.log(`>>> Found folder URL for ${projectName}: ${folderUrl}`);
+      Logger.log(`>>> Extracted folderId: ${match ? match[0] : "NONE"}`);
+
+      if (match) {
+        return match[0];
+      } else {
+        Logger.log(
+          `>>> No valid folder ID for ${projectName}, fallback to CONFIG.FOLDER_ID`
+        );
+        return CONFIG.FOLDER_ID;
+      }
+    }
+  }
+
+  Logger.log(
+    `>>> Project ${projectName} not found in Lists, fallback to CONFIG.FOLDER_ID`
+  );
+  return CONFIG.FOLDER_ID;
 }
