@@ -553,11 +553,7 @@
             const project = document
               .getElementById("project_name")
               .value.trim();
-            if (
-              value &&
-              validProjectNames.includes(project) &&
-              mode === "create"
-            ) {
+            if (value && project && mode === "create") {
               google.script.run
                 .withSuccessHandler(fillProjectDetails)
                 .getProjectDetails(project);
