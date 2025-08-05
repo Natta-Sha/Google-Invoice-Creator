@@ -314,6 +314,7 @@
       const BASE_URL = "<?= baseUrl ?>";
 
       function populateProjectNames() {
+        console.log("[populateProjectNames] running...");
         // Уже внутри populateProjectNames:
         google.script.run
           .withSuccessHandler(function (projects) {
@@ -812,9 +813,9 @@
       }
 
       window.addEventListener("DOMContentLoaded", function () {
-        populateProjectNames();
         invoiceId = "<?= invoiceId ?>";
         mode = "<?= mode ?>";
+        populateProjectNames();
         console.log("Loaded InvoiceGenerator (DOMContentLoaded):", {
           invoiceId,
           mode,
