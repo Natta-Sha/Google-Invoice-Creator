@@ -351,7 +351,7 @@
           details.bankDetails2 || "";
 
         const invoiceDate = document.getElementById("invoice_date").value;
-        if (invoiceDate) {
+        if (mode === "create" && invoiceDate) {
           let baseDate = new Date(invoiceDate);
           let dueDate;
           if (details.dayType === "WD") {
@@ -382,7 +382,9 @@
   `;
         }
 
-        updateTotals();
+        if (mode === "create") {
+          updateTotals();
+        }
       }
 
       function fillInvoiceFormFromSavedData(data) {
@@ -432,8 +434,10 @@
             input.className = "form-control";
             input.value = value;
             if (j === 5) input.classList.add("amount");
-            input.oninput = updateTotals;
-            input.onfocus = markManualAmount;
+            if (mode === "create") {
+              input.oninput = updateTotals;
+              input.onfocus = markManualAmount;
+            }
             cell.appendChild(input);
             row.appendChild(cell);
           });
@@ -450,7 +454,9 @@
           tbody.appendChild(row);
         });
 
-        updateTotals();
+        if (mode === "create") {
+          updateTotals();
+        }
       }
 
       // Преобразование даты для input type="date"
@@ -537,6 +543,8 @@
       }
 
       function updateTotals() {
+        if (mode !== "create") return; // ❗ отключаем пересчёт в view/delete
+
         const tbody = document.getElementById("invoice-body");
         let subtotal = 0;
 
@@ -559,7 +567,6 @@
         const total = subtotal + (subtotal * tax) / 100;
         document.getElementById("total").innerText = total.toFixed(2);
 
-        // Новая логика для Amount in EUR
         const currency = document
           .getElementById("currency")
           .textContent.trim()
