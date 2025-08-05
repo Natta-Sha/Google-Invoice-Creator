@@ -1,4 +1,5 @@
-// Data access layer for spreadsheet operations
+// Data access layer for spreadsheet operations - Refactored version
+// This file handles all spreadsheet read/write operations
 
 /**
  * Get project names from the Lists sheet
@@ -168,8 +169,8 @@ function getInvoiceListFromData() {
       id: row[colIndex.id] || "",
       projectName: row[colIndex.projectName] || "",
       invoiceNumber: row[colIndex.invoiceNumber] || "",
-      invoiceDate: formatDate(row[colIndex.invoiceDate]),
-      dueDate: formatDate(row[colIndex.dueDate]),
+      invoiceDate: formatDateFromUtils(row[colIndex.invoiceDate]),
+      dueDate: formatDateFromUtils(row[colIndex.dueDate]),
       total:
         row[colIndex.total] !== undefined && row[colIndex.total] !== ""
           ? parseFloat(row[colIndex.total]).toFixed(2)
@@ -204,7 +205,7 @@ function getInvoiceDataByIdFromData(id) {
     const row = data.find((r, i) => i > 0 && r[indexMap["ID"]] === id);
     if (!row) {
       console.log(`Invoice with ID ${id} not found.`);
-      return {}; // ⚠️ вместо throw
+      return {};
     }
 
     const items = [];
@@ -222,8 +223,8 @@ function getInvoiceDataByIdFromData(id) {
       clientName: row[indexMap["Client Name"]],
       clientAddress: row[indexMap["Client Address"]],
       clientNumber: row[indexMap["Client Number"]],
-      invoiceDate: formatDateForInput(row[indexMap["Invoice Date"]]),
-      dueDate: formatDateForInput(row[indexMap["Due Date"]]),
+      invoiceDate: formatDateForInputFromUtils(row[indexMap["Invoice Date"]]),
+      dueDate: formatDateForInputFromUtils(row[indexMap["Due Date"]]),
       tax: row[indexMap["Tax Rate (%)"]],
       subtotal: row[indexMap["Subtotal"]],
       total: row[indexMap["Total"]],
@@ -238,14 +239,14 @@ function getInvoiceDataByIdFromData(id) {
     };
   } catch (error) {
     console.error("Error getting invoice data by ID:", error);
-    return {}; // ⚠️ тоже вернём пустой объект
+    return {};
   }
 }
 
 /**
  * Save invoice data to spreadsheet
  * @param {Object} data - Invoice data to save
- * @returns {Object} Result with doc and PDF URLs
+ * @returns {Object} Result with newRowIndex and uniqueId
  */
 function saveInvoiceData(data) {
   try {
@@ -268,10 +269,10 @@ function saveInvoiceData(data) {
       dueDateObject,
       data.tax,
       data.subtotal,
-      calculateTaxAmount(data.subtotal, data.tax),
-      calculateTotalAmount(
+      calculateTaxAmountFromUtils(data.subtotal, data.tax),
+      calculateTotalAmountFromUtils(
         data.subtotal,
-        calculateTaxAmount(data.subtotal, data.tax)
+        calculateTaxAmountFromUtils(data.subtotal, data.tax)
       ),
       data.currency === "$" ? data.exchangeRate : "",
       data.currency,
@@ -298,6 +299,11 @@ function saveInvoiceData(data) {
   }
 }
 
+/**
+ * Main business logic for processing invoice form data
+ * @param {Object} data - Form data from frontend
+ * @returns {Object} Result with document and PDF URLs
+ */
 function processFormFromData(data) {
   try {
     Logger.log("processFormFromData: Starting invoice creation.");
@@ -310,57 +316,19 @@ function processFormFromData(data) {
     const uniqueId = Utilities.getUuid();
     Logger.log(`processFormFromData: Generated new unique ID: ${uniqueId}`);
 
-    if (sheet.getLastRow() === 0) {
-      const baseHeaders = [
-        "ID",
-        "Project Name",
-        "Invoice Number",
-        "Client Name",
-        "Client Address",
-        "Client Number",
-        "Invoice Date",
-        "Due Date",
-        "Tax Rate (%)",
-        "Subtotal",
-        "Tax Amount",
-        "Total",
-        "Exchange Rate",
-        "Currency",
-        "Amount in EUR",
-        "Bank Details 1",
-        "Bank Details 2",
-        "Our Company",
-        "Comment",
-        "Google Doc Link",
-        "PDF Link",
-      ];
+    // Ensure headers exist
+    ensureInvoiceHeaders(sheet);
 
-      const itemHeaders = [];
-      for (let i = 1; i <= CONFIG.INVOICE_TABLE.MAX_ROWS; i++) {
-        itemHeaders.push(
-          `Row ${i} #`,
-          `Row ${i} Service`,
-          `Row ${i} Period`,
-          `Row ${i} Quantity`,
-          `Row ${i} Rate/hour`,
-          `Row ${i} Amount`
-        );
-      }
-      sheet.appendRow([...baseHeaders, ...itemHeaders]);
-      SpreadsheetApp.flush();
-      Logger.log("processFormFromData: Sheet was empty, headers created.");
-    }
-
-    const formattedDate = formatDate(data.invoiceDate);
+    const formattedDate = formatDateFromUtils(data.invoiceDate);
 
     const [day, month, year] = data.dueDate.split("/");
     const dueDateObject = new Date(year, month - 1, day);
-    const formattedDueDate = formatDate(dueDateObject);
+    const formattedDueDate = formatDateFromUtils(dueDateObject);
 
     const subtotalNum = parseFloat(data.subtotal) || 0;
     const taxRate = parseFloat(data.tax) || 0;
-    const taxAmount = (subtotalNum * taxRate) / 100;
-    const totalAmount = subtotalNum + taxAmount;
+    const taxAmount = calculateTaxAmountFromUtils(subtotalNum, taxRate);
+    const totalAmount = calculateTotalAmountFromUtils(subtotalNum, taxAmount);
 
     const itemCells = [];
     data.items.forEach((row, i) => {
@@ -400,7 +368,8 @@ function processFormFromData(data) {
       `processFormFromData: Wrote main data to sheet '${CONFIG.SHEETS.INVOICES}' at row ${newRowIndex}.`
     );
 
-    const doc = createInvoiceDoc(
+    // Create document and PDF
+    const doc = createInvoiceDocFromDocumentService(
       data,
       formattedDate,
       formattedDueDate,
@@ -440,14 +409,7 @@ function processFormFromData(data) {
 
     const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
 
-    const cleanCompany = (data.ourCompany || "")
-      .replace(/[\\/:*?"<>|]/g, "")
-      .trim();
-    const cleanClient = (data.clientName || "")
-      .replace(/[\\/:*?"<>|]/g, "")
-      .trim();
-    const filename = `${data.invoiceDate}_Invoice${data.invoiceNumber}_${cleanCompany}-${cleanClient}`;
-
+    const filename = generateInvoiceFilenameFromUtils(data);
     const pdfFile = folder.createFile(pdf).setName(`${filename}.pdf`);
     Logger.log(
       `processFormFromData: Created PDF file. ID: ${pdfFile.getId()}, URL: ${pdfFile.getUrl()}`
@@ -474,26 +436,54 @@ function processFormFromData(data) {
   } catch (e) {
     Logger.log(`processFormFromData: CRITICAL ERROR - ${e.toString()}`);
     Logger.log(`Stack Trace: ${e.stack}`);
-    // Re-throw the error so the client-side `.withFailureHandler` can catch it if one is added.
     throw e;
   }
 }
 
 /**
- * Update spreadsheet with URLs
- * @param {number} newRowIndex - Index of the new row
- * @param {string} docUrl - URL of the Google Doc
- * @param {string} pdfUrl - URL of the PDF file
+ * Ensure invoice sheet has proper headers
+ * @param {Sheet} sheet - The invoice sheet
  */
-function updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl) {
-  try {
-    const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
-    const sheet = spreadsheet.getSheets()[0];
-    sheet.getRange(newRowIndex, 21).setValue(docUrl);
-    sheet.getRange(newRowIndex, 22).setValue(pdfUrl);
-  } catch (error) {
-    console.error("Error updating spreadsheet with URLs:", error);
-    throw error;
+function ensureInvoiceHeaders(sheet) {
+  if (sheet.getLastRow() === 0) {
+    const baseHeaders = [
+      "ID",
+      "Project Name",
+      "Invoice Number",
+      "Client Name",
+      "Client Address",
+      "Client Number",
+      "Invoice Date",
+      "Due Date",
+      "Tax Rate (%)",
+      "Subtotal",
+      "Tax Amount",
+      "Total",
+      "Exchange Rate",
+      "Currency",
+      "Amount in EUR",
+      "Bank Details 1",
+      "Bank Details 2",
+      "Our Company",
+      "Comment",
+      "Google Doc Link",
+      "PDF Link",
+    ];
+
+    const itemHeaders = [];
+    for (let i = 1; i <= CONFIG.INVOICE_TABLE.MAX_ROWS; i++) {
+      itemHeaders.push(
+        `Row ${i} #`,
+        `Row ${i} Service`,
+        `Row ${i} Period`,
+        `Row ${i} Quantity`,
+        `Row ${i} Rate/hour`,
+        `Row ${i} Amount`
+      );
+    }
+    sheet.appendRow([...baseHeaders, ...itemHeaders]);
+    SpreadsheetApp.flush();
+    Logger.log("processFormFromData: Sheet was empty, headers created.");
   }
 }
 
@@ -502,7 +492,7 @@ function updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl) {
  * @param {string} id - Invoice ID
  * @returns {Object} { success: true } or { success: false, message }
  */
-function deleteInvoiceById(id) {
+function deleteInvoiceByIdFromData(id) {
   try {
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
@@ -532,7 +522,7 @@ function deleteInvoiceById(id) {
       return { success: false, message: "Invoice not found." };
     }
 
-    // 🔹 Удаляем файлы (если есть), логируем ошибки
+    // Delete files (if they exist), log errors
     let deletedNotes = [];
 
     if (docUrl) {
@@ -557,13 +547,12 @@ function deleteInvoiceById(id) {
       }
     }
 
-    // 🧹 Удаляем строку
+    // Delete row
     sheet.deleteRow(rowToDelete);
 
-    // 🧼 Очищаем кэш
+    // Clear cache
     CacheService.getScriptCache().remove("invoiceList");
 
-    // ✅ Возвращаем результат
     return {
       success: true,
       note: deletedNotes.length ? deletedNotes.join(" ") : undefined,
@@ -574,6 +563,11 @@ function deleteInvoiceById(id) {
   }
 }
 
+/**
+ * Extract file ID from Google Drive URL
+ * @param {string} url - Google Drive URL
+ * @returns {string} File ID
+ */
 function extractFileIdFromUrl(url) {
   const match = url.match(/[-\w]{25,}/);
   if (!match) {

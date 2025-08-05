@@ -1,11 +1,16 @@
-// Utility functions for common operations
+// Utility functions for common operations - Refactored version
+// This file contains all utility functions used across the application
+
+// ============================================================================
+// DATE FORMATTING FUNCTIONS
+// ============================================================================
 
 /**
  * Format date from YYYY-MM-DD to DD/MM/YYYY
  * @param {string|Date} dateStr - Date string or Date object
  * @returns {string} Formatted date string
  */
-function formatDate(dateStr) {
+function formatDateFromUtils(dateStr) {
   if (!dateStr) return "";
 
   // If it's already a Date object
@@ -41,7 +46,7 @@ function formatDate(dateStr) {
  * @param {string|Date} val - Date value
  * @returns {string} YYYY-MM-DD formatted string
  */
-function formatDateForInput(val) {
+function formatDateForInputFromUtils(val) {
   if (val instanceof Date) {
     const yyyy = val.getFullYear();
     const mm = String(val.getMonth() + 1).padStart(2, "0");
@@ -50,6 +55,10 @@ function formatDateForInput(val) {
   }
   return val;
 }
+
+// ============================================================================
+// FILE AND FILENAME FUNCTIONS
+// ============================================================================
 
 /**
  * Clean filename by removing invalid characters
@@ -65,11 +74,15 @@ function cleanFilename(filename) {
  * @param {Object} data - Invoice data
  * @returns {string} Generated filename
  */
-function generateInvoiceFilename(data) {
+function generateInvoiceFilenameFromUtils(data) {
   const cleanCompany = cleanFilename(data.ourCompany);
   const cleanClient = cleanFilename(data.clientName);
   return `${data.invoiceDate}_Invoice${data.invoiceNumber}_${cleanCompany}-${cleanClient}`;
 }
+
+// ============================================================================
+// CURRENCY AND CALCULATION FUNCTIONS
+// ============================================================================
 
 /**
  * Format currency amount with symbol
@@ -77,7 +90,7 @@ function generateInvoiceFilename(data) {
  * @param {string} currency - Currency symbol
  * @returns {string} Formatted amount
  */
-function formatCurrency(amount, currency) {
+function formatCurrencyFromUtils(amount, currency) {
   if (!amount) return "";
   const num = parseFloat(amount);
   if (isNaN(num)) return "";
@@ -90,7 +103,7 @@ function formatCurrency(amount, currency) {
  * @param {number} taxRate - Tax rate percentage
  * @returns {number} Tax amount
  */
-function calculateTaxAmount(subtotal, taxRate) {
+function calculateTaxAmountFromUtils(subtotal, taxRate) {
   const subtotalNum = parseFloat(subtotal) || 0;
   const rate = parseFloat(taxRate) || 0;
   return (subtotalNum * rate) / 100;
@@ -102,11 +115,15 @@ function calculateTaxAmount(subtotal, taxRate) {
  * @param {number} taxAmount - Tax amount
  * @returns {number} Total amount
  */
-function calculateTotalAmount(subtotal, taxAmount) {
+function calculateTotalAmountFromUtils(subtotal, taxAmount) {
   const subtotalNum = parseFloat(subtotal) || 0;
   const taxNum = parseFloat(taxAmount) || 0;
   return subtotalNum + taxNum;
 }
+
+// ============================================================================
+// VALIDATION FUNCTIONS
+// ============================================================================
 
 /**
  * Validate required fields
@@ -114,7 +131,7 @@ function calculateTotalAmount(subtotal, taxAmount) {
  * @param {Array} requiredFields - Array of required field names
  * @returns {Object} Validation result with isValid and errors
  */
-function validateRequiredFields(data, requiredFields) {
+function validateRequiredFieldsFromUtils(data, requiredFields) {
   const errors = [];
 
   requiredFields.forEach((field) => {
@@ -128,6 +145,10 @@ function validateRequiredFields(data, requiredFields) {
     errors: errors,
   };
 }
+
+// ============================================================================
+// SPREADSHEET UTILITY FUNCTIONS
+// ============================================================================
 
 /**
  * Get spreadsheet by ID with error handling
@@ -154,4 +175,39 @@ function getSheet(spreadsheet, sheetName) {
   } catch (error) {
     throw new Error(`Failed to get sheet "${sheetName}": ${error.message}`);
   }
+}
+
+// ============================================================================
+// LEGACY FUNCTION ALIASES (for backward compatibility)
+// ============================================================================
+
+// These functions maintain backward compatibility with existing code
+// while delegating to the new properly named functions
+
+function formatDate(dateStr) {
+  return formatDateFromUtils(dateStr);
+}
+
+function formatDateForInput(val) {
+  return formatDateForInputFromUtils(val);
+}
+
+function formatCurrency(amount, currency) {
+  return formatCurrencyFromUtils(amount, currency);
+}
+
+function calculateTaxAmount(subtotal, taxRate) {
+  return calculateTaxAmountFromUtils(subtotal, taxRate);
+}
+
+function calculateTotalAmount(subtotal, taxAmount) {
+  return calculateTotalAmountFromUtils(subtotal, taxAmount);
+}
+
+function validateRequiredFields(data, requiredFields) {
+  return validateRequiredFieldsFromUtils(data, requiredFields);
+}
+
+function generateInvoiceFilename(data) {
+  return generateInvoiceFilenameFromUtils(data);
 }

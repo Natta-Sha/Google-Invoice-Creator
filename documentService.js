@@ -1,4 +1,5 @@
-// Document service for Google Docs and PDF operations
+// Document service for Google Docs and PDF operations - Refactored version
+// This file handles all document creation, manipulation, and PDF generation
 
 /**
  * Create invoice document from template
@@ -12,7 +13,7 @@
  * @param {string} templateId - Template document ID
  * @returns {Document} Google Document object
  */
-function createInvoiceDoc(
+function createInvoiceDocFromDocumentService(
   data,
   formattedDate,
   formattedDueDate,
@@ -31,7 +32,7 @@ function createInvoiceDoc(
   try {
     const template = DriveApp.getFileById(templateId);
     const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
-    const filename = generateInvoiceFilename(data);
+    const filename = generateInvoiceFilenameFromUtils(data);
     Logger.log(`createInvoiceDoc: Generated filename: ${filename}`);
 
     const copy = template.makeCopy(filename, folder);
@@ -151,7 +152,9 @@ function updateInvoiceTable(body, data) {
     row.forEach((cell, index) => {
       if (index === 4 || index === 5) {
         // Format currency columns
-        newRow.appendTableCell(cell ? formatCurrency(cell, data.currency) : "");
+        newRow.appendTableCell(
+          cell ? formatCurrencyFromUtils(cell, data.currency) : ""
+        );
       } else {
         newRow.appendTableCell(cell || "");
       }
@@ -188,8 +191,8 @@ function replaceDocumentPlaceholders(
     "\\{Дата счета\\}": formattedDate,
     "\\{Due date\\}": formattedDueDate,
     "\\{VAT%\\}": taxRate.toFixed(0),
-    "\\{Сумма НДС\\}": formatCurrency(taxAmount, data.currency),
-    "\\{Сумма общая\\}": formatCurrency(totalAmount, data.currency),
+    "\\{Сумма НДС\\}": formatCurrencyFromUtils(taxAmount, data.currency),
+    "\\{Сумма общая\\}": formatCurrencyFromUtils(totalAmount, data.currency),
     "\\{Банковские реквизиты1\\}": data.bankDetails1,
     "\\{Банковские реквизиты2\\}": data.bankDetails2,
     "\\{Комментарий\\}": data.comment || "",
@@ -218,13 +221,13 @@ function replaceDocumentPlaceholders(
       if (item[4]) {
         body.replaceText(
           `\\{Рейт-${i + 1}\\}`,
-          formatCurrency(item[4], data.currency)
+          formatCurrencyFromUtils(item[4], data.currency)
         );
       }
       if (item[5]) {
         body.replaceText(
           `\\{Сумма-${i + 1}\\}`,
-          formatCurrency(item[5], data.currency)
+          formatCurrencyFromUtils(item[5], data.currency)
         );
       }
     }
@@ -237,7 +240,7 @@ function replaceDocumentPlaceholders(
  * @param {string} filename - Filename for PDF
  * @returns {File} PDF file object
  */
-function generateAndSavePDF(doc, filename) {
+function generateAndSavePDFFromDocumentService(doc, filename) {
   try {
     // Wait a bit for document to be fully processed
     Utilities.sleep(500);
@@ -259,7 +262,11 @@ function generateAndSavePDF(doc, filename) {
  * @param {string} docUrl - Document URL
  * @param {string} pdfUrl - PDF URL
  */
-function updateSpreadsheetWithUrls(rowIndex, docUrl, pdfUrl) {
+function updateSpreadsheetWithUrlsFromDocumentService(
+  rowIndex,
+  docUrl,
+  pdfUrl
+) {
   try {
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = spreadsheet.getSheets()[0];

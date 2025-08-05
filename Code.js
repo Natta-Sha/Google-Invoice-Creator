@@ -1,5 +1,5 @@
-// Main application entry point - Optimized version
-// This file contains the web app endpoints and main business logic
+// Main application entry point - Refactored version
+// This file contains the web app endpoints and orchestrates business logic
 
 /**
  * Main web app entry point
@@ -10,17 +10,11 @@ function doGet(e) {
   try {
     const page = e.parameter.page || "Home";
     const template = HtmlService.createTemplateFromFile(page);
+
+    // Set template variables
     template.baseUrl = ScriptApp.getService().getUrl();
     template.invoiceId = e.parameter.invoiceId || e.parameter.id || "";
     template.mode = e.parameter.mode || "";
-
-    // Pass invoice ID if provided
-    if (e.parameter.invoiceId || e.parameter.id) {
-      template.invoiceId = e.parameter.invoiceId || e.parameter.id;
-    }
-    if (e.parameter.mode) {
-      template.mode = e.parameter.mode;
-    }
 
     return template.evaluate().setTitle(page);
   } catch (error) {
@@ -38,9 +32,7 @@ function doGet(e) {
  */
 function loadPage(name) {
   try {
-    return typeof dataService !== "undefined" && dataService.loadPage
-      ? dataService.loadPage(name)
-      : HtmlService.createHtmlOutputFromFile(name).getContent();
+    return HtmlService.createHtmlOutputFromFile(name).getContent();
   } catch (error) {
     console.error(`Error loading page ${name}:`, error);
     return `<h1>Error</h1><p>Failed to load page: ${error.message}</p>`;
@@ -53,12 +45,11 @@ function loadPage(name) {
  * @returns {Object} Result with document and PDF URLs
  */
 function processForm(data) {
-  return processFormFromData(data);
+  return processInvoiceCreation(data);
 }
 
-// Export functions for use in other modules
-// Note: In Google Apps Script, all functions are globally available
-// These comments help with documentation and IDE support
+// Public API functions - Direct calls to service layer
+// These maintain backward compatibility while delegating to the appropriate services
 
 /**
  * Get project names for dropdown
@@ -94,96 +85,29 @@ function getInvoiceDataById(id) {
   return getInvoiceDataByIdFromData(id);
 }
 
-// Helper functions to call the real implementations in dataService.js
-function getProjectNamesFromData() {
-  return typeof dataService !== "undefined" && dataService.getProjectNames
-    ? dataService.getProjectNames()
-    : [];
-}
-function getProjectDetailsFromData(projectName) {
-  return typeof dataService !== "undefined" && dataService.getProjectDetails
-    ? dataService.getProjectDetails(projectName)
-    : {};
-}
-function getInvoiceListFromData() {
-  return typeof dataService !== "undefined" && dataService.getInvoiceList
-    ? dataService.getInvoiceList()
-    : [];
-}
-function getInvoiceDataByIdFromData(id) {
-  return typeof dataService !== "undefined" && dataService.getInvoiceDataById
-    ? dataService.getInvoiceDataById(id)
-    : {};
+/**
+ * Delete invoice by ID
+ * @param {string} id - Invoice ID
+ * @returns {Object} { success: true } or { success: false, message }
+ */
+function deleteInvoiceById(id) {
+  return deleteInvoiceByIdFromData(id);
 }
 
-// Error handling wrapper for better debugging
-function handleError(func, context = "") {
-  return function (...args) {
-    try {
-      return func.apply(this, args);
-    } catch (error) {
-      console.error(`Error in ${context || func.name}:`, error);
-      throw error;
-    }
-  };
-}
-
-// Performance monitoring (optional)
-function logPerformance(func, context = "") {
-  return function (...args) {
-    const start = new Date();
-    try {
-      const result = func.apply(this, args);
-      const duration = new Date() - start;
-      console.log(`${context || func.name} took ${duration}ms`);
-      return result;
-    } catch (error) {
-      const duration = new Date() - start;
-      console.error(
-        `${context || func.name} failed after ${duration}ms:`,
-        error
-      );
-      throw error;
-    }
-  };
-}
-
-// Apply performance monitoring to key functions
-const monitoredProcessForm = logPerformance(processForm, "processForm");
-const monitoredGetProjectDetails = logPerformance(
-  getProjectDetails,
-  "getProjectDetails"
-);
-const monitoredCreateInvoiceDoc = logPerformance(
-  createInvoiceDoc,
-  "createInvoiceDoc"
-);
-
+// Utility functions for validation and calculations
 function validateRequiredFields(data, requiredFields) {
-  return typeof dataService !== "undefined" &&
-    dataService.validateRequiredFields
-    ? dataService.validateRequiredFields(data, requiredFields)
-    : { isValid: true, errors: [] };
+  return validateRequiredFieldsFromUtils(data, requiredFields);
 }
 
 function calculateTaxAmount(subtotal, taxRate) {
-  return typeof dataService !== "undefined" && dataService.calculateTaxAmount
-    ? dataService.calculateTaxAmount(subtotal, taxRate)
-    : 0;
+  return calculateTaxAmountFromUtils(subtotal, taxRate);
 }
 
 function calculateTotalAmount(subtotal, taxAmount) {
-  return typeof dataService !== "undefined" && dataService.calculateTotalAmount
-    ? dataService.calculateTotalAmount(subtotal, taxAmount)
-    : 0;
+  return calculateTotalAmountFromUtils(subtotal, taxAmount);
 }
 
-function saveInvoiceData(data) {
-  return typeof dataService !== "undefined" && dataService.saveInvoiceData
-    ? dataService.saveInvoiceData(data)
-    : { newRowIndex: -1, uniqueId: "" };
-}
-
+// Document service functions
 function createInvoiceDoc(
   data,
   formattedDate,
@@ -194,63 +118,44 @@ function createInvoiceDoc(
   totalAmount,
   templateId
 ) {
-  return typeof dataService !== "undefined" && dataService.createInvoiceDoc
-    ? dataService.createInvoiceDoc(
-        data,
-        formattedDate,
-        formattedDueDate,
-        subtotal,
-        taxRate,
-        taxAmount,
-        totalAmount,
-        templateId
-      )
-    : null;
+  return createInvoiceDocFromDocumentService(
+    data,
+    formattedDate,
+    formattedDueDate,
+    subtotal,
+    taxRate,
+    taxAmount,
+    totalAmount,
+    templateId
+  );
 }
 
 function generateInvoiceFilename(data) {
-  return typeof dataService !== "undefined" &&
-    dataService.generateInvoiceFilename
-    ? dataService.generateInvoiceFilename(data)
-    : "";
+  return generateInvoiceFilenameFromUtils(data);
 }
 
 function generateAndSavePDF(doc, filename) {
-  return typeof dataService !== "undefined" && dataService.generateAndSavePDF
-    ? dataService.generateAndSavePDF(doc, filename)
-    : null;
+  return generateAndSavePDFFromDocumentService(doc, filename);
 }
 
 function updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl) {
-  return typeof dataService !== "undefined" &&
-    dataService.updateSpreadsheetWithUrls
-    ? dataService.updateSpreadsheetWithUrls(newRowIndex, docUrl, pdfUrl)
-    : null;
+  return updateSpreadsheetWithUrlsFromDocumentService(
+    newRowIndex,
+    docUrl,
+    pdfUrl
+  );
 }
 
+// Date formatting functions
 function formatDate(dateStr) {
-  return typeof dataService !== "undefined" && dataService.formatDate
-    ? dataService.formatDate(dateStr)
-    : dateStr;
+  return formatDateFromUtils(dateStr);
 }
 
 function formatDateForInput(val) {
-  return typeof dataService !== "undefined" && dataService.formatDateForInput
-    ? dataService.formatDateForInput(val)
-    : val;
+  return formatDateForInputFromUtils(val);
 }
 
-/**
- * Delete invoice by ID (global endpoint for frontend)
- * @param {string} id - Invoice ID
- * @returns {Object} { success: true } or { success: false, message }
- */
-function deleteInvoiceById(id) {
-  return typeof dataService !== "undefined" && dataService.deleteInvoiceById
-    ? dataService.deleteInvoiceById(id)
-    : { success: false, message: "deleteInvoiceById not implemented" };
-}
-
+// Test function for debugging
 function testLogger(message) {
   Logger.log(`[CLIENT TEST]: ${message}`);
 }
