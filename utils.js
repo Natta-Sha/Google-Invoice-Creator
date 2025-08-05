@@ -65,7 +65,7 @@ function cleanFilename(filename) {
  * @param {Object} data - Invoice data
  * @returns {string} Generated filename
  */
-function generateInvoiceFilename(data) {
+function generateInvoiceFilenameFromUtils(data) {
   const cleanCompany = cleanFilename(data.ourCompany);
   const cleanClient = cleanFilename(data.clientName);
   return `${data.invoiceDate}_Invoice${data.invoiceNumber}_${cleanCompany}-${cleanClient}`;
@@ -93,7 +93,7 @@ function formatCurrency(amount, currency) {
  * @param {number} taxRate - Tax rate percentage
  * @returns {number} Tax amount
  */
-function calculateTaxAmount(subtotal, taxRate) {
+function calculateTaxAmountFromUtils(subtotal, taxRate) {
   const subtotalNum = parseFloat(subtotal) || 0;
   const rate = parseFloat(taxRate) || 0;
   return (subtotalNum * rate) / 100;
@@ -105,7 +105,7 @@ function calculateTaxAmount(subtotal, taxRate) {
  * @param {number} taxAmount - Tax amount
  * @returns {number} Total amount
  */
-function calculateTotalAmount(subtotal, taxAmount) {
+function calculateTotalAmountFromUtils(subtotal, taxAmount) {
   const subtotalNum = parseFloat(subtotal) || 0;
   const taxNum = parseFloat(taxAmount) || 0;
   return subtotalNum + taxNum;
@@ -117,7 +117,7 @@ function calculateTotalAmount(subtotal, taxAmount) {
  * @param {Array} requiredFields - Array of required field names
  * @returns {Object} Validation result with isValid and errors
  */
-function validateRequiredFields(data, requiredFields) {
+function validateRequiredFieldsFromUtils(data, requiredFields) {
   const errors = [];
 
   requiredFields.forEach((field) => {
