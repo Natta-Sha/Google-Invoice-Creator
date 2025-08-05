@@ -48,7 +48,7 @@ function processInvoiceCreation(data) {
       taxAmount,
       totalAmount,
       data.templateId,
-      CONFIG.FOLDER_ID
+      data.folderId
     );
 
     if (!doc) {
