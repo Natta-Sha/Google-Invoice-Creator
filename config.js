@@ -1,7 +1,7 @@
 // Configuration constants
 const CONFIG = {
   // Google Drive IDs
-  FOLDER_ID: "1eHbDCawBYyRse6UNuTS3Z3coxeb80Zqr",
+  FOLDER_ID: "1Djz7X55KECay2nj_LU2lQJGyLKU1toFl",
   SPREADSHEET_ID: "1yKl8WDZQORJoVhfZ-zyyHXq2A1XCnC09wt9Q3b2bcq8",
 
   // Sheet names
