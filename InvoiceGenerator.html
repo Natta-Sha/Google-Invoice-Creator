@@ -554,8 +554,10 @@
           const rate = parseFloat(inputs[4].value) || 0;
           const amountCell = inputs[5];
 
-          if (!amountCell.hasAttribute("manual")) {
-            amountCell.value = (qty * rate).toFixed(2);
+          if (mode === "create") {
+            if (!amountCell.hasAttribute("manual")) {
+              amountCell.value = (qty * rate).toFixed(2);
+            }
           }
 
           subtotal += parseFloat(amountCell.value) || 0;
