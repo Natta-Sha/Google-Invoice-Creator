@@ -115,6 +115,55 @@ function testBackwardCompatibility() {
 }
 
 /**
+ * Test project details functionality - CRITICAL FOR YOUR ISSUE
+ */
+function testProjectDetails() {
+  console.log("Testing project details functionality...");
+
+  try {
+    // Test getProjectNames function
+    const projectNames = getProjectNames();
+    console.log(
+      `✅ getProjectNames() returned ${projectNames.length} projects`
+    );
+
+    if (projectNames.length > 0) {
+      // Test getProjectDetails with first project
+      const firstProject = projectNames[0];
+      console.log(`Testing getProjectDetails with project: ${firstProject}`);
+
+      const projectDetails = getProjectDetails(firstProject);
+      console.log("✅ getProjectDetails() returned:", projectDetails);
+
+      // Check if required fields are present
+      const requiredFields = [
+        "clientName",
+        "clientAddress",
+        "tax",
+        "currency",
+        "templateId",
+      ];
+      const missingFields = requiredFields.filter(
+        (field) => !projectDetails[field]
+      );
+
+      if (missingFields.length === 0) {
+        console.log("✅ All required project details fields are present");
+      } else {
+        console.log("❌ Missing project details fields:", missingFields);
+      }
+    } else {
+      console.log("⚠️ No projects found to test with");
+    }
+
+    console.log("Project details test completed.");
+  } catch (error) {
+    console.error("❌ Project details test error:", error.message);
+    console.error("Stack trace:", error.stack);
+  }
+}
+
+/**
  * Run all tests
  */
 function runAllTests() {
@@ -124,6 +173,7 @@ function runAllTests() {
   testDataServiceFunctions();
   testBusinessServiceFunctions();
   testBackwardCompatibility();
+  testProjectDetails(); // This is the most important test for your issue
 
   console.log("=== All Tests Completed ===");
 }
