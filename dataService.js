@@ -192,10 +192,14 @@ function getInvoiceListFromData() {
  */
 function getInvoiceDataByIdFromData(id) {
   try {
+    console.log("getInvoiceDataByIdFromData called with ID:", id);
+    console.log("ID type:", typeof id);
+    console.log("ID length:", id ? id.length : "null");
+
     // Validate input
     if (!id || id.toString().trim() === "") {
       console.log("Invalid ID provided to getInvoiceDataByIdFromData");
-      return {};
+      return null;
     }
 
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
