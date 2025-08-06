@@ -20,87 +20,17 @@ function processInvoiceCreation(data) {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
 
-    // Get folderId from project details
+    // Get project details and folder ID
     const projectDetails = getProjectDetailsWithValidation(data.projectName);
     const projectFolderId = getProjectFolderId(data.projectName);
-    Logger.log(">>> Fallback to getProjectFolderId(): " + projectFolderId);
+    Logger.log(">>> Using folderId: " + projectFolderId);
 
-    // Save invoice data to spreadsheet
-    const saveResult = saveInvoiceData(data);
-    Logger.log(
-      `processInvoiceCreation: Invoice data saved with ID: ${saveResult.uniqueId}`
-    );
-
-    // Format dates for document creation
-    const formattedDate = formatDateFromUtils(data.invoiceDate);
-    const [day, month, year] = data.dueDate.split("/");
-    const dueDateObject = new Date(year, month - 1, day);
-    const formattedDueDate = formatDateFromUtils(dueDateObject);
-
-    // Calculate amounts
-    const subtotalNum = parseFloat(data.subtotal) || 0;
-    const taxRate = parseFloat(data.tax) || 0;
-    const taxAmount = calculateTaxAmountFromUtils(subtotalNum, taxRate);
-    const totalAmount = calculateTotalAmountFromUtils(subtotalNum, taxAmount);
-
-    // Create document
-    const doc = createInvoiceDoc(
-      data,
-      formattedDate,
-      formattedDueDate,
-      subtotalNum,
-      taxRate,
-      taxAmount,
-      totalAmount,
-      data.templateId,
-      data.folderId
-    );
-
-    if (!doc) {
-      throw new Error(
-        "Failed to create the Google Doc. The returned document object was empty."
-      );
+    if (!projectFolderId) {
+      throw new Error("Missing folderId for this project.");
     }
 
-    Logger.log(
-      `processInvoiceCreation: Document created successfully. Doc ID: ${doc.getId()}`
-    );
-
-    // Generate PDF
-    Utilities.sleep(1000); // Allow document to be fully processed
-    const pdf = doc.getAs("application/pdf");
-    if (!pdf) {
-      throw new Error("Failed to generate PDF content from the document.");
-    }
-
-    // Save PDF to Drive
-    const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
-    const filename = generateInvoiceFilenameFromUtils(data);
-    const pdfFile = folder.createFile(pdf).setName(`${filename}.pdf`);
-
-    Logger.log(
-      `processInvoiceCreation: PDF created successfully. File ID: ${pdfFile.getId()}`
-    );
-
-    // Update spreadsheet with URLs
-    const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
-    const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
-    sheet.getRange(saveResult.newRowIndex, 20).setValue(doc.getUrl());
-    sheet.getRange(saveResult.newRowIndex, 21).setValue(pdfFile.getUrl());
-    SpreadsheetApp.flush();
-
-    // Clear cache
-    CacheService.getScriptCache().remove("invoiceList");
-
-    const result = {
-      docUrl: doc.getUrl(),
-      pdfUrl: pdfFile.getUrl(),
-    };
-
-    Logger.log(
-      "processInvoiceCreation: Invoice creation completed successfully."
-    );
-    return result;
+    // Use dataService to handle the entire process
+    return processFormFromData(data);
   } catch (error) {
     Logger.log(`processInvoiceCreation: ERROR - ${error.toString()}`);
     Logger.log(`Stack Trace: ${error.stack}`);
