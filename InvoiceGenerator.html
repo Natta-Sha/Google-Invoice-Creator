@@ -829,6 +829,10 @@
             .withSuccessHandler(function (data) {
               console.log("Loaded invoice data (DOMContentLoaded):", data);
               if (!data || !data.projectName) {
+                console.error("Invalid invoice data received:", data);
+                alert(
+                  "Error loading invoice data. The invoice may have invalid data in the database."
+                );
                 window.location.href = "?page=InvoicesList";
                 return;
               }

@@ -207,10 +207,16 @@ function getInvoiceDataByIdFromData(id) {
       return acc;
     }, {});
 
+    console.log("Looking for ID:", id);
+    console.log(
+      "Available IDs:",
+      data.slice(1).map((r) => r[indexMap["ID"]])
+    );
+
     const row = data.find((r, i) => i > 0 && r[indexMap["ID"]] === id);
     if (!row) {
       console.log(`Invoice with ID ${id} not found.`);
-      return {};
+      return null; // Changed from {} to null to match the error
     }
 
     const items = [];
@@ -222,7 +228,7 @@ function getInvoiceDataByIdFromData(id) {
       }
     }
 
-    return {
+    const result = {
       projectName: row[indexMap["Project Name"]],
       invoiceNumber: row[indexMap["Invoice Number"]],
       clientName: row[indexMap["Client Name"]],
@@ -242,6 +248,12 @@ function getInvoiceDataByIdFromData(id) {
       comment: row[indexMap["Comment"]],
       items: items,
     };
+
+    console.log("Raw due date from sheet:", row[indexMap["Due Date"]]);
+    console.log("Formatted due date:", result.dueDate);
+    console.log("Full result:", result);
+
+    return result;
   } catch (error) {
     console.error("Error getting invoice data by ID:", error);
     return {}; // ⚠️ тоже вернём пустой объект
