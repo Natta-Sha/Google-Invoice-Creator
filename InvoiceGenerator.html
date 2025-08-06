@@ -851,6 +851,9 @@
                 ? formatDateDDMMYYYY(new Date(data.dueDate))
                 : "";
             })
+            .withFailureHandler(function (error) {
+              console.error("getInvoiceDataById failed:", error);
+            })
             .getInvoiceDataById(invoiceId);
 
           // Set up the page based on mode
