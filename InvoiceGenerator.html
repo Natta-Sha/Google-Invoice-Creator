@@ -814,7 +814,6 @@
       }
 
       window.addEventListener("DOMContentLoaded", function () {
-        console.log("DOMContentLoaded started");
         populateProjectNames();
         console.log("Loaded InvoiceGenerator (DOMContentLoaded):", {
           invoiceId,
@@ -826,7 +825,6 @@
           "none";
 
         if (invoiceId) {
-          console.log("About to call getInvoiceDataById with ID:", invoiceId);
           google.script.run
             .withSuccessHandler(function (data) {
               console.log("Loaded invoice data (DOMContentLoaded):", data);
@@ -852,9 +850,6 @@
               document.getElementById("due_date").textContent = data.dueDate
                 ? formatDateDDMMYYYY(new Date(data.dueDate))
                 : "";
-            })
-            .withFailureHandler(function (error) {
-              console.error("getInvoiceDataById failed:", error);
             })
             .getInvoiceDataById(invoiceId);
 

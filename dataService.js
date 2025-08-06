@@ -192,14 +192,10 @@ function getInvoiceListFromData() {
  */
 function getInvoiceDataByIdFromData(id) {
   try {
-    console.log("getInvoiceDataByIdFromData called with ID:", id);
-    console.log("ID type:", typeof id);
-    console.log("ID length:", id ? id.length : "null");
-
     // Validate input
     if (!id || id.toString().trim() === "") {
       console.log("Invalid ID provided to getInvoiceDataByIdFromData");
-      return null;
+      return {};
     }
 
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
@@ -211,16 +207,10 @@ function getInvoiceDataByIdFromData(id) {
       return acc;
     }, {});
 
-    console.log("Looking for ID:", id);
-    console.log(
-      "Available IDs:",
-      data.slice(1).map((r) => r[indexMap["ID"]])
-    );
-
     const row = data.find((r, i) => i > 0 && r[indexMap["ID"]] === id);
     if (!row) {
       console.log(`Invoice with ID ${id} not found.`);
-      return null; // Changed from {} to null to match the error
+      return {};
     }
 
     const items = [];
@@ -232,7 +222,7 @@ function getInvoiceDataByIdFromData(id) {
       }
     }
 
-    const result = {
+    return {
       projectName: row[indexMap["Project Name"]],
       invoiceNumber: row[indexMap["Invoice Number"]],
       clientName: row[indexMap["Client Name"]],
@@ -252,12 +242,6 @@ function getInvoiceDataByIdFromData(id) {
       comment: row[indexMap["Comment"]],
       items: items,
     };
-
-    console.log("Raw due date from sheet:", row[indexMap["Due Date"]]);
-    console.log("Formatted due date:", result.dueDate);
-    console.log("Full result:", result);
-
-    return result;
   } catch (error) {
     console.error("Error getting invoice data by ID:", error);
     return {}; // ⚠️ тоже вернём пустой объект
