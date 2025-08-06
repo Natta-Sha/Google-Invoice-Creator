@@ -91,7 +91,15 @@ function getInvoiceList() {
  * @returns {Object} Invoice data
  */
 function getInvoiceDataById(id) {
-  return getInvoiceDataByIdFromData(id);
+  console.log("getInvoiceDataById called with ID:", id);
+  try {
+    const result = getInvoiceDataByIdFromData(id);
+    console.log("getInvoiceDataById result:", result);
+    return result;
+  } catch (error) {
+    console.error("Error in getInvoiceDataById:", error);
+    return null;
+  }
 }
 
 // Error handling and performance monitoring removed for cleaner code
