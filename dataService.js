@@ -290,7 +290,16 @@ function saveInvoiceData(data) {
       "", // Placeholder for PDF URL
     ];
 
-    const itemCells = data.items.flat();
+    // Process items to force Period field to be saved as text
+    const itemCells = [];
+    data.items.forEach((row, i) => {
+      const newRow = [...row];
+      // Force Period field (index 2) to be saved as text to prevent Google Sheets from converting it to date
+      if (newRow[2]) {
+        newRow[2] = `'${newRow[2].toString()}`; // Add single quote prefix to force text format
+      }
+      itemCells.push(...newRow);
+    });
     const fullRow = newRow.concat(itemCells);
 
     const newRowIndex = sheet.getLastRow() + 1;
@@ -372,6 +381,10 @@ function processFormFromData(data) {
     data.items.forEach((row, i) => {
       const newRow = [...row];
       newRow[0] = (i + 1).toString();
+      // Force Period field (index 2) to be saved as text to prevent Google Sheets from converting it to date
+      if (newRow[2]) {
+        newRow[2] = `'${newRow[2].toString()}`; // Add single quote prefix to force text format
+      }
       itemCells.push(...newRow);
     });
 
