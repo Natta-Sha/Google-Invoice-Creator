@@ -43,3 +43,6 @@ cp ~/.clasprc_sloboda.json ~/.clasprc.json
 cd ~/projects/sloboda-webapp/
 clasp pull
 code .
+
+Если смерджила бранч в гитхабе и сюда нужно подтянуть:
+git pull origin main
