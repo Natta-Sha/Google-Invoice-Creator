@@ -163,9 +163,10 @@ function updateInvoiceTable(body, data) {
 
       // Выравнивание вправо для сумм (Rate/hour и Amount)
       if (index === 4 || index === 5) {
-        cellElement.setHorizontalAlignment(
-          DocumentApp.HorizontalAlignment.RIGHT
-        );
+        cellElement
+          .getChild(0)
+          .asParagraph()
+          .setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
       }
     });
   });
