@@ -81,10 +81,19 @@ function formatCurrencyFromUtils(amount, currency) {
   if (!amount) return "";
   const num = parseFloat(amount);
   if (isNaN(num)) return "";
-  return `${currency}${num.toLocaleString(undefined, {
+
+  // Format the number first, then add currency symbol in the correct position
+  const formattedNumber = num.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })}`;
+  });
+
+  // For negative numbers, put the minus sign before the currency symbol
+  if (num < 0) {
+    return `-${currency}${formattedNumber.substring(1)}`; // Remove the minus from formatted number and add it before currency
+  }
+
+  return `${currency}${formattedNumber}`;
 }
 
 /**

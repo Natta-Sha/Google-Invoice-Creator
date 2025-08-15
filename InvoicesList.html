@@ -139,6 +139,29 @@
         const table = $("#invoiceTable").DataTable({
           dom: "lrtip",
           orderCellsTop: true,
+          columnDefs: [
+            {
+              targets: 4, // колонка Total (индекс 4)
+              className: "text-end", // выравнивание вправо
+              render: function (data, type, row) {
+                if (type === "display" && data) {
+                  // Форматируем число с запятыми для отображения
+                  const num = parseFloat(data);
+                  if (!isNaN(num)) {
+                    return num.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    });
+                  }
+                }
+                return data;
+              },
+            },
+            {
+              targets: "_all", // все колонки
+              className: "text-center", // выравнивание заголовков по центру
+            },
+          ],
         });
 
         new $.fn.dataTable.FixedHeader(table);
