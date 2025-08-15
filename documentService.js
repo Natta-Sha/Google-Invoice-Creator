@@ -153,13 +153,19 @@ function updateInvoiceTable(body, data) {
   data.items.forEach((row) => {
     const newRow = targetTable.appendTableRow();
     row.forEach((cell, index) => {
+      const cellElement = newRow.appendTableCell(
+        index === 4 || index === 5
+          ? cell
+            ? formatCurrencyFromUtils(cell, data.currency)
+            : ""
+          : cell || ""
+      );
+
+      // Выравнивание вправо для сумм (Rate/hour и Amount)
       if (index === 4 || index === 5) {
-        // Format currency columns
-        newRow.appendTableCell(
-          cell ? formatCurrencyFromUtils(cell, data.currency) : ""
+        cellElement.setHorizontalAlignment(
+          DocumentApp.HorizontalAlignment.RIGHT
         );
-      } else {
-        newRow.appendTableCell(cell || "");
       }
     });
   });
