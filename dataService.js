@@ -207,7 +207,13 @@ function getInvoiceDataByIdFromData(id) {
       return acc;
     }, {});
 
-    const row = data.find((r, i) => i > 0 && r[indexMap["ID"]] === id);
+    let row = null;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][indexMap["ID"]] === id) {
+        row = data[i];
+        break;
+      }
+    }
     if (!row) {
       console.log(`Invoice with ID ${id} not found.`);
       return {};
@@ -274,10 +280,10 @@ function saveInvoiceData(data) {
       dueDateObject,
       data.tax,
       data.subtotal,
-      calculateTaxAmount(data.subtotal, data.tax),
-      calculateTotalAmount(
+      calculateTaxAmountFromUtils(data.subtotal, data.tax),
+      calculateTotalAmountFromUtils(
         data.subtotal,
-        calculateTaxAmount(data.subtotal, data.tax)
+        calculateTaxAmountFromUtils(data.subtotal, data.tax)
       ),
       data.currency === "$" ? data.exchangeRate : "",
       data.currency,
@@ -362,7 +368,6 @@ function processFormFromData(data) {
         );
       }
       sheet.appendRow([...baseHeaders, ...itemHeaders]);
-      SpreadsheetApp.flush();
       Logger.log("processFormFromData: Sheet was empty, headers created.");
     }
 
@@ -414,7 +419,6 @@ function processFormFromData(data) {
 
     const newRowIndex = sheet.getLastRow() + 1;
     sheet.getRange(newRowIndex, 1, 1, row.length).setValues([row]);
-    SpreadsheetApp.flush();
     Logger.log(
       `processFormFromData: Wrote main data to sheet '${CONFIG.SHEETS.INVOICES}' at row ${newRowIndex}.`
     );

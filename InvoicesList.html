@@ -75,6 +75,11 @@
         box-sizing: border-box;
         padding: 4px;
       }
+
+      /* Выравнивание заголовков по центру */
+      #invoiceTable thead th {
+        text-align: center !important;
+      }
     </style>
   </head>
 
@@ -142,7 +147,7 @@
           columnDefs: [
             {
               targets: 4, // колонка Total (индекс 4)
-              className: "text-end", // выравнивание вправо
+              className: "dt-body-right dt-head-center", // данные вправо, заголовок по центру
               render: function (data, type, row) {
                 if (type === "display" && data) {
                   // Форматируем число с запятыми для отображения
@@ -158,8 +163,8 @@
               },
             },
             {
-              targets: "_all", // все колонки
-              className: "text-center", // выравнивание заголовков по центру
+              targets: [0, 1, 2, 3, 5, 6], // все колонки кроме Total (4)
+              className: "dt-body-left dt-head-center", // данные влево, заголовок по центру
             },
           ],
         });
