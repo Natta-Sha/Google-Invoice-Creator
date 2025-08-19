@@ -198,48 +198,26 @@ function getInvoiceDataByIdFromData(id) {
       return {};
     }
 
-    // Temporarily simplified to test
-    console.log(`[TEST] getInvoiceDataByIdFromData called with ID: ${id}`);
-
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
-    console.log(`[TEST] Got spreadsheet`);
-
     const sheet = spreadsheet.getSheets()[0];
-    console.log(`[TEST] Got sheet`);
-
     const data = sheet.getDataRange().getValues();
-    console.log(`[TEST] Got data, rows: ${data.length}`);
-
-    if (data.length < 2) {
-      console.log(`[TEST] No data found`);
-      return {};
-    }
-
     const headers = data[0];
-    console.log(`[TEST] Headers: ${JSON.stringify(headers)}`);
-
     const indexMap = headers.reduce((acc, h, i) => {
       acc[h] = i;
       return acc;
     }, {});
 
-    console.log(`[TEST] Index map: ${JSON.stringify(indexMap)}`);
-
     let row = null;
     for (let i = 1; i < data.length; i++) {
       if (data[i][indexMap["ID"]] === id) {
         row = data[i];
-        console.log(`[TEST] Found row at index ${i}`);
         break;
       }
     }
-
     if (!row) {
-      console.log(`[TEST] Invoice with ID ${id} not found.`);
+      console.log(`Invoice with ID ${id} not found.`);
       return {};
     }
-
-    console.log(`[TEST] Processing row data`);
 
     const items = [];
     for (let i = 0; i < CONFIG.INVOICE_TABLE.MAX_ROWS; i++) {
@@ -250,7 +228,7 @@ function getInvoiceDataByIdFromData(id) {
       }
     }
 
-    const result = {
+    return {
       projectName: row[indexMap["Project Name"]],
       invoiceNumber: row[indexMap["Invoice Number"]],
       clientName: row[indexMap["Client Name"]],
@@ -270,12 +248,9 @@ function getInvoiceDataByIdFromData(id) {
       comment: row[indexMap["Comment"]],
       items: items,
     };
-
-    console.log(`[TEST] Returning result: ${JSON.stringify(result)}`);
-    return result;
   } catch (error) {
     console.error("Error getting invoice data by ID:", error);
-    return { error: error.message };
+    return {}; // ⚠️ тоже вернём пустой объект
   }
 }
 
@@ -505,11 +480,11 @@ function processFormFromData(data) {
       `processFormFromData: Created PDF file. ID: ${pdfFile.getId()}, URL: ${pdfFile.getUrl()}`
     );
 
-    sheet.getRange(targetRowIndex, 20).setValue(doc.getUrl());
-    sheet.getRange(targetRowIndex, 21).setValue(pdfFile.getUrl());
+    sheet.getRange(newRowIndex, 20).setValue(doc.getUrl());
+    sheet.getRange(newRowIndex, 21).setValue(pdfFile.getUrl());
     SpreadsheetApp.flush();
     Logger.log(
-      `processFormFromData: Wrote Doc and PDF URLs to sheet at row ${targetRowIndex}.`
+      `processFormFromData: Wrote Doc and PDF URLs to sheet at row ${newRowIndex}.`
     );
 
     const result = {
@@ -630,26 +605,4 @@ function extractFileIdFromUrl(url) {
     throw new Error("Invalid file URL: " + url);
   }
   return match[0];
-}
-
-/**
- * Update invoice by ID in the Invoices sheet
- * @param {Object} data - Updated invoice data with ID
- * @returns {Object} { success: true } or { success: false, message }
- */
-function updateInvoiceByIdFromData(data) {
-  try {
-    // Validate input
-    if (!data || !data.id) {
-      console.log("Invalid data provided to updateInvoiceByIdFromData");
-      return { success: false, message: "Invalid invoice data provided" };
-    }
-
-    // For now, return success to test if the function is working
-    // TODO: Implement actual update logic
-    return { success: true, message: "Update function called successfully" };
-  } catch (error) {
-    console.error("Error updating invoice:", error);
-    return { success: false, message: error.message };
-  }
 }

@@ -301,31 +301,7 @@
       <div class="row mt-4">
         <div class="col-md-12 d-flex justify-content-end gap-2">
           <button id="delete-bottom-btn" class="btn btn-danger px-5 fw-bold">
-            Confirm delete
-            <div
-              id="delete-spinner"
-              class="spinner-border spinner-border-sm ms-2"
-              style="display: none"
-            >
-              <span class="visually-hidden">Deleting...</span>
-            </div>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="edit-bottom-btn-container" style="display: none">
-      <div class="row mt-4">
-        <div class="col-md-12 d-flex justify-content-end gap-2">
-          <button id="edit-bottom-btn" class="btn btn-primary px-5 fw-bold">
-            Confirm edit
-            <div
-              id="edit-spinner"
-              class="spinner-border spinner-border-sm ms-2"
-              style="display: none"
-            >
-              <span class="visually-hidden">Updating...</span>
-            </div>
+            Delete
           </button>
         </div>
       </div>
@@ -945,61 +921,12 @@
             document.getElementById(
               "delete-bottom-btn-container"
             ).style.display = "none";
-            document.getElementById("edit-bottom-btn-container").style.display =
-              "none";
-          } else if (mode === "copy") {
-            document.getElementById("page-title").textContent =
-              "Invoice - Copy";
-            document.getElementById(
-              "delete-bottom-btn-container"
-            ).style.display = "none";
-            document.getElementById("edit-bottom-btn-container").style.display =
-              "none";
-
-            // Enable editing for form fields
-            enableEditing();
-
-            // Clear invoice number and date for new copy
-            document.getElementById("invoice_number").value = "";
-            document.getElementById("invoice_number").disabled = false;
-            document.getElementById("invoice_date").value = "";
-            document.getElementById("due_date").textContent = "";
-
-            // Clear client data that should be pulled from current project settings
-            document.getElementById("client_name").textContent = "";
-            document.getElementById("client_address").textContent = "";
-            document.getElementById("client_number").textContent = "";
-            document.getElementById("our_company").textContent = "";
-            document.getElementById("tax").textContent = "";
-            document.getElementById("currency").textContent = "";
-            document.getElementById("bank_details_1").textContent = "";
-            document.getElementById("bank_details_2").textContent = "";
-
-            // Show generate button for creating new invoice and change its text
-            document.getElementById("generate-btn").style.display = "block";
-            document.getElementById("generate-btn").textContent =
-              "Confirm creation of new invoice";
-            document.getElementById("new-invoice-btn").style.display = "block";
-
-            // Add event listener for project selection to pull fresh client data
-            document
-              .getElementById("project_name")
-              .addEventListener("change", function () {
-                const selectedProject = this.value.trim();
-                if (selectedProject) {
-                  google.script.run
-                    .withSuccessHandler(fillProjectDetails)
-                    .getProjectDetails(selectedProject);
-                }
-              });
           } else {
             document.getElementById("page-title").textContent =
               "Invoice - View";
             document.getElementById(
               "delete-bottom-btn-container"
             ).style.display = "none";
-            document.getElementById("edit-bottom-btn-container").style.display =
-              "none";
           }
           document.getElementById("back-to-list").style.display = "block";
           document.getElementById("generate-btn").style.display = "none";
@@ -1108,71 +1035,6 @@
         document.getElementById("spinner").style.display = "none";
 
         populateProjectNames();
-      }
-
-      function enableEditing() {
-        // Enable all input fields
-        document.querySelectorAll("input, textarea").forEach((el) => {
-          el.disabled = false;
-        });
-
-        // Show add row button
-        const addRowBtn = document.getElementById("add-row-btn");
-        if (addRowBtn) addRowBtn.style.display = "block";
-
-        // Show comment input, hide comment display
-        const commentInput = document.getElementById("comment");
-        if (commentInput) commentInput.style.display = "block";
-
-        const commentDisplay = document.getElementById("comment-display");
-        if (commentDisplay) commentDisplay.style.display = "none";
-
-        // Hide generate and new invoice buttons
-        document.getElementById("generate-btn").style.display = "none";
-        document.getElementById("new-invoice-btn").style.display = "none";
-
-        // Make table cells editable
-        const tableCells = document.querySelectorAll("#invoice-body td");
-        tableCells.forEach((cell) => {
-          cell.contentEditable = true;
-          cell.style.border = "1px solid #ccc";
-          cell.style.padding = "4px";
-        });
-      }
-
-      function collectFormData() {
-        const formData = {
-          projectName: document.getElementById("project_name").value,
-          invoiceNumber: document.getElementById("invoice_number").value,
-          invoiceDate: document.getElementById("invoice_date").value,
-          dueDate: document.getElementById("due_date").textContent,
-          currency: document
-            .getElementById("currency")
-            .textContent.split(" ")[0], // Extract symbol only
-          exchangeRate:
-            document.getElementById("exchange_rate").value || "1.0000",
-          comment: document.getElementById("comment").value,
-          items: [],
-        };
-
-        // Collect items from the table
-        const rows = document.querySelectorAll("#invoice-body tr");
-        rows.forEach((row) => {
-          const cells = row.querySelectorAll("td");
-          if (cells.length >= 6) {
-            const item = [
-              cells[0].textContent.trim(), // Number
-              cells[1].textContent.trim(), // Description
-              cells[2].textContent.trim(), // Period
-              cells[3].textContent.trim(), // Hours
-              cells[4].textContent.trim(), // Rate/hour
-              cells[5].textContent.trim(), // Amount
-            ];
-            formData.items.push(item);
-          }
-        });
-
-        return formData;
       }
     </script>
     <!-- Custom modal -->
