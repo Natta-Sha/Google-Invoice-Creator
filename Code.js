@@ -91,7 +91,16 @@ function getInvoiceList() {
  * @returns {Object} Invoice data
  */
 function getInvoiceDataById(id) {
-  return getInvoiceDataByIdFromData(id);
+  // Temporarily simplified to test
+  try {
+    Logger.log(`[TEST] getInvoiceDataById called with ID: ${id}`);
+    const result = getInvoiceDataByIdFromData(id);
+    Logger.log(`[TEST] getInvoiceDataById result: ${JSON.stringify(result)}`);
+    return result;
+  } catch (error) {
+    Logger.log(`[TEST] getInvoiceDataById error: ${error.message}`);
+    return { error: error.message };
+  }
 }
 
 /**
@@ -144,4 +153,16 @@ function deleteInvoiceById(id) {
 
 function testLogger(message) {
   Logger.log(`[CLIENT TEST]: ${message}`);
+}
+
+function testGetInvoiceDataById(id) {
+  Logger.log(`[TEST] Testing getInvoiceDataById with ID: ${id}`);
+  try {
+    const result = getInvoiceDataByIdFromData(id);
+    Logger.log(`[TEST] Result: ${JSON.stringify(result)}`);
+    return result;
+  } catch (error) {
+    Logger.log(`[TEST] Error: ${error.message}`);
+    return { error: error.message };
+  }
 }
