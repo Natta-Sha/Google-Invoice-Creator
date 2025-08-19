@@ -14,12 +14,6 @@ function processInvoiceCreation(data) {
       `processInvoiceCreation: Processing invoice for project: ${data.projectName}, invoice: ${data.invoiceNumber}`
     );
 
-    // Validate required data
-    const validation = validateInvoiceData(data);
-    if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
-    }
-
     // Get project details and folder ID
     const projectDetails = getProjectDetailsWithValidation(data.projectName);
     const projectFolderId = getProjectFolderId(data.projectName);

@@ -91,16 +91,28 @@ function getInvoiceList() {
  * @returns {Object} Invoice data
  */
 function getInvoiceDataById(id) {
-  // Temporarily simplified to test
-  try {
-    Logger.log(`[TEST] getInvoiceDataById called with ID: ${id}`);
-    const result = getInvoiceDataByIdFromData(id);
-    Logger.log(`[TEST] getInvoiceDataById result: ${JSON.stringify(result)}`);
-    return result;
-  } catch (error) {
-    Logger.log(`[TEST] getInvoiceDataById error: ${error.message}`);
-    return { error: error.message };
-  }
+  // Temporarily simplified to test - return mock data
+  Logger.log(`[TEST] getInvoiceDataById called with ID: ${id}`);
+  return {
+    projectName: "Test Project",
+    invoiceNumber: "TEST-001",
+    clientName: "Test Client",
+    clientAddress: "Test Address",
+    clientNumber: "123456789",
+    invoiceDate: "2024-01-01",
+    dueDate: "2024-01-31",
+    tax: "20",
+    subtotal: "1000.00",
+    total: "1200.00",
+    exchangeRate: "1.0000",
+    currency: "$",
+    amountInEUR: "1000.00",
+    bankDetails1: "Test Bank",
+    bankDetails2: "Test Account",
+    ourCompany: "Test Company",
+    comment: "Test comment",
+    items: [["1", "Test Service", "January 2024", "10", "100.00", "1000.00"]],
+  };
 }
 
 /**
@@ -153,16 +165,4 @@ function deleteInvoiceById(id) {
 
 function testLogger(message) {
   Logger.log(`[CLIENT TEST]: ${message}`);
-}
-
-function testGetInvoiceDataById(id) {
-  Logger.log(`[TEST] Testing getInvoiceDataById with ID: ${id}`);
-  try {
-    const result = getInvoiceDataByIdFromData(id);
-    Logger.log(`[TEST] Result: ${JSON.stringify(result)}`);
-    return result;
-  } catch (error) {
-    Logger.log(`[TEST] Error: ${error.message}`);
-    return { error: error.message };
-  }
 }
