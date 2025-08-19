@@ -198,6 +198,7 @@
 
             if (!Array.isArray(data) || data.length === 0) {
               table.clear().draw();
+              document.getElementById("invoiceTable").style.display = "";
               return;
             }
 
@@ -219,6 +220,7 @@
             });
 
             table.draw();
+            document.getElementById("invoiceTable").style.display = "";
           })
           .withFailureHandler(function (error) {
             // Hide loading spinner
