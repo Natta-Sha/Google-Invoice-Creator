@@ -97,6 +97,18 @@
       </a>
     </div>
 
+    <!-- Loading spinner -->
+    <div id="loading-spinner" class="text-center py-5">
+      <div
+        class="spinner-border text-primary"
+        role="status"
+        style="width: 3rem; height: 3rem"
+      >
+        <span class="visually-hidden">Loading invoices...</span>
+      </div>
+      <p class="mt-3 text-muted">Loading invoices...</p>
+    </div>
+
     <script>
       function goHome() {
         window.location.href = "?page=Home";
@@ -181,9 +193,11 @@
 
         google.script.run
           .withSuccessHandler(function (data) {
+            // Hide loading spinner
+            document.getElementById("loading-spinner").style.display = "none";
+
             if (!Array.isArray(data) || data.length === 0) {
               table.clear().draw();
-              document.getElementById("invoiceTable").style.display = "";
               return;
             }
 
@@ -197,17 +211,18 @@
                 row.currency || "",
                 `
                   <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=view" class="btn btn-sm btn-outline-primary me-1">View</a>
-                  <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                  <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=edit" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
                   <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=delete" class="btn btn-sm btn-outline-danger me-1">Delete</a>
-                  <button class="btn btn-sm btn-outline-success">Copy</button>
+                  <a href="<?= baseUrl ?>?page=InvoiceGenerator&id=${row.id}&mode=copy" class="btn btn-sm btn-outline-success">Copy</a>
                 `,
               ]);
             });
 
             table.draw();
-            document.getElementById("invoiceTable").style.display = "";
           })
           .withFailureHandler(function (error) {
+            // Hide loading spinner
+            document.getElementById("loading-spinner").style.display = "none";
             console.error("Error loading invoice list:", error);
             alert("Failed to load invoice list.");
           })

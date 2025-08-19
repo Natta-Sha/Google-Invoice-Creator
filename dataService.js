@@ -321,15 +321,27 @@ function saveInvoiceData(data) {
 
 function processFormFromData(data) {
   try {
-    Logger.log("processFormFromData: Starting invoice creation.");
-    Logger.log(
-      `processFormFromData: Received data for project: ${data.projectName}, invoice: ${data.invoiceNumber}`
-    );
+    const isUpdate = data.id && data.id.trim() !== "";
+
+    if (isUpdate) {
+      Logger.log("processFormFromData: Starting invoice update.");
+      Logger.log(
+        `processFormFromData: Updating invoice with ID: ${data.id}, project: ${data.projectName}, invoice: ${data.invoiceNumber}`
+      );
+    } else {
+      Logger.log("processFormFromData: Starting invoice creation.");
+      Logger.log(
+        `processFormFromData: Received data for project: ${data.projectName}, invoice: ${data.invoiceNumber}`
+      );
+    }
 
     const spreadsheet = getSpreadsheet(CONFIG.SPREADSHEET_ID);
     const sheet = getSheet(spreadsheet, CONFIG.SHEETS.INVOICES);
-    const uniqueId = Utilities.getUuid();
-    Logger.log(`processFormFromData: Generated new unique ID: ${uniqueId}`);
+
+    let uniqueId = data.id || Utilities.getUuid();
+    if (!isUpdate) {
+      Logger.log(`processFormFromData: Generated new unique ID: ${uniqueId}`);
+    }
 
     if (sheet.getLastRow() === 0) {
       const baseHeaders = [
@@ -417,14 +429,79 @@ function processFormFromData(data) {
       "", // placeholders for doc & pdf
     ].concat(itemCells);
 
-    const newRowIndex = sheet.getLastRow() + 1;
-    sheet.getRange(newRowIndex, 1, 1, row.length).setValues([row]);
-    Logger.log(
-      `processFormFromData: Wrote main data to sheet '${CONFIG.SHEETS.INVOICES}' at row ${newRowIndex}.`
-    );
+    let targetRowIndex;
+
+    if (isUpdate) {
+      // Find existing row to update
+      const sheetData = sheet.getDataRange().getValues();
+      const headers = sheetData[0];
+      const idCol = headers.indexOf("ID");
+
+      for (let i = 1; i < sheetData.length; i++) {
+        if (sheetData[i][idCol] === data.id) {
+          targetRowIndex = i + 1; // 1-based index
+          break;
+        }
+      }
+
+      if (!targetRowIndex) {
+        throw new Error("Invoice not found for update");
+      }
+
+      sheet.getRange(targetRowIndex, 1, 1, row.length).setValues([row]);
+      Logger.log(
+        `processFormFromData: Updated existing data in sheet '${CONFIG.SHEETS.INVOICES}' at row ${targetRowIndex}.`
+      );
+    } else {
+      // Create new row
+      targetRowIndex = sheet.getLastRow() + 1;
+      sheet.getRange(targetRowIndex, 1, 1, row.length).setValues([row]);
+      Logger.log(
+        `processFormFromData: Wrote new data to sheet '${CONFIG.SHEETS.INVOICES}' at row ${targetRowIndex}.`
+      );
+    }
 
     const folderId = getProjectFolderId(data.projectName);
     Logger.log(">>> Resolved folderId: " + folderId);
+
+    // Delete old files if updating
+    if (isUpdate) {
+      const sheetData = sheet.getDataRange().getValues();
+      const headers = sheetData[0];
+      const docLinkCol = headers.indexOf("Google Doc Link");
+      const pdfLinkCol = headers.indexOf("PDF Link");
+
+      const oldDocUrl = sheetData[targetRowIndex - 1][docLinkCol] || "";
+      const oldPdfUrl = sheetData[targetRowIndex - 1][pdfLinkCol] || "";
+
+      if (oldDocUrl && oldDocUrl.trim() !== "") {
+        try {
+          const docId = extractFileIdFromUrl(oldDocUrl);
+          if (docId) {
+            DriveApp.getFileById(docId).setTrashed(true);
+            Logger.log(`processFormFromData: Deleted old Google Doc: ${docId}`);
+          }
+        } catch (err) {
+          Logger.log(
+            `processFormFromData: Old Google Doc already deleted or not found: ${err.message}`
+          );
+        }
+      }
+
+      if (oldPdfUrl && oldPdfUrl.trim() !== "") {
+        try {
+          const pdfId = extractFileIdFromUrl(oldPdfUrl);
+          if (pdfId) {
+            DriveApp.getFileById(pdfId).setTrashed(true);
+            Logger.log(`processFormFromData: Deleted old PDF: ${pdfId}`);
+          }
+        } catch (err) {
+          Logger.log(
+            `processFormFromData: Old PDF already deleted or not found: ${err.message}`
+          );
+        }
+      }
+    }
 
     const doc = createInvoiceDoc(
       data,
@@ -480,11 +557,11 @@ function processFormFromData(data) {
       `processFormFromData: Created PDF file. ID: ${pdfFile.getId()}, URL: ${pdfFile.getUrl()}`
     );
 
-    sheet.getRange(newRowIndex, 20).setValue(doc.getUrl());
-    sheet.getRange(newRowIndex, 21).setValue(pdfFile.getUrl());
+    sheet.getRange(targetRowIndex, 20).setValue(doc.getUrl());
+    sheet.getRange(targetRowIndex, 21).setValue(pdfFile.getUrl());
     SpreadsheetApp.flush();
     Logger.log(
-      `processFormFromData: Wrote Doc and PDF URLs to sheet at row ${newRowIndex}.`
+      `processFormFromData: Wrote Doc and PDF URLs to sheet at row ${targetRowIndex}.`
     );
 
     const result = {
@@ -605,4 +682,36 @@ function extractFileIdFromUrl(url) {
     throw new Error("Invalid file URL: " + url);
   }
   return match[0];
+}
+
+/**
+ * Update invoice by ID in the Invoices sheet
+ * @param {Object} data - Updated invoice data with ID
+ * @returns {Object} { success: true } or { success: false, message }
+ */
+function updateInvoiceByIdFromData(data) {
+  try {
+    // Validate input
+    if (!data || !data.id) {
+      console.log("Invalid data provided to updateInvoiceByIdFromData");
+      return { success: false, message: "Invalid invoice data provided" };
+    }
+
+    // Process the updated data (this will handle file deletion and recreation)
+    const result = processFormFromData(data);
+
+    if (!result || !result.docUrl) {
+      return { success: false, message: "Failed to update invoice" };
+    }
+
+    // Clear cache
+    CacheService.getScriptCache().remove("invoiceList");
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("Error updating invoice:", error);
+    return { success: false, message: error.message };
+  }
 }

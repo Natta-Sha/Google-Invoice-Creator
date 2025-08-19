@@ -94,6 +94,15 @@ function getInvoiceDataById(id) {
   return getInvoiceDataByIdFromData(id);
 }
 
+/**
+ * Update invoice by ID
+ * @param {Object} data - Updated invoice data
+ * @returns {Object} Result with success status
+ */
+function updateInvoiceById(data) {
+  return updateInvoiceByIdFromData(data);
+}
+
 // Error handling and performance monitoring removed for cleaner code
 
 // Performance monitoring removed for cleaner code
