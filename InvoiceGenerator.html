@@ -860,7 +860,7 @@
                 window.location.href = "?page=InvoicesList";
                 return;
               }
-              if (["view", "delete", "copy"].includes(mode)) {
+              if (["view", "delete", "edit", "copy"].includes(mode)) {
                 renderSavedDataRaw(data);
               } else {
                 fillInvoiceFormFromSavedData(data);
