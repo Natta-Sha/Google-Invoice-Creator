@@ -860,7 +860,7 @@
                 window.location.href = "?page=InvoicesList";
                 return;
               }
-              if (["view", "delete", "edit", "copy"].includes(mode)) {
+              if (["view", "delete", "copy"].includes(mode)) {
                 renderSavedDataRaw(data);
               } else {
                 fillInvoiceFormFromSavedData(data);
@@ -947,60 +947,6 @@
             ).style.display = "none";
             document.getElementById("edit-bottom-btn-container").style.display =
               "none";
-          } else if (mode === "edit") {
-            document.getElementById("page-title").textContent =
-              "Invoice - Edit";
-            document.getElementById(
-              "delete-bottom-btn-container"
-            ).style.display = "none";
-            document.getElementById("edit-bottom-btn-container").style.display =
-              "block";
-
-            // Enable editing for form fields
-            enableEditing();
-
-            // Add event handler for edit button
-            document
-              .getElementById("edit-bottom-btn")
-              .addEventListener("click", function () {
-                // Show spinner
-                const spinner = document.getElementById("edit-spinner");
-                if (spinner) spinner.style.display = "inline-block";
-
-                // Disable button
-                this.disabled = true;
-
-                // Collect form data and call update function
-                const formData = collectFormData();
-                formData.id = invoiceId; // Add the invoice ID
-
-                google.script.run
-                  .withSuccessHandler(function (result) {
-                    if (result.success) {
-                      // Show success message and redirect
-                      alert("Invoice updated successfully!");
-                      window.top.location.href =
-                        BASE_URL + "?page=InvoicesList";
-                    } else {
-                      alert(
-                        "Error updating invoice: " +
-                          (result.message || "Unknown error")
-                      );
-                      // Re-enable button
-                      document.getElementById(
-                        "edit-bottom-btn"
-                      ).disabled = false;
-                      if (spinner) spinner.style.display = "none";
-                    }
-                  })
-                  .withFailureHandler(function (error) {
-                    alert("Error updating invoice: " + error.message);
-                    // Re-enable button
-                    document.getElementById("edit-bottom-btn").disabled = false;
-                    if (spinner) spinner.style.display = "none";
-                  })
-                  .updateInvoiceById(formData);
-              });
           } else if (mode === "copy") {
             document.getElementById("page-title").textContent =
               "Invoice - Copy";
