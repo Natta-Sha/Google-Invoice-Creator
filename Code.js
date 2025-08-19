@@ -100,7 +100,8 @@ function getInvoiceDataById(id) {
  * @returns {Object} Result with success status
  */
 function updateInvoiceById(data) {
-  return updateInvoiceByIdFromData(data);
+  // Temporarily disabled
+  return { success: false, message: "Update function disabled" };
 }
 
 // Error handling and performance monitoring removed for cleaner code
