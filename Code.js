@@ -135,3 +135,102 @@ function deleteInvoiceById(id) {
 function testLogger(message) {
   Logger.log(`[CLIENT TEST]: ${message}`);
 }
+
+/**
+ * Diagnostic function to check application state
+ * @returns {Object} Diagnostic information
+ */
+function runDiagnostics() {
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    config: {
+      folderId: CONFIG.FOLDER_ID,
+      spreadsheetId: CONFIG.SPREADSHEET_ID,
+      sheets: CONFIG.SHEETS,
+    },
+    services: {
+      dataService: typeof dataService !== "undefined",
+      businessService: typeof businessService !== "undefined",
+      documentService: typeof documentService !== "undefined",
+      utils: typeof utils !== "undefined",
+    },
+    functions: {
+      getProjectNames: typeof getProjectNames === "function",
+      getProjectDetails: typeof getProjectDetails === "function",
+      getInvoiceList: typeof getInvoiceList === "function",
+      processForm: typeof processForm === "function",
+    },
+    errors: [],
+  };
+
+  try {
+    // Test basic functionality
+    const projectNames = getProjectNames();
+    diagnostics.projectNames = projectNames;
+    diagnostics.projectNamesCount = projectNames.length;
+  } catch (error) {
+    diagnostics.errors.push(`getProjectNames error: ${error.message}`);
+  }
+
+  try {
+    // Test spreadsheet access
+    const spreadsheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    diagnostics.spreadsheetAccess = true;
+    diagnostics.spreadsheetName = spreadsheet.getName();
+  } catch (error) {
+    diagnostics.errors.push(`Spreadsheet access error: ${error.message}`);
+  }
+
+  try {
+    // Test folder access
+    const folder = DriveApp.getFolderById(CONFIG.FOLDER_ID);
+    diagnostics.folderAccess = true;
+    diagnostics.folderName = folder.getName();
+  } catch (error) {
+    diagnostics.errors.push(`Folder access error: ${error.message}`);
+  }
+
+  Logger.log(`Diagnostics: ${JSON.stringify(diagnostics, null, 2)}`);
+  return diagnostics;
+}
+
+/**
+ * Test function to check if all required services are loaded
+ * @returns {string} Status message
+ */
+function testServices() {
+  const services = [
+    "CONFIG",
+    "dataService",
+    "businessService",
+    "documentService",
+    "utils",
+  ];
+
+  const results = services.map((service) => {
+    const exists = typeof eval(service) !== "undefined";
+    return `${service}: ${exists ? "✅" : "❌"}`;
+  });
+
+  const message = results.join("\n");
+  Logger.log(`Service test results:\n${message}`);
+  return message;
+}
+
+/**
+ * Test configuration access
+ * @returns {Object} Configuration test result
+ */
+function testConfig() {
+  try {
+    return {
+      folderId: CONFIG.FOLDER_ID,
+      spreadsheetId: CONFIG.SPREADSHEET_ID,
+      sheets: CONFIG.SHEETS,
+      currencySymbols: CONFIG.CURRENCY_SYMBOLS,
+    };
+  } catch (error) {
+    Logger.log(`Config test error: ${error.message}`);
+    throw error;
+  }
+}
