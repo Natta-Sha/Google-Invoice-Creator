@@ -65,7 +65,22 @@ function processForm(data) {
  * @returns {Array} Array of project names
  */
 function getProjectNames() {
-  return getProjectNamesFromData();
+  try {
+    // Check if function exists
+    if (typeof getProjectNamesFromData === "function") {
+      return getProjectNamesFromData();
+    } else {
+      // Fallback: call function directly if module not loaded
+      Logger.log("getProjectNamesFromData not found, using fallback");
+      const spreadsheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+      const sheet = spreadsheet.getSheetByName(CONFIG.SHEETS.LISTS);
+      const values = sheet.getRange("A:A").getValues().flat().filter(String);
+      return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+    }
+  } catch (error) {
+    Logger.log(`Error in getProjectNames: ${error.message}`);
+    return [];
+  }
 }
 
 /**
@@ -199,18 +214,47 @@ function runDiagnostics() {
  * @returns {string} Status message
  */
 function testServices() {
-  const services = [
-    "CONFIG",
-    "dataService",
-    "businessService",
-    "documentService",
-    "utils",
-  ];
+  const results = [];
 
-  const results = services.map((service) => {
-    const exists = typeof eval(service) !== "undefined";
-    return `${service}: ${exists ? "✅" : "❌"}`;
-  });
+  // Test CONFIG object
+  try {
+    const configExists = typeof CONFIG !== "undefined" && CONFIG.FOLDER_ID;
+    results.push(`CONFIG: ${configExists ? "✅" : "❌"}`);
+  } catch (e) {
+    results.push(`CONFIG: ❌ (${e.message})`);
+  }
+
+  // Test key functions from dataService
+  try {
+    const dataServiceExists = typeof getProjectNamesFromData === "function";
+    results.push(`dataService: ${dataServiceExists ? "✅" : "❌"}`);
+  } catch (e) {
+    results.push(`dataService: ❌ (${e.message})`);
+  }
+
+  // Test key functions from businessService
+  try {
+    const businessServiceExists = typeof processInvoiceCreation === "function";
+    results.push(`businessService: ${businessServiceExists ? "✅" : "❌"}`);
+  } catch (e) {
+    results.push(`businessService: ❌ (${e.message})`);
+  }
+
+  // Test key functions from documentService
+  try {
+    const documentServiceExists = typeof createInvoiceDoc === "function";
+    results.push(`documentService: ${documentServiceExists ? "✅" : "❌"}`);
+  } catch (e) {
+    results.push(`documentService: ❌ (${e.message})`);
+  }
+
+  // Test key functions from utils
+  try {
+    const utilsExists = typeof formatDateFromUtils === "function";
+    results.push(`utils: ${utilsExists ? "✅" : "❌"}`);
+  } catch (e) {
+    results.push(`utils: ❌ (${e.message})`);
+  }
 
   const message = results.join("\n");
   Logger.log(`Service test results:\n${message}`);
