@@ -1,4 +1,5 @@
 // === Система диагностики и управления кэшем ===
+const BUILD_VERSION = "2025-08-20T15:30"; // версия с системой диагностики
 
 // Main application entry point - Optimized version
 // This file contains the web app endpoints and main business logic
