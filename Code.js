@@ -1,3 +1,5 @@
+// === Система диагностики и управления кэшем ===
+
 // Main application entry point - Optimized version
 // This file contains the web app endpoints and main business logic
 
@@ -8,6 +10,23 @@
  */
 function doGet(e) {
   try {
+    // 1) Ручной сброс кэшей/состояния
+    if (e?.parameter?.flush === "1") {
+      CacheService.getScriptCache().removeAll(["state"]); // свои ключи
+      PropertiesService.getScriptProperties().deleteAllProperties();
+      return ContentService.createTextOutput("Flushed").setMimeType(
+        ContentService.MimeType.TEXT
+      );
+    }
+
+    // 2) Прогрев — просто проверка живости
+    if (e?.parameter?.warmup === "1") {
+      return ContentService.createTextOutput(
+        "Warm OK " + BUILD_VERSION
+      ).setMimeType(ContentService.MimeType.TEXT);
+    }
+
+    // === твоя основная логика здесь ===
     const page = e.parameter.page || "Home";
     const template = HtmlService.createTemplateFromFile(page);
     template.baseUrl = ScriptApp.getService().getUrl();
